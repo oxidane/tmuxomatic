@@ -19,7 +19,7 @@ Source: [https://github.com/oxidane/tmuxomatic](https://github.com/oxidane/tmuxo
 
 ## Introduction
 
-All it takes is one example to know what tmuxomatic is and how it works.  This is one window from the file `session_example`:
+All it takes is one example to show everything tmuxomatic is capable of:
 
 	window a_complex_layout_of_25_panes
 	AAAAAAAAAAAAVVVzz
@@ -36,7 +36,7 @@ All it takes is one example to know what tmuxomatic is and how it works.  This i
 	0 run ls -la
 	Y run echo "boom"
 
-Run the above with `tmuxomatic session_example`.  The resulting tmux screnshot:
+Run the above using `tmuxomatic session_example`.  The resulting tmux screnshot:
 
 ![](https://github.com/oxidane/tmuxomatic/blob/master/examples/example.png)
 

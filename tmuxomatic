@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -71,7 +71,11 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##-------------------+
 ##
 DISTRIBUTION = "https://github.com/oxidane/tmuxomatic"
-VERSION = "1.0.12" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
+VERSION = "1.0.13" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
+##
+##	1.0.13	2014-07-21	Added example screenshot, shortened the readme example to one window
+##						Fixed issues #1, #2: Supports non-numeric tmux versions (e.g., "1.9a")
+##						Fixed issue #3: Relative loading of the python3 interpreter for portability
 ##
 ##	1.0.12	2014-07-21	Public release
 ##						Fixed session filename
@@ -138,6 +142,9 @@ VERSION = "1.0.12" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##		Needs a self-destruct option that will kill the session on hangup (before exit).  This is ideal in scenarios
 ##		where you want to login into a system to spot check it, but don't want your monitoring tools to consume
 ##		resources when you're not connected.
+##
+##		Add YAML<->SESSION conversion, support on read/write, detect format on session file load.  Window diagrams are
+##		easily supported by YAML as block literals.
 ##
 ## Significant:
 ##
@@ -1205,8 +1212,8 @@ def main():
 	pn = len(tmux_rep.split("."))
 	if qn < pn: tmux_req += ".0" * (pn-qn) # Equalize the element counts
 	if pn < qn: tmux_rep += ".0" * (qn-pn) # Equalize the element counts
-	version_listint = lambda version_string: [int(re.sub("\D", "", x)) for x in version_string.split(".")]
-	for p, q in zip( version_listint(tmux_rep), version_listint(tmux_req) ):
+	ver_intlist = lambda ver_str: [int(re.sub(r"\D", r"", x)) for x in ver_str.split(".")] # Strip non-numerics (#1, #2)
+	for p, q in zip( ver_intlist(tmux_rep), ver_intlist(tmux_req) ):
 		if int(p) == int(q): continue # Qualifies so far
 		if int(p) > int(q): break # Qualifies
 		print("This requires tmux " + tmux_req + " or higher, found tmux " + tmux_dup)
