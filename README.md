@@ -11,26 +11,16 @@ Automated window layout and session management for tmux, with a simple definitio
 ## Requirements
 
 * [Python 3](http://www.python.org/getit/)
-* [tmux 1.8](http://tmux.sourceforge.net/) ... *Some earlier versions may work*
+* [tmux 1.8](http://tmux.sourceforge.net/) ... *earlier versions may or may not work*
 
 
 
 ## Introduction
 
-All it takes is a single two-window example session to know what tmuxomatic is and how it works.
+All it takes is one example to know what tmuxomatic is and how it works.
 
 From the file `session_example` (included in project):
 
-	window a_simple_layout_of_3_panes
-	112
-	333
-	333
-	
-	  dir ~
-	1 run tail --follow=name /var/log/messages
-	3 foc
-	3 dir /tmp
-	
 	window a_complex_layout_of_25_panes
 	AAAAAAAAAAAAVVVzz
 	11200000000XXOozz
@@ -46,9 +36,9 @@ From the file `session_example` (included in project):
 	0 run ls -la
 	Y run echo "boom"
 
-Run the above session with `tmuxomatic session_example`.  The resulting screnshots:
+Run the above session with `tmuxomatic session_example`.  The resulting tmux screnshot:
 
-TODO
+![](https://github.com/oxidane/tmuxomatic/blob/master/examples/example.png)
 
 If you've ever worked with tmux sessions, either manually or using some other tmux-related program, the simplicity and flexibility of tmuxomatic should now be obvious.
 
@@ -84,8 +74,8 @@ Latest version may be found here: [https://github.com/oxidane/tmuxomatic](https:
 
 ## Copyright and License
 
-Copyright 2013-2014, Oxidane
-All rights reserved
+Copyright 2013-2014, Oxidane.
+All rights reserved.
 
 Distributed under the [BSD 3-Clause license](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution of the source.  See the license for details.
 
