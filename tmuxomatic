@@ -1205,7 +1205,7 @@ def main():
 	pn = len(tmux_rep.split("."))
 	if qn < pn: tmux_req += ".0" * (pn-qn) # Equalize the element counts
 	if pn < qn: tmux_rep += ".0" * (qn-pn) # Equalize the element counts
-	version_listint = lambda version_string: [int(x) for x in version_string.split(".")]
+	version_listint = lambda version_string: [int(re.sub("\D", "", x)) for x in version_string.split(".")]
 	for p, q in zip( version_listint(tmux_rep), version_listint(tmux_req) ):
 		if int(p) == int(q): continue # Qualifies so far
 		if int(p) > int(q): break # Qualifies
