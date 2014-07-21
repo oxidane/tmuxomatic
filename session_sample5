@@ -1,0 +1,26 @@
+# tmuxomatic session file ... Sample 5
+####################################################################################################
+
+
+
+window sample5.new		# This was an edge case in tmuxomatic 1.0.0 that was fixed in 1.0.1
+11111333				# The splitter algorithm was vertically simple, for example it did not
+11111333				# combine multiple windows until it found a clean split, instead right
+11111444				# <- here it will be split on 1, which truncates 4 and leaves the hole
+22222444				# next to 2, this edge case was fixed by using a best-fit algorithm
+22222555				# that searches for a clean vertical or horizontal split
+22222555
+
+1 dir /bin
+1 run echo "bin"
+2 dir /etc
+2 run echo "etc"
+3 dir /lib
+3 run echo "lib"
+4 dir /usr
+4 run echo "usr"
+5 dir /var
+5 run echo "var"
+
+
+

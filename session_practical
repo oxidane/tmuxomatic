@@ -1,0 +1,36 @@
+# tmuxomatic session file ... This is a practical example
+####################################################################################################
+
+
+
+window admin
+22222HHH
+22222111
+33333111
+33333111
+44445555
+44445555
+44445555
+44445555
+44445555
+44445555
+
+foc
+dir ~
+H run clear ; figlet -c $HOSTNAME -w "\`stty size | cut -f2 -d' '\`" -f standard ; echo "" ; figlet -c "\`hostname --all-ip-addresses | sed 's/ /   /g' | sed 's/ *$//g'\`" -w "\`stty size | cut -f2 -d' '\`" -f term ; sleep 1000d
+1 run htop
+2 run tail --follow=name /var/log/messages
+3 run tail --follow=name /var/log/secure
+5 foc
+
+
+
+window various
+1
+2
+2
+
+dir ~
+
+
+

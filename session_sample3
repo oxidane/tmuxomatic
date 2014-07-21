@@ -1,0 +1,68 @@
+# tmuxomatic session file ... Sample 3
+####################################################################################################
+
+
+
+window sample3.1
+11224444
+33334444
+55556677
+55558888
+
+1 run echo 1
+2 run echo 2
+3 run echo 3
+4 run echo 4
+5 run echo 5
+6 run echo 6
+7 run echo 7
+8 run echo 8
+
+
+
+window sample3.2
+1111002222
+1111002222
+1111002222
+1111002222
+3333004444
+3333004444
+3333004444
+3333004444
+5555566666
+5555566666
+5555566666
+5555566666
+5555577777
+5555577777
+5555577777
+
+0 run echo 0
+1 run echo 1
+2 run echo 2
+3 run echo 3
+4 run echo 4
+5 run echo 5
+6 run echo 6
+7 run echo 7
+
+
+
+window sample3.3
+12227777
+33447777
+55557777
+66667777
+88888888
+
+1 run echo 1
+2 run echo 2
+3 run echo 3
+4 run echo 4
+5 run echo 5
+6 run echo 6
+7 run echo 7
+8 run echo 8
+
+
+

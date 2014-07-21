@@ -1,0 +1,27 @@
+# tmuxomatic session file ... Unsupported layouts
+####################################################################################################
+
+
+
+window tmux				# The following layout is not possible in tmux
+11222					# This is the tmux edge case that is mentioned in the source
+11222					# The problem with this layout is that there are no clean splits
+11544					# It's easy to adapt tmuxomatic to support layouts like this, if tmux does
+33344
+33344
+
+
+
+window tmux_2			# This is basically the same as the above window
+111111111xxx
+yyyzzzzzzxxx
+yyy222222222
+
+
+
+window overlap			# Overlapping panes are not supported by tmuxomatic or tmux
+12						# Pane 2 overlaps pane 1
+11
+
+
+

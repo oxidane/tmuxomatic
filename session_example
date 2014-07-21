@@ -1,0 +1,34 @@
+# tmuxomatic session file ... This is the example used in the readme file
+####################################################################################################
+
+
+
+window a_simple_layout_of_3_panes
+112
+333
+333
+
+  dir ~
+1 run tail --follow=name /var/log/messages
+3 foc
+3 dir /tmp
+
+
+
+window a_complex_layout_of_25_panes
+AAAAAAAAAAAAVVVzz
+11200000000XXOozz
+34400000000XXIiyy
+55500000000YYYYyy
+abc00000000YYYYxx
+ddeeffqqqqqqqqZxx
+
+  foc
+  dir ~
+0 foc
+0 dir /tmp
+0 run ls -la
+Y run echo "boom"
+
+
+

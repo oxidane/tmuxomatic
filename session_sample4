@@ -1,0 +1,21 @@
+# tmuxomatic session file ... Sample 4
+####################################################################################################
+
+
+
+window sample4 test1
+1122
+3422
+5555
+5555
+
+
+
+window sample4 test2
+aabbffff
+ccdeffff
+gggggggg
+gggggggg
+
+
+
