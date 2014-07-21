@@ -6,6 +6,8 @@ Automated window layout and session management for tmux, with a simple definitio
 
 <!-- [![Version](https://pypip.in/v/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic) [![Downloads](https://pypip.in/d/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic) -->
 
+Source: [https://github.com/oxidane/tmuxomatic](https://github.com/oxidane/tmuxomatic).
+
 
 
 ## Requirements
@@ -17,9 +19,7 @@ Automated window layout and session management for tmux, with a simple definitio
 
 ## Introduction
 
-All it takes is one example to know what tmuxomatic is and how it works.
-
-From the file `session_example` (included in project):
+All it takes is one example to know what tmuxomatic is and how it works.  This is one window from the file `session_example`:
 
 	window a_complex_layout_of_25_panes
 	AAAAAAAAAAAAVVVzz
@@ -36,7 +36,7 @@ From the file `session_example` (included in project):
 	0 run ls -la
 	Y run echo "boom"
 
-Run the above session with `tmuxomatic session_example`.  The resulting tmux screnshot:
+Run the above with `tmuxomatic session_example`.  The resulting tmux screnshot:
 
 ![](https://github.com/oxidane/tmuxomatic/blob/master/examples/example.png)
 
@@ -67,8 +67,6 @@ Many session examples are included.  The most practical is `session_practical`. 
 ## Notes
 
 Although you don't have to know [how to use tmux](http://net.tutsplus.com/tutorials/tools-and-tips/intro-to-tmux/) to use tmuxomatic, it is essential for [customizing the tmux status bar](http://me.veekun.com/blog/2012/03/21/tmux-is-sweet-as-heck/), or [changing the default key bindings](https://wiki.archlinux.org/index.php/tmux#Key_bindings).  These features are extraneous to tmuxomatic and are typically added to your personalized `.tmux.conf` file.
-
-Latest version may be found here: [https://github.com/oxidane/tmuxomatic](https://github.com/oxidane/tmuxomatic).
 
 
 
