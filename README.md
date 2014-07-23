@@ -4,8 +4,7 @@
 
 Automated window layout and session management for tmux, with a simple definition file that is powerful and flexible.
 
-Quickstart: `pip install tmuxomatic`
-
+* Install: `pip install tmuxomatic`
 * Release: [https://pypi.python.org/pypi/tmuxomatic](https://pypi.python.org/pypi/tmuxomatic)
 [![Version](https://pypip.in/v/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic)
 [![Downloads](https://pypip.in/d/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic)
@@ -16,11 +15,11 @@ Quickstart: `pip install tmuxomatic`
 
 ## Introduction
 
-Not long after I installed tmux, I became frustrated with the needless complexity and inflexibility of existing session managers.  From the ridicuous amounts of documentation and interface options, to the expectation that panes should be defined by a complicated nesting of splits and sizing.  I wanted something simple, flexible, and so easy that anybody could use it to tremendous advantage after seeing just one example.  Something that empowers me and gets out of my way.
+Existing session managers for tmux are needlessly complex and inflexible.  From the ridiculous amount of documentation and interface options, to the expectation that panes should be defined by a complicated nesting of splits and sizing.  I wanted a session manager that's flexible and powerful, yet so easy that anybody could use it after seeing just one example.  Something that empowers and gets out of the way.
 
-Enter tmuxomatic.  It uses the **windowgram**, a totally new approach to tmux sessions.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character identifies the shape and position of one pane (up to 62 panes per window).  It should take only one example to illustrate the tremendous simplicity and flexibility the windowgram has to offer:
+Enter tmuxomatic.  It uses the **windowgram**, a new approach to tmux sessions.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character identifies the shape and position of a pane (up to 62 panes per window).  It should take only one example to illustrate the simplicity and flexibility the windowgram has to offer:
 
-	window my_example       # <-- A new window begins like this, spaces in names are acceptable
+	window an_example       # <-- A new window begins like this, spaces in names are acceptable
 
 	HHHOOOOOVVVVXXXXAAAA    # <-- This is a windowgram, it defines shapes and positions of panes
 	HHHOOOOOTTTTXXXXAAAA    # <-- You make your own, any size and arrangement, 62 panes maximum
@@ -34,19 +33,17 @@ Enter tmuxomatic.  It uses the **windowgram**, a totally new approach to tmux se
 	  foc                   # <-- 3 three letter commands to remember: Focus, Directory, Run
 	  dir ~                 # <-- An unlinked command becomes the default for all panes
 	a run echo "pane a"     # <-- A linked command to run on pane a
-	a run pwd
 	q run echo "pane q"
 	q foc
-	A dir /tmp
-	A run pwd
+	A run echo "pane A"
 
-The above comes from the file `session_example`.  Run the session with `tmuxomatic session_example`.  Here you have the result:
+The above comes from the file `session_example`, included with tmuxomatic.  Run this session with `tmuxomatic session_example`, and here's the result:
 
 ![](https://github.com/oxidane/tmuxomatic/blob/master/img/example.png)
 
-The advantages of the windowgram should be obvious now.  With tmuxomatic, you'll never have to manually split, position, or size a pane again.  If you change your window dimensions, tmuxomatic scales it to fit, just as you would expect.  Because pane definition (commands and attributes) is similarly easy, you'll rarely need to look at documentation.
+With tmuxomatic, you'll never have to manually split, position, or size a pane again.  If you change your window dimensions, tmuxomatic scales it to fit, just as you might expect.  Setting pane commands and attributes is similarly easy, you may not even need documentation.
 
-A windowgram scale feature is built into the tmuxomatic command line.  With it, you may scale a windowgram up or down as needed to fine-tune your session layouts.  This is really helpful if you want very small panes.  See `--help` for details on the `--scale` feature.
+A windowgram scale feature is built into the tmuxomatic command line.  With it, you may scale a windowgram up or down as needed to fine-tune your session layouts.  This is really helpful if you want very small panes on your windows.  See `--help` for details on the `--scale` feature.
 
 **Support for YAML session files coming soon.**
 
