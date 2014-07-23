@@ -1,27 +1,20 @@
-# tmuxomatic session file ... Unsupported layouts
-####################################################################################################
+#-------------------------------------------------------------------------------------------------
+#
+# Examples of unsupported layouts.  All of these have to do with inherent limitations in the
+# split-driven layout mechanics of tmux.  As long as you keep the clean split rule in mind, you
+# will be able to design around these limitations with ease.  For more information, search the
+# source code for this filename: "session_unsupported".
+#
+#-------------------------------------------------------------------------------------------------
 
+window tmux_incompatibility      # The following layout is not possible in tmux
+122                              # This is the tmux edge case that is mentioned in the source
+154                              # The problem with this layout is that there are no clean splits
+334                              # If tmux supports new layout mechanics, this could be fixed
 
+#-------------------------------------------------------------------------------------------------
 
-window tmux				# The following layout is not possible in tmux
-11222					# This is the tmux edge case that is mentioned in the source
-11222					# The problem with this layout is that there are no clean splits
-11544					# It's easy to adapt tmuxomatic to support layouts like this, if tmux does
-33344
-33344
-
-
-
-window tmux_2			# This is basically the same as the above window
-111111111xxx
-yyyzzzzzzxxx
-yyy222222222
-
-
-
-window overlap			# Overlapping panes are not supported by tmuxomatic or tmux
-12						# Pane 2 overlaps pane 1
-11
-
-
+window overlap_not_supported     # Overlapping panes are not supported by tmuxomatic or tmux
+12                               # Pane 2 overlaps pane 1
+11                               # This is a similar limitation in tmux
 

@@ -1,34 +1,43 @@
-# tmuxomatic session file ... This is the example used in the readme file
-####################################################################################################
+#-------------------------------------------------------------------------------------------------
+#
+# A simple example tmuxomatic session with two windows defined in tmuxomatic shorthand
+#
+#-------------------------------------------------------------------------------------------------
 
+window an_example       # <-- A new window begins like this, spaces in names are acceptable
 
+HHHOOOOOVVVVXXXXAAAA    # <-- This is a windowgram, it defines shapes and positions of panes
+HHHOOOOOTTTTXXXXAAAA    # <-- You make your own, any size and arrangement, 62 panes maximum
+HHHqqqqqqqqkkkkkAAAA
+jjjqqqqqqqqkkkkkAAAA
+jjjqqqqqqqqkkkkk1234
+jjjqqqqqqqqkkkkk5678
+0000llllllllllaaaaaa
+tmuxllllllllllaaaaaa
 
-window a_simple_layout_of_3_panes
-112
-333
-333
+  foc                   # <-- 3 three letter commands to remember: Focus, Directory, Run
+  dir ~                 # <-- An unlinked command becomes the default for all panes
+a run echo "pane a"     # <-- A linked command to run on pane a
+a run pwd
+q run echo "pane q"
+q foc
+A dir /tmp
+A run pwd
+
+#-------------------------------------------------------------------------------------------------
+
+window another_example  # <-- Try scaling this with "tmuxomatic session_example --scale 2 5x 4x"
+
+111XYZ
+000000
+000000
 
   dir ~
-1 run tail --follow=name /var/log/messages
-3 foc
-3 dir /tmp
-
-
-
-window a_complex_layout_of_25_panes
-AAAAAAAAAAAAVVVzz
-11200000000XXOozz
-34400000000XXIiyy
-55500000000YYYYyy
-abc00000000YYYYxx
-ddeeffqqqqqqqqZxx
-
-  foc
-  dir ~
+X run echo "X"
+Y run echo "Y"
+Z run echo "Z"
 0 foc
-0 dir /tmp
-0 run ls -la
-Y run echo "boom"
+1 run htop
 
-
+#-------------------------------------------------------------------------------------------------
 

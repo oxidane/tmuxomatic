@@ -1,36 +1,103 @@
-# tmuxomatic session file ... This is a practical example
-####################################################################################################
+#-------------------------------------------------------------------------------------------------
+#
+# This is a practical example of how you might use tmuxomatic to lay out tmux windows for system
+# monitoring.  This session will cover three example windowgrams.  All windowgrams are unique,
+# you can make your windowgrams exactly as you want them to appear.  Try the built in scale tool
+# if you need to create large windowgrams to support very small panes.
+#
+#-------------------------------------------------------------------------------------------------
+#
+# For the first window in this session, you might have an overview of your system: its hostname
+# and network addresses, a process list, some log tails, service summary for whatever you're
+# running, etc.
+#
+#-------------------------------------------------------------------------------------------------
 
+window system monitor
 
-
-window admin
-22222HHH
-22222111
-33333111
-33333111
-44445555
-44445555
-44445555
-44445555
-44445555
-44445555
+HHHmmmmm
+TTTmmmmm
+TTTsssss
+TTTsssss
+11112222
+11112222
+11112222
+33334444
+33334444
+33334444
 
 foc
 dir ~
 H run clear ; figlet -c $HOSTNAME -w "\`stty size | cut -f2 -d' '\`" -f standard ; echo "" ; figlet -c "\`hostname --all-ip-addresses | sed 's/ /   /g' | sed 's/ *$//g'\`" -w "\`stty size | cut -f2 -d' '\`" -f term ; sleep 1000d
-1 run htop
-2 run tail --follow=name /var/log/messages
-3 run tail --follow=name /var/log/secure
-5 foc
+T run htop
+m run tail --follow=name /var/log/messages
+s run tail --follow=name /var/log/secure
+1 run echo "you're focused on this pane"
+1 foc
+2 run echo "another summary here"
+3 run echo "another log file here"
+4 run echo "a service overview here"
 
+#-------------------------------------------------------------------------------------------------
+#
+# Say you're using an irc client, and since you're on there a lot, maybe you want stock tickers
+# running on the same screen, but you want your IRC session to take up most of the space.
+#
+#-------------------------------------------------------------------------------------------------
 
+window irc
 
-window various
-1
-2
-2
+1122abc
+iiiiiii
+iiiiiii
+iiiiiii
+iiiiiii
+iiiiiii
+ttttttt
 
 dir ~
+t run echo "scroller or ticker or something"
+1 run echo "chart 1"
+2 run echo "chart 2"
+a run echo "graph 1"
+b run echo "graph 2"
+c run echo "graph 3"
+dir ~/irc
+i foc
+i run echo "you'd run irc here"
 
+#-------------------------------------------------------------------------------------------------
+#
+# Perhaps you have a few cryptocurrency wallets running on this server, and you occasionally need
+# to upgrade or change them.  Say you want the actual currency panes to take up very little space
+# compared to a shell where you do related work.
+#
+#-------------------------------------------------------------------------------------------------
 
+window wallets
+abcX
+abcX
+ABCX
+1111
+1111
+1111
+1111
+1111
+1111
+
+dir /cc/bitcoin
+a run figlet bitcoin
+A run keepup
+dir /cc/litecoin
+b run figlet litecoin
+B run keepup
+dir /cc/namecoin
+c run figlet namecoin
+C run keepup
+dir /cc
+X run echo "chart"
+1 run echo "work here"
+1 run ls -la
+
+#-------------------------------------------------------------------------------------------------
 

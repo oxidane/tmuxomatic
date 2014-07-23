@@ -42,25 +42,24 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##     About     |
 ##---------------+
 ##
-## *** For a detailed description of how to use tmuxomatic, see the file "session_introduction".
-## *** Example session files may be found on the official tmuxomatic github page.
+## QUICKSTART: See the session file "session_example", and run it with "tmuxomatic session_example".
 ##
 ## The tmux interface for creating window splits is technically simple, but to use those splits to arrange layouts is a
 ## tedious and inefficient process.  Other tmux-related programs offer no solutions when it comes to splitting windows,
 ## so they have the same usability problem of tmux, compounded by their needy configuration files.
 ##
 ## Ideally I wanted a more intuitive interface, completely reinvented to be as simple and as user-friendly as possible.
-## You depict the window pane layout in text, using unique characters as pane identifiers.  Then link each pane to an
-## optional directory, run commands, and focus state.  This ideal program would then automatically translate this simple
-## layout to the necessary tmux commands for splitting, scaling, pathing, and sendkeys.
+## You depict the window pane layout in a "windowgram", where each unique character identifies a pane.  Then each pane
+## is linked by its character to an optional directory, run commands, and focus state.  The program would then translate
+## this information to the necessary tmux commands for splitting, scaling, pathing, and sendkeys.
 ##
 ## So that's exactly what tmuxomatic does.
 ##
 ## This will be most useful to tmux users who make use of window panes.  Even if you've already settled on an existing
 ## tmux configuration, tmuxomatic may be worth learning for the flexibility and ease of future modifications.
 ##
-## By default tmuxomatic attaches to an existing session before creating one.  When the user disconnects, it leaves the
-## session active.  For a full list of command line options, see "tmuxomatic --help".
+## By default tmuxomatic attaches to an existing session before creating one.  Also by default, when the user
+## disconnects, it leaves the session active.  For a full list of command line options, see "tmuxomatic --help".
 ##
 ## New users of tmux: You'll still need to learn tmux bindings, and probably configure it for your personal preferences,
 ## and any tmux tutorial will get you started with these.  It's recommended to obtain a tailored "tmux.conf" file for a
@@ -71,7 +70,13 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##-------------------+
 ##
 DISTRIBUTION = "https://github.com/oxidane/tmuxomatic"
-VERSION = "1.0.13" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
+VERSION = "1.0.14" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
+##
+##	1.0.14	2014-07-22	The previously unnamed central concept in tmuxomatic is now called a windowgram
+##						For readability, blank lines between window name and windowgram are allowed
+##						Added undocumented command synonyms to avoid user documentation lookups
+##						Rewrote examples since they were mostly just early development tests
+##						Rewrote the introduction in the readme file and added links to tmuxomatic
 ##
 ##	1.0.13	2014-07-21	Added example screenshot, shortened the readme example to one window
 ##						Fixed issues #1, #2: Supports non-numeric tmux versions (e.g., "1.9a")
@@ -131,11 +136,9 @@ VERSION = "1.0.13" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##
 ## Minor:
 ##
-##		Add aliases: [ "foc", "focus" ], [ "dir", "path", "cd", "directory" ], [ "run", "exec", "exe", "execute" ]
-##
 ##		Video demonstration of tmuxomatic, including the "--scale" feature and how it's used for rapid development
-##		and modification of layouts ("12\n34" -> 4x -> add small windows).  Keep it short, fast paced, demonstrating at
-##		least one simple and one complex example.
+##		and modification of windowgrams ("12\n34" -> 4x -> add small windows).  Keep it short, fast paced,
+##		demonstrating at least one small and one large example.
 ##
 ##		Manual page.  Include command line examples.
 ##
@@ -143,18 +146,29 @@ VERSION = "1.0.13" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##		where you want to login into a system to spot check it, but don't want your monitoring tools to consume
 ##		resources when you're not connected.
 ##
-##		Add YAML<->SESSION conversion, support on read/write, detect format on session file load.  Window diagrams are
+##		Delete most of the session examples, keeping only two or three of the most useful.  Possibly embed these in the
+##		program, where the user may run, extract, or view these anywhere at any time.
+##
+##		Add YAML<->SESSION conversion, support on read/write, detect format on session file load.  Windowgrams are
 ##		easily supported by YAML as block literals.
+##
+##		Would be great to add a file format template to a text editor, that adds color to the tmuxomatic session file.
+##		If it could give an even unique color (e.g., evenly spaced over color wheel) to each pane in the windowgram,
+##		then I think it would make the custom format much more appealing.  Detection abilities may be limited in some
+##		IDEs though, so an extension may be necessary.  Anyway, a dimension of color will allow the windowgram to be
+##		more rapidly assessed at-a-glance.
+##
+##		Support other multiplexers like screen, if they have similar capabilities (vertical splits, shell driven, etc).
 ##
 ## Significant:
 ##
 ##		Reflection capabilities that allows you to update a session file based on the running session, or the other way
 ##		around and update a running session based on an updated session file.  In either way, some things won't be easy
-##		to do.  Changing the name of a window is easy, but changing pane layouts may not be (without unique identifiers
+##		to do.  Changing the name of a window is easy, but changing windowgram may not be (without unique identifiers
 ##		in tmux).  An update-while-running thread could be done to deliver this feature, basically it would run in the
 ##		background, checking the live configuration for changes, and checking the session file for changes, and then
 ##		updating one in response to changes in the other.  Error handling could be shown in a created error window,
-##		which would be destroyed on next session load if there was no error.
+##		which would be destroyed on next session load if there was no error.  Preliminarily named session binding.
 ##
 ##		Possible console-driven option that allows individual window adjustments on a specified session.  It would also
 ##		automatically save the session file on every change, and with it a compressed and encoded undo list in case the
@@ -191,7 +205,7 @@ VERSION = "1.0.13" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##
 ##		3) tmux add-pane x y w h		Explicit pane creation (exact placement and dimensions).  This automatically
 ##										pushes neighbors, subdivides, or re-appropriates, the affected unassigned panes.
-##										Upgrades: Fast and precise arbitrary layout algorithm, resolves the edge case.
+##										Upgrades: Fast, precise arbitrary windowgram algorithm; resolves the edge case.
 ##
 ## If tmux could preserve pane percentages, when xterm is resized, the panes would be proportionally adjusted.  This
 ## feature would save users from having to restart tmuxomatic when the xterm size at session creation differed from what
@@ -200,6 +214,8 @@ VERSION = "1.0.13" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##---------------+------------------------------------------------------------------------------------------------------
 ##     Terms     |
 ##---------------+
+##
+##		windowgram	A box of rectangles comprised of unique characters, each one represents a pane in a window.
 ##
 ##		xterm		Represents the user's terminal window, this may be xterm, putty, securecrt, or similar.
 ##
@@ -216,13 +232,13 @@ VERSION = "1.0.13" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ## This program addresses only the session layout (windows, panes).  For tmux settings (status bar, key bindings)
 ## consult an online tutorial for ".tmux.conf".
 ##
-## For best results, design layouts that have a similar width-to-height ratio as your xterm.
+## For best results, design windowgrams that have a similar width-to-height ratio as your xterm.
 ##
 ## The way tmuxomatic (and tmux) works is by recursively subdividing the window using vertical and horizontal splits.
-## If you specify a layout where such a split is not possible, then it cannot be supported by tmux, or tmuxomatic.  For
-## more information about this limitation, including an example, see file "session_unsupported".
+## If you specify a windowgram where such a split is not possible, then it cannot be supported by tmux, or tmuxomatic.
+## For more information about this limitation, including an example, see file "session_unsupported".
 ##
-## Supports any pane arrangement that is also supported by tmux.  Some layouts, like those in "session_unsupported",
+## Supports any pane arrangement that is also supported by tmux.  Some windowgrams, like those in "session_unsupported",
 ## won't work because of tmux (see "add-pane").
 ##
 ## The pane numbers in the session file will not always correlate with tmux (see "renumber-pane").
@@ -237,7 +253,7 @@ VERSION = "1.0.13" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##     Other Uses     |
 ##--------------------+
 ##
-## The layout parser and splitting code could be used for some other purposes:
+## The windowgram parser and splitting code could be used for some other purposes:
 ##
 ##		* HTML table generation
 ##
@@ -268,10 +284,13 @@ EXE				= "tmux"				# Short variable name for short line lengths, also changes to
 # Fixed Settings (requires source update)
 
 PANE_CHARACTERS	= "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" # "[0-9a-zA-Z]"
-
 MINIMUM_VERSION	= "1.8"					# Minimum supported tmux version (1.8 is required for absolute sizing)
 VERBOSE_MAX		= 4						# 0 = quiet, 1 = summary, 2 = inputs, 3 = fitting, 4 = commands
 MAXIMUM_PANES	= len(PANE_CHARACTERS)	# 62 maximum panes (not windows)
+
+# Expandable Settings
+
+ALIASES			= { 'foc': "focus keys cursor", 'dir': "path cd directory", 'run': "exec exe execute" }
 
 
 
@@ -393,6 +412,16 @@ def which(program):
 				return exe_file
 	return None
 
+def command_matches(command, primary):
+	"""
+	Matches the command (from file) with the primary (for branch)
+	Returns True if command is primary or a supported alias
+	"""
+
+	if command == primary: return True
+	if primary in ALIASES and command in ALIASES[primary].split(" "): return True
+	return False
+
 
 
 ##----------------------------------------------------------------------------------------------------------------------
@@ -411,7 +440,7 @@ def tmux_split( dim, at_linkid, linkid, list_split, list_links, how, of_this ):
 	"""
 
 	def translate( pane, window, screen ):
-		# Returns scaled pane according to window configuration and screen dimensions
+		# Returns scaled pane according to windowgram and screen dimensions
 		return int( float(pane) / float(window) * float(screen) )
 
 	# Initialize
@@ -686,7 +715,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 			line = f.readline() # Next line (EOF == "")
 			errpkg['line'] += 1 # Line number tracking for error messages
 		if line == "": # EOF
-			if window_state == 2: pass # Process window configuration if it abruptly goes EOF
+			if window_state == 2: pass # Force process the windowgram if file abruptly goes EOF
 			elif window_state == 4: window_state = 5 # Process window creation step before EOF
 			else: break # Real EOF
 		if '#' in line: line = line[:line.index('#')] # Strip off comments
@@ -714,12 +743,15 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 					if ARGS.scale: scale___existing_window_table.append("  " + str(window_number) + ": " + window_name)
 					if ARGS.verbose >= 2: print("")
 					window_state = 2
+					windowgram_load = False
 					continue # Next line
 
 		#
-		# 2) Window definition block parser
+		# 2) Windowgram parser
 		#
 		if window_state == 2:
+			if not windowgram_load and not line: continue # 1.0.14: Allow blank lines before windowgram for readability
+			windowgram_load = True
 			panes_y += 1
 			panes_x = 0
 			invalid = False
@@ -728,7 +760,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 					# Invalid characters: Assume it's a pane definition line
 					invalid = True
 					break
-			if len(line) == 3 and line == "foc":
+			if len(line) == 3 and command_matches(line, "foc"):
 				# Known label: Assume it's a pane definition line
 				invalid = True
 			if invalid or len(line) == 0 or (panes_h > 1 and len(line) != panes_w):
@@ -736,7 +768,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 				window_state = 3
 				# Fall through
 			else:
-				if ARGS.verbose >= 2: print("(2) Window configuration: " + line)
+				if ARGS.verbose >= 2: print("(2) Windowgram: " + line)
 				panes_h += 1
 				if panes_w == 0:
 					panes_w = len(line)
@@ -744,7 +776,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 					panes_x += 1
 					if ch not in PANE_CHARACTERS:
 						# Outside of valid pane identifier range
-						synerr(errpkg, "Window configuration must contain valid identifiers: [0-9a-zA-Z]")
+						synerr(errpkg, "Windowgram must contain valid identifiers: [0-9a-zA-Z]")
 					# Builds "bounding box" around pane for easy error detection through overlap algorithm
 					if not ch in layout:
 						# New pane
@@ -775,7 +807,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 			#
 			panes_x = 1
 			panes_y = 1
-			list_panes = [] # List of user defined panes (derived from window configuration)
+			list_panes = [] # List of user defined panes (derived from windowgram)
 			while len(layout):
 				pane = ""
 				for it in layout:
@@ -814,8 +846,8 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 					q, r = math.modf( float(element - 1) * multiplier )
 					if q >= .5: r += 1
 					return int(r) + 1
-				def scale_window_configuration( list_panes, sx, sy ):
-					# Scales the window configuration
+				def scale_windowgram( list_panes, sx, sy ):
+					# Scales the windowgram
 					# Because text is low resolution, fractional scaling may produce unsatisfactory results
 					ax, ay = float(sx), float(sy)
 					lost = 0
@@ -828,21 +860,21 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 						if ay: pane['h'] -= pane['y']
 						if not pane['x'] or not pane['y'] or not pane['w'] or not pane['h']: lost += 1
 					return lost
-				def render_window_configuration( list_panes ):
-					# Renders (prints) the window configuration
-					window_configuration = []
+				def render_windowgram( list_panes ):
+					# Prints the windowgram
+					windowgram = []
 					for pane in list_panes:
 						for y in range( pane['y'], pane['y'] + pane['h'] ):
 							for x in range( pane['x'], pane['x'] + pane['w'] ):
 								ix = int(x) - 1
 								iy = int(y) - 1
-								while len(window_configuration) <= iy: window_configuration.append([])
-								while len(window_configuration[iy]) <= ix: window_configuration[iy].append([])
-								window_configuration[iy][ix] = pane['n']
-					window_configuration_str = ""
-					for line in window_configuration:
-						window_configuration_str += "".join(line) + "\n"
-					return window_configuration_str
+								while len(windowgram) <= iy: windowgram.append([])
+								while len(windowgram[iy]) <= ix: windowgram[iy].append([])
+								windowgram[iy][ix] = pane['n']
+					windowgram_str = ""
+					for line in windowgram:
+						windowgram_str += "".join(line) + "\n"
+					return windowgram_str
 				def get_multiplier( param, other ):
 					# Extracts multiplier from command line argument
 					# Returns (float_multiplier, bool_duplicate)
@@ -862,20 +894,22 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 					else:
 						if not ax and not dx: print("XSCALE unrecognized: \"" + ARGS.scale[1] + "\"")
 						if not ay and not dy: print("YSCALE unrecognized: \"" + ARGS.scale[2] + "\"")
-						print("Use either a percentage (200%) or a multiplier (2x), fractions are also valid (2.5x)")
+						print("Use percentage (200%) or a multiplier (2x).  Fractions are also valid (2.5x)")
 					exit(0)
 				# Perform the scale
 				list_panes_scaled = copy.deepcopy( list_panes )
-				lost = scale_window_configuration( list_panes_scaled, ax, ay )
-				wincfg_scaled = render_window_configuration( list_panes_scaled ) # Used either way
-				# Set the window configuration header
+				lost = scale_windowgram( list_panes_scaled, ax, ay )
+				wincfg_scaled = render_windowgram( list_panes_scaled ) # Used either way
+				# Set the window header
 				scaled = "x=" + str(ax) + ", y=" + str(ay)
 				header = "window " + window_name + " # User scaled: " + scaled
+				# Windowgram title
+				windowgram_title = "(" + str(window_number) + ") \"" + window_name + "\""
 				# Either write to file or write to stdout
 				if ARGS.scale_replace:
-					# FILE ... Load file and write back modified with the scaled window configuration
-					print("Scaled window configuration, \"" + window_name + \
-						"\", and replaced it in session file \"" + ARGS.filename + "\"...")
+					# FILE ... Load file and write back modified with the scaled windowgram
+					print("Scaled windowgram " + windowgram_title + "...")
+					print("Replaced it in session file \"" + ARGS.filename + "\"...")
 					window_stops_at_line_number = errpkg['line']
 					f.seek(0) # About to cache the margins
 					data_top = data_bot = ""
@@ -890,18 +924,19 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 					f.close() # About to overwrite this file
 					f = open(ARGS.filename, 'w')
 					f.write( data_top )
-					f.write( header )
-					f.write( "\n" )
+					f.write( header ) # Window name + blank line + windowgram
+					f.write( "\n\n" )
 					f.write( wincfg_scaled )
 					f.write( data_bot )
 				else:
 					# STDOUT ... Print scaled window for the user to review
 					print("")
-					print("# Your window configuration has been scaled: " + scaled)
+					print("# Your windowgram " + windowgram_title + " has been scaled: " + scaled)
 					print("# If satisfactory, run again with --scale-replace and the session file will be updated")
 					if lost > 0: print("# WARNING: This scale has resulted in " + str(lost) + " lost panes !!!")
 					print("")
-					print( header )
+					print( header ) # Window name + blank line + windowgram
+					print("")
 					print( wincfg_scaled )
 				# Always exit after scaling
 				exit(0)
@@ -926,11 +961,11 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 				if ARGS.verbose >= 2 and not first_pdl: print("")
 				if ARGS.verbose >= 2: print("(2) Pane definition: " + line)
 				first_pdl = True
-				if line == "foc":
+				if command_matches(line, "foc"):
 					# Window focus
 					focus_window = window_number
 					continue # Next line
-				if line[:3] == "dir":
+				if command_matches(line[:3], "dir"):
 					# Default directory
 					if ' ' in line or '\t' in line:
 						# Set or change the default directory.  Applies to successive panes until changed again.
@@ -957,7 +992,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 						into = pane
 						break
 				if not into:
-					synerr(errpkg, "Pane definition id was not specified in the window configuration")
+					synerr(errpkg, "Pane definition id was not specified in the windowgram")
 				#
 				# Target pane specified ... Set default directory if not already set for this pane
 				#
@@ -966,14 +1001,14 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 				#
 				# Command handlers
 				#
-				if panedef_cmd == 'run':
+				if command_matches(panedef_cmd, "run"):
 					if not panedef_args: synerr(errpkg, "Pane definition command 'run' must have arguments")
 					if not 'run' in into: into['run'] = [ panedef_args ]
 					else: into['run'].append( panedef_args )
-				elif panedef_cmd == 'dir':
+				elif command_matches(panedef_cmd, "dir"):
 					if not panedef_args: synerr(errpkg, "Pane definition command 'dir' must have arguments")
 					into['dir'] = panedef_args
-				elif panedef_cmd == 'foc':
+				elif command_matches(panedef_cmd, "foc"):
 					if panedef_args: synerr(errpkg, "Pane definition command 'foc' must have no arguments")
 					if 'foc' in into: synerr(errpkg, "Pane definition command 'foc' already specified for this pane")
 					into['foc'] = True
@@ -1045,7 +1080,9 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 						ent_panes = i
 						break
 				if not ent_panes:
-					synerr(errpkg, "Unable to fully cross-link, probably because of an unsupported layout")
+					synerr(errpkg,
+						"Unable to fully cross-link, probably because of an unsupported window layout.  " + \
+						"Please see the included example file session_unsupported for more information...")
 				list_panes_dir = ent_panes['dir']		# "/tmp"		Directory of pane
 				if list_panes_dir: adddir = " -c " + list_panes_dir
 				else: adddir = ""
@@ -1315,13 +1352,13 @@ if __name__ == "__main__":
 		"feature requires tmux 1.8 or later." )
 	PARSER.add_argument( "-s", "--scale", nargs=3, metavar=('SEQ', 'XSCALE', 'YSCALE'), help=\
 		"Loads window SEQ, scales it by XSCALE and YSCALE, then " + \
-		"prints the resulting window configuration, then exits.  " + \
+		"prints the resulting windowgram, then exits.  " + \
 		"SCALE is a multiplier (1.5x), or a percentage (150%%).  " + \
 		"to skip scaling an axis, specify either \"-\" or \"none\".  " + \
 		"To duplicate the scaling from other axis, specify \".\".  " + \
 		"Example: " + PROGRAM_THIS + " FILENAME -s 1 3x 2x" )
 	PARSER.add_argument( "-w", "--scale-replace", action="store_true", help=\
-		"Replace the window configuration in the session file.  " + \
+		"Replace the windowgram in the session file.  " + \
 		"This is only valid when used with window scale (-s).  " + \
 		"Use with caution since this overwrites the specified " + \
 		"session file." )
