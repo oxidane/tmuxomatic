@@ -18,11 +18,9 @@ tmuxllllllllllaaaaaa
   foc                   # <-- 3 three letter commands to remember: Focus, Directory, Run
   dir ~                 # <-- An unlinked command becomes the default for all panes
 a run echo "pane a"     # <-- A linked command to run on pane a
-a run pwd
 q run echo "pane q"
 q foc
-A dir /tmp
-A run pwd
+A run echo "pane A"
 
 #-------------------------------------------------------------------------------------------------
 
