@@ -4,10 +4,10 @@
 #
 #-------------------------------------------------------------------------------------------------
 
-window an_example       # <-- A new window begins like this, spaces in names are acceptable
+window an_example         # <-- A new window begins like this, spaces in names are acceptable
 
-HHHOOOOOVVVVXXXXAAAA    # <-- This is a windowgram, it defines shapes and positions of panes
-HHHOOOOOTTTTXXXXAAAA    # <-- You make your own, any size and arrangement, 62 panes maximum
+HHHOOOOOVVVVXXXXAAAA      # <-- This is a windowgram, it defines shapes and positions of panes
+HHHOOOOOTTTTXXXXAAAA      # <-- You make your own, any size and arrangement, 62 panes maximum
 HHHqqqqqqqqkkkkkAAAA
 jjjqqqqqqqqkkkkkAAAA
 jjjqqqqqqqqkkkkk1234
@@ -15,16 +15,16 @@ jjjqqqqqqqqkkkkk5678
 0000llllllllllaaaaaa
 tmuxllllllllllaaaaaa
 
-  foc                   # <-- 3 three letter commands to remember: Focus, Directory, Run
-  dir ~                 # <-- An unlinked command becomes the default for all panes
-a run echo "pane a"     # <-- A linked command to run on pane a
-q run echo "pane q"
+  foc                     # <-- Only 3 three-letter commands to remember: Focus, Directory, Run
+  dir ~                   # <-- An unlinked command becomes the default for all following panes
+a run figlet "a"          # <-- Here is a linked command to print a large "a" on pane a
+q run figlet "q"
 q foc
-A run echo "pane A"
+A run figlet "A"
 
 #-------------------------------------------------------------------------------------------------
 
-window another_example  # <-- Try scaling this with "tmuxomatic session_example --scale 2 5x 4x"
+window another_example    # <-- Try scaling this with "tmuxomatic session_example --scale 2 5x 4x"
 
 111XYZ
 000000
@@ -35,6 +35,8 @@ X run echo "X"
 Y run echo "Y"
 Z run echo "Z"
 0 foc
+0 dir /tmp
+0 run ls -la
 1 run htop
 
 #-------------------------------------------------------------------------------------------------

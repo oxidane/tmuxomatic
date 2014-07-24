@@ -70,7 +70,12 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##-------------------+
 ##
 DISTRIBUTION = "https://github.com/oxidane/tmuxomatic"
-VERSION = "1.0.14" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
+VERSION = "1.0.15" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
+YAML = False # Development flag
+##
+##	1.0.15	2014-07-24	Began working on YAML support, this will not be enabled until it's ready
+##						Fixed issue #4: Support for Solaris and other hosts without "stty size"
+##						Various cleanup in the documentation
 ##
 ##	1.0.14	2014-07-22	The previously unnamed central concept in tmuxomatic is now called a windowgram
 ##						For readability, blank lines between window name and windowgram are allowed
@@ -146,13 +151,12 @@ VERSION = "1.0.14" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##		where you want to login into a system to spot check it, but don't want your monitoring tools to consume
 ##		resources when you're not connected.
 ##
-##		Delete most of the session examples, keeping only two or three of the most useful.  Possibly embed these in the
-##		program, where the user may run, extract, or view these anywhere at any time.
+##		Possibly embed the examples in the program, allowing the user to run, extract, or view the session files.
 ##
 ##		Add YAML<->SESSION conversion, support on read/write, detect format on session file load.  Windowgrams are
 ##		easily supported by YAML as block literals.
 ##
-##		Would be great to add a file format template to a text editor, that adds color to the tmuxomatic session file.
+##		Would be great to add a file format template that adds color to the tmuxomatic session file in text editors.
 ##		If it could give an even unique color (e.g., evenly spaced over color wheel) to each pane in the windowgram,
 ##		then I think it would make the custom format much more appealing.  Detection abilities may be limited in some
 ##		IDEs though, so an extension may be necessary.  Anyway, a dimension of color will allow the windowgram to be
@@ -160,7 +164,7 @@ VERSION = "1.0.14" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##
 ##		Support other multiplexers like screen, if they have similar capabilities (vertical splits, shell driven, etc).
 ##
-## Significant:
+## Major:
 ##
 ##		Reflection capabilities that allows you to update a session file based on the running session, or the other way
 ##		around and update a running session based on an updated session file.  In either way, some things won't be easy
@@ -177,7 +181,7 @@ VERSION = "1.0.14" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##		is added, it has to be kept simple, and then a user could describe how they want a window laid out in a very
 ##		responsive manner that is guaranteed to be read by the loader properly.
 ##
-## Possible (depends on tmux):
+## Possible:
 ##
 ##		Multiple commands in a single call to tmux for faster execution (requires tmux "stdin").
 ##
@@ -189,6 +193,9 @@ VERSION = "1.0.14" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##
 ##		If tmux ever supports some kind of aggregate window pane arrangements then the tmux edge case represented by the
 ##		example "session_unsupported" could be fixed (requires tmux "add-pane").
+##
+##		Maybe support pane groups in the windowgram linker.  For example "12 run ls" instead of "1 run ls\n2 run ls".
+##		This might introduce complexity that could be confusing for new users.  Perhaps as an undocumented feature.
 ##
 ##------------------+---------------------------------------------------------------------------------------------------
 ##     Requests     |
@@ -232,7 +239,7 @@ VERSION = "1.0.14" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ## This program addresses only the session layout (windows, panes).  For tmux settings (status bar, key bindings)
 ## consult an online tutorial for ".tmux.conf".
 ##
-## For best results, design windowgrams that have a similar width-to-height ratio as your xterm.
+## For best results, design windowgrams that has a similar width-to-height ratio as your xterm.
 ##
 ## The way tmuxomatic (and tmux) works is by recursively subdividing the window using vertical and horizontal splits.
 ## If you specify a windowgram where such a split is not possible, then it cannot be supported by tmux, or tmuxomatic.
@@ -290,7 +297,9 @@ MAXIMUM_PANES	= len(PANE_CHARACTERS)	# 62 maximum panes (not windows)
 
 # Expandable Settings
 
-ALIASES			= { 'foc': "focus keys cursor", 'dir': "path cd directory", 'run': "exec exe execute" }
+ALIASES			= { 'foc': "focus keys cursor",
+					'dir': "path cd directory",
+					'run': "exec exe execute" }
 
 
 
@@ -338,6 +347,16 @@ def tmux_run( command, nopipe=False, force=False, real=False ):
 			if stderr: return str(stderr, "ascii")
 			return str(stdout, "ascii")
 
+def tmux_version(): # -> name, version
+	"""
+	Queries tmux for the version
+	"""
+	result = tmux_run( EXE + " -V", False, True, True ) # Nopipe, Force, Real
+	result = [ line.strip() for line in result.split("\n") if line.strip() ]
+	name = result[0].split(" ", 1)[0] # Name that was reported by tmux (should be "tmux")
+	version = result[0].split(" ", 1)[1] # Only the version is needed
+	return name, version
+
 def signal_handler( signal_number, frame ):
 	"""
 	Signal handler.  Displays interruption message and exits.
@@ -347,18 +366,33 @@ def signal_handler( signal_number, frame ):
 	print("User interrupted...")
 	exit(0)
 
-def get_xterm_dimensions_wh():
+def get_xterm_dimensions_wh(): # cols (x), rows (y)
 	"""
 	Returns the dimensions of the user's xterm
-	Soruce: http://stackoverflow.com/a/566752
+	Modified of: http://stackoverflow.com/a/566752
 	"""
+
+	rows = cols = None
 
 	#
 	# Linux
 	#
-	rows, columns = os.popen("stty size", "r").read().split()
-	if rows and int(rows) > 0:
-		return columns, rows # x, y
+	stty_exec = os.popen("stty size", "r").read()
+	if stty_exec:
+		stty_exec = stty_exec.split()
+		if len(stty_exec) >= 2:
+			rows = stty_exec[0]
+			cols = stty_exec[1]
+	if rows and cols:
+		return int(cols), int(rows) # cols, rows
+
+	#
+	# Unix / Solaris
+	#
+	rows = os.popen("tput rows", "r").read() # Issue #4: Use tput instead of stty on some systems
+	cols = os.popen("tput cols", "r").read()
+	if rows and cols:
+		return int(cols), int(rows) # cols, rows
 
 	#
 	# Unix
@@ -383,12 +417,12 @@ def get_xterm_dimensions_wh():
 		env = os.environ
 		cr = (env.get("LINES", 25), env.get("COLUMNS", 80))
 	if cr and len(cr) == 2 and int(cr[0]) > 0 and int(cr[1]) > 0:
-		return int(cr[1]), int(cr[0]) # x, y
+		return int(cr[1]), int(cr[0]) # cols, rows
 
 	#
 	# Unsupported ... Other platforms not needed since tmux doesn't run there
 	#
-	return 0, 0 # x, y
+	return 0, 0 # cols, rows
 
 def which(program):
 	"""
@@ -421,6 +455,18 @@ def command_matches(command, primary):
 	if command == primary: return True
 	if primary in ALIASES and command in ALIASES[primary].split(" "): return True
 	return False
+
+def satisfies_minimum_version(minimum, version):
+	qn = len(minimum.split("."))
+	pn = len(version.split("."))
+	if qn < pn: minimum += ".0" * (pn-qn) # Equalize the element counts
+	if pn < qn: version += ".0" * (qn-pn) # Equalize the element counts
+	ver_intlist = lambda ver_str: [int(re.sub(r'\D', r'', x)) for x in ver_str.split(".")] # Issues: #1, #2
+	for p, q in zip( ver_intlist(version), ver_intlist(minimum) ):
+		if int(p) == int(q): continue # Qualifies so far
+		if int(p) > int(q): break # Qualifies
+		return False
+	return True
 
 
 
@@ -653,6 +699,57 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 
 
 
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Session Files
+##
+##----------------------------------------------------------------------------------------------------------------------
+##
+## YAML plan:
+##
+##		1.0.15 ... Separate session file load/save from session parser
+##		1.0.16 ... Add Shorthand<->YAML conversion, tie into load/save
+##		1.1.0  ... Officially support YAML session files (add to readme)
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+def session_text2list(text_file): # -> list_of_lines
+	# Shorthand -> LineList
+	session_data = []
+	for line in text_file.split("\n"):
+		session_data.append(line)
+	return session_data
+
+def session_load(filename): # -> text_file, user_file_format
+	# File (Shorthand or YAML) -> LineList
+	f = open(ARGS.filename, "rU")
+	text_file = ""
+	while True:
+		line = f.readline()
+		if not line: break
+		line = line.rstrip() # Remove spaces from end of line only
+		text_file += line + "\n"
+	user_file_format = "shorthand"
+	return session_text2list(text_file), user_file_format
+
+def session_save(filename, text_file, user_file_format):
+	# Do nothing if the format is invalid
+	if user_file_format == "shorthand":
+		# Shorthand -> File
+		f = open(ARGS.filename, 'w')
+		f.write( text_file )
+	if user_file_format == "yaml":
+		# Shorthand -> YAML -> File
+		pass
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Loop tmuxomatic
+##
+##----------------------------------------------------------------------------------------------------------------------
+
 def tmuxomatic( program_cli, full_cli, user_wh, session ):
 	"""
 
@@ -693,7 +790,12 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 	window_starts_at_line_number = 0
 
 	#
-	# Parse the file
+	# Load session file
+	#
+	session_data, session_format = session_load( ARGS.filename )
+
+	#
+	# Parse session file
 	#
 	# The file format is conducive to a simple state machine parser:
 	#
@@ -704,7 +806,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 	#	5 = Generate tmux commands
 	#	6 = Loop
 	#
-	f = open(ARGS.filename, "rU")
+	session_iter = 0
 	while True:
 
 		#
@@ -712,9 +814,14 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 		#
 		if preserve: preserve = False
 		else:
-			line = f.readline() # Next line (EOF == "")
+			if session_iter >= len(session_data): # EOF
+				line = None
+			else:
+				line = session_data[session_iter] # Next line
+				session_iter += 1
 			errpkg['line'] += 1 # Line number tracking for error messages
-		if line == "": # EOF
+		if line is None: # EOF
+			line = "" # We may need to continue processing, so this can't be None
 			if window_state == 2: pass # Force process the windowgram if file abruptly goes EOF
 			elif window_state == 4: window_state = 5 # Process window creation step before EOF
 			else: break # Real EOF
@@ -907,27 +1014,17 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 				windowgram_title = "(" + str(window_number) + ") \"" + window_name + "\""
 				# Either write to file or write to stdout
 				if ARGS.scale_replace:
-					# FILE ... Load file and write back modified with the scaled windowgram
+					# FILE ... Save session modified with the scaled windowgram
 					print("Scaled windowgram " + windowgram_title + "...")
-					print("Replaced it in session file \"" + ARGS.filename + "\"...")
 					window_stops_at_line_number = errpkg['line']
-					f.seek(0) # About to cache the margins
 					data_top = data_bot = ""
-					for _ in range( 1, window_starts_at_line_number ):
-						data_top += f.readline()
-					for _ in range( window_starts_at_line_number, window_stops_at_line_number ):
-						f.readline() # Discarded
-					while True:
-						line = f.readline()
-						if line == "": break
-						data_bot += line
-					f.close() # About to overwrite this file
-					f = open(ARGS.filename, 'w')
-					f.write( data_top )
-					f.write( header ) # Window name + blank line + windowgram
-					f.write( "\n\n" )
-					f.write( wincfg_scaled )
-					f.write( data_bot )
+					for idx in range( 0, window_starts_at_line_number-1 ): # Skip window header
+						data_top += session_data[idx] + "\n"
+					for idx in range( window_stops_at_line_number, len(session_data)-1 ):
+						data_bot += session_data[idx] + "\n"
+					session_save( ARGS.filename,
+						data_top + header + "\n\n" + wincfg_scaled + "\n" + data_bot, session_format )
+					print("Replaced it in session file \"" + ARGS.filename + "\"...")
 				else:
 					# STDOUT ... Print scaled window for the user to review
 					print("")
@@ -1238,22 +1335,12 @@ def main():
 
 	# Check tmux version (req = required, rep = reported)
 	tmux_req = MINIMUM_VERSION
-	tmux_rep = tmux_run( EXE + " -V", False, True, True ) # Nopipe, Force, Real
-	tmux_cli = tmux_rep[:4] # Name that was reported by tmux (should be "tmux")
-	tmux_rep = tmux_rep[5:].split("\n", 1)[0] # Only the version is needed
-	tmux_dup = tmux_rep # Retained because tmux_rep may become modified
+	tmux_cli, tmux_rep = tmux_version()
 	if tmux_cli != "tmux":
 		print("The tmux executable cannot be found")
 		exit(0)
-	qn = len(tmux_req.split("."))
-	pn = len(tmux_rep.split("."))
-	if qn < pn: tmux_req += ".0" * (pn-qn) # Equalize the element counts
-	if pn < qn: tmux_rep += ".0" * (qn-pn) # Equalize the element counts
-	ver_intlist = lambda ver_str: [int(re.sub(r"\D", r"", x)) for x in ver_str.split(".")] # Strip non-numerics (#1, #2)
-	for p, q in zip( ver_intlist(tmux_rep), ver_intlist(tmux_req) ):
-		if int(p) == int(q): continue # Qualifies so far
-		if int(p) > int(q): break # Qualifies
-		print("This requires tmux " + tmux_req + " or higher, found tmux " + tmux_dup)
+	if not satisfies_minimum_version( tmux_req, tmux_rep ):
+		print("This requires tmux " + tmux_req + " or higher, found tmux " + tmux_rep)
 		exit(0)
 
 	# Settings
@@ -1279,12 +1366,17 @@ def main():
 		print("The option --scale-replace is only valid with --scale.")
 		exit(0)
 
-	# Check for presence of specified filename
+	# Check for presence of specified session filename
 	if not os.path.exists(ARGS.filename):
 		print("The specified session file does not exist: " + ARGS.filename)
 		exit(0)
 
-	# Session name in tmux
+	# Make sure the session file is not unexpectedly large (say the user accidentally specified a binary file)
+	if 2**20 < os.stat(ARGS.filename).st_size:
+		print("The specified session exceeds 1 megabyte, that's nearly 1 megabyte more than expected.")
+		exit(0)
+
+	# Session name in tmux is always derived from the filename (pathname is dropped to avoid confusion)
 	filename_only = ARGS.filename[ARGS.filename.rfind('/')+1:] # Get the filename only (drop the pathname)
 	session = PROGRAM_THIS + "_" + filename_only # Session name with the executable name as a prefix
 	session = re.sub(r'([/])', r'_', session) # In case of session path: replace '/' with '_'
