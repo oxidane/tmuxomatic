@@ -71,7 +71,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DISTRIBUTION = "https://github.com/oxidane/tmuxomatic"
 VERSION = "1.0.15" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
-YAML = False # Development flag
+YAML = False # In development
 ##
 ##	1.0.15	2014-07-24	Began working on YAML support, this will not be enabled until it's ready
 ##						Fixed issue #4: Support for Solaris and other hosts without "stty size"
@@ -389,7 +389,7 @@ def get_xterm_dimensions_wh(): # cols (x), rows (y)
 	#
 	# Unix / Solaris
 	#
-	rows = os.popen("tput rows", "r").read() # Issue #4: Use tput instead of stty on some systems
+	rows = os.popen("tput lines", "r").read() # Issue #4: Use tput instead of stty on some systems
 	cols = os.popen("tput cols", "r").read()
 	if rows and cols:
 		return int(cols), int(rows) # cols, rows

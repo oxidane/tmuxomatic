@@ -41,9 +41,9 @@ That's a sample window from the file `session_example`.  Run with `tmuxomatic se
 
 ![](https://github.com/oxidane/tmuxomatic/blob/master/img/example.png)
 
-With tmuxomatic, you'll never have to manually split, position, or size a pane again.  Linking the panes to actions is so logically simple that you won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.  It's so easy, you can probably begin using tmuxomatic right now.
+With tmuxomatic, you'll never have to manually split, position, or size a pane again.  Linking the panes to actions is so logically simple that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
 
-Run `tmuxomatic --help` for the list of command-line options that may be of use to demanding users.  Most notably, it has a windowgram scaling feature.  With it, you can scale a windowgram to be larger or smaller -- by any multiplier, on either axis -- to help with fine-tuning your session layouts.  This is especially useful if you want very small panes on a window.
+Run `tmuxomatic --help` for a list of useful command-line options.  Most notably, it has a windowgram scaling feature.  This lets you scale a windowgram to be larger or smaller -- by any multiplier, on either axis -- to help with fine-tuning your session layouts.  This is especially useful if you want very small panes on a window.
 
 **Support for YAML session files coming soon.**
 
