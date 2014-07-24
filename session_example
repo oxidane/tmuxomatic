@@ -24,7 +24,7 @@ A run figlet "A"
 
 #-------------------------------------------------------------------------------------------------
 
-window another_example    # <-- Try scaling this with "tmuxomatic session_example --scale 2 5x 4x"
+window another_example    # <-- Try scaling with "tmuxomatic session_example --scale 2 5x 4x"
 
 111XYZ
 000000

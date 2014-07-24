@@ -2,14 +2,14 @@
 
 # tmuxomatic
 
-An altogether better way to do session management for tmux.
+An altogether better way to do session management with tmux.
 
 * Install: `pip install tmuxomatic`
 * Release: [https://pypi.python.org/pypi/tmuxomatic](https://pypi.python.org/pypi/tmuxomatic)
 [![Version](https://pypip.in/v/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic)
 [![Downloads](https://pypip.in/d/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic)
 * Development: [https://github.com/oxidane/tmuxomatic](https://github.com/oxidane/tmuxomatic)
-* Threads: [Version 1.0.12 @ HN](https://news.ycombinator.com/item?id=8063459)
+* Thread: [Version 1.0.12 @ HN](https://news.ycombinator.com/item?id=8063459)
 
 
 
@@ -78,7 +78,7 @@ This project includes a few examples.  The most useful is `session_practical`, a
 
 ## Notes
 
-To use tmuxomatic, you don't have to know everything about [how to use tmux](http://net.tutsplus.com/tutorials/tools-and-tips/intro-to-tmux/), but it will be useful for [customizing the tmux status bar](http://me.veekun.com/blog/2012/03/21/tmux-is-sweet-as-heck/), or [changing the default key bindings](https://wiki.archlinux.org/index.php/tmux#Key_bindings).  These features are extraneous to tmuxomatic, and they typically go into your personal `.tmux.conf` file.
+To use tmuxomatic, you don't have to know everything about [how to use tmux](http://net.tutsplus.com/tutorials/tools-and-tips/intro-to-tmux/), but the knowledge is useful for [customizing the tmux status bar](http://me.veekun.com/blog/2012/03/21/tmux-is-sweet-as-heck/), or [changing the default key bindings](https://wiki.archlinux.org/index.php/tmux#Key_bindings).  These features are extraneous to tmuxomatic, and they typically go into your personal `.tmux.conf` file.
 
 
 
