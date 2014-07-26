@@ -2,9 +2,9 @@
 
 # tmuxomatic
 
-Other tmux session managers are doing it wrong.  From the ridiculous list of options requiring pages of documentation, to panes defined by a complicated nesting of rigid splits and sizings.  Let's fix this, and make session management more flexible and more powerful, yet so easy that anybody could use it after just one example.  Session management that gets out of the way.
+Other tmux session managers are doing it wrong.  From the ridiculous list of unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of panes with rigid splits and sizings.  Let's fix this, and make session management more flexible and more powerful, yet so easy that anybody could use it after just one example.  Session management that gets out of the way.
 
-At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character identifies the position, size, and shape of a pane (up to 62 panes per window).  It takes only one short example to demonstrate all the powers of the windowgram.  Compare the following window from `session_example` with its screenshot, taken after running `tmuxomatic session_example`:
+At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character identifies the position, size, and shape of a pane (up to 62 panes per window).  It should take only one short example to demonstrate all the powers of the windowgram.  Compare this definition from `session_example`, with its screenshot from `tmuxomatic session_example`:
 
 	window an_example         # <-- A new window begins like this, spaces in names are acceptable
 
@@ -36,14 +36,14 @@ For a list of additional features, run `tmuxomatic --help`.  For example, tmuxom
 
 ## Installation
 
-* Requires [Python 3 +](http://www.python.org/getit/)
-* Requires [tmux 1.8 +](http://tmux.sourceforge.net/)
+This application requires:
 
+* [Python 3 +](http://www.python.org/getit/)
+* [tmux 1.8 +](http://tmux.sourceforge.net/)
 
-* Quick: `python3-pip install tmuxomatic`
+Install with `pip install tmuxomatic`, or download the latest release or development version:
 
-
-* Download: [https://pypi.python.org/pypi/tmuxomatic](https://pypi.python.org/pypi/tmuxomatic) [![Version](https://pypip.in/v/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic) [![Downloads](https://pypip.in/d/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic)
+* Release: [https://pypi.python.org/pypi/tmuxomatic](https://pypi.python.org/pypi/tmuxomatic) [![Version](https://pypip.in/v/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic) [![Downloads](https://pypip.in/d/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic)
 * Development: [https://github.com/oxidane/tmuxomatic](https://github.com/oxidane/tmuxomatic)
 
 

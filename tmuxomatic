@@ -71,11 +71,11 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DISTRIBUTION = "https://github.com/oxidane/tmuxomatic"
 VERSION = "1.0.15" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
-YAML = False # In development
 ##
 ##	1.0.15	2014-07-25	Began working on YAML support, this will not be enabled until it's ready
 ##						Fixed issue #4: Support for Solaris and other hosts without "stty size"
-##						Added an option to destroy the session on disconnect, off by default
+##						Added option to destroy the session on disconnect, disabled by default
+##						Added pypi support, now installable using "pip install tmuxomatic".
 ##
 ##	1.0.14	2014-07-22	The previously unnamed central concept in tmuxomatic is now called a windowgram
 ##						For readability, blank lines between window name and windowgram are allowed
@@ -1444,8 +1444,8 @@ if __name__ == "__main__":
 
 	# Argument parser
 	PARSER = argparse.ArgumentParser( description=\
-		"The easiest way to define tmux sessions! ... Session file specification and " + \
-		"examples may be found at: " + DISTRIBUTION )
+		"The easiest way to define tmux sessions! ... An introduction and example " + \
+		"sessions are on the project home page: " + DISTRIBUTION )
 	PARSER.add_argument( "-V", "--version", action="version", version=PROGRAM_THIS + " " + VERSION, help=\
 		"Show the version number and exit" )
 	PARSER.add_argument( "-v", "--verbose", action="count", help=\
