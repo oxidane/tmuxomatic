@@ -75,7 +75,7 @@ YAML = False # In development
 ##
 ##	1.0.15	2014-07-25	Began working on YAML support, this will not be enabled until it's ready
 ##						Fixed issue #4: Support for Solaris and other hosts without "stty size"
-##						Added an option for session destruction on disconnect, off by default
+##						Added an option to destroy the session on disconnect, off by default
 ##
 ##	1.0.14	2014-07-22	The previously unnamed central concept in tmuxomatic is now called a windowgram
 ##						For readability, blank lines between window name and windowgram are allowed
@@ -1462,7 +1462,7 @@ if __name__ == "__main__":
 	PARSER.add_argument( "-a", "--absolute", action="store_true", help=\
 		"Absolute pane sizing (default is relative).  This " + \
 		"feature requires tmux 1.8 or later." )
-	PARSER.add_argument( "-d", "--destruct", action="store_true", help=\
+	PARSER.add_argument( "-d", "--destroy", action="store_true", help=\
 		"When you disconnect, the session will be destroyed.  " + \
 		"Most useful in situations where you don't want to " + \
 		"consume resources when you're not plugged in." )

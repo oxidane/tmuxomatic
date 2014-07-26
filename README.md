@@ -39,11 +39,11 @@ For a list of additional features, run `tmuxomatic --help`.  For example, tmuxom
 * Requires [Python 3 +](http://www.python.org/getit/)
 * Requires [tmux 1.8 +](http://tmux.sourceforge.net/)
 
+
 * Quick: `python3-pip install tmuxomatic`
 
-* Download: [https://pypi.python.org/pypi/tmuxomatic](https://pypi.python.org/pypi/tmuxomatic)
-[![Version](https://pypip.in/v/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic)
-[![Downloads](https://pypip.in/d/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic)
+
+* Download: [https://pypi.python.org/pypi/tmuxomatic](https://pypi.python.org/pypi/tmuxomatic) [![Version](https://pypip.in/v/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic) [![Downloads](https://pypip.in/d/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic)
 * Development: [https://github.com/oxidane/tmuxomatic](https://github.com/oxidane/tmuxomatic)
 
 
