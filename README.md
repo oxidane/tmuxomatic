@@ -2,11 +2,11 @@
 
 # tmuxomatic
 
-Other tmux session managers are doing it wrong.  From the ridiculous list of unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of panes with rigid splits and sizings.  Let's fix this, and make session management more flexible and more powerful, yet so easy that anybody could use it after just one example.  Session management that gets out of the way.
+The other tmux session managers are doing it wrong.  From the ridiculous list of unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of pane splits.  Instead, what if session management were more flexible and more powerful, yet so easy that anybody could use it after just one example.  Session management that gets out of the way.
 
-At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character identifies the position, size, and shape of a pane (up to 62 panes per window).  It should take only one short example to demonstrate all the powers of the windowgram.
+At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character identifies the position, size, and shape of a pane (up to 62 panes per window).  It should take only one short example to demonstrate the flexibility and power of the windowgram.
 
-Compare this definition from `session_example`, with its screenshot from `tmuxomatic session_example`:
+Compare this window from `session_example`, with its screenshot from `tmuxomatic session_example`:
 
 	window an_example         # <-- A new window begins like this, spaces in names are acceptable
 
@@ -28,9 +28,9 @@ Compare this definition from `session_example`, with its screenshot from `tmuxom
 
 ![](https://github.com/oxidane/tmuxomatic/blob/master/img/example.png)
 
-With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
+With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
 
-For a list of command line features, run `tmuxomatic --help`.  For example, tmuxomatic can scale your windowgram larger or smaller -- by any multiplier, on either axis -- to help with fine-tuning.  This will be especially useful if you want very small panes on a window.
+There are some other features, run `tmuxomatic --help` for a full list of command line options.  For example, tmuxomatic can scale your windowgram larger or smaller -- by any multiplier, on either axis -- to help with fine-tuning.  This will be especially useful if you want very small panes on a window.
 
 **Support for YAML session files coming soon.**
 
