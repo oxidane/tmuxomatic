@@ -4,7 +4,9 @@
 
 Other tmux session managers are doing it wrong.  From the ridiculous list of unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of panes with rigid splits and sizings.  Let's fix this, and make session management more flexible and more powerful, yet so easy that anybody could use it after just one example.  Session management that gets out of the way.
 
-At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character identifies the position, size, and shape of a pane (up to 62 panes per window).  It should take only one short example to demonstrate all the powers of the windowgram.  Compare this definition from `session_example`, with its screenshot from `tmuxomatic session_example`:
+At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character identifies the position, size, and shape of a pane (up to 62 panes per window).  It should take only one short example to demonstrate all the powers of the windowgram.
+
+Compare this definition from `session_example`, with its screenshot from `tmuxomatic session_example`:
 
 	window an_example         # <-- A new window begins like this, spaces in names are acceptable
 
@@ -28,7 +30,7 @@ At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux 
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
 
-For a list of additional features, run `tmuxomatic --help`.  For example, tmuxomatic can scale your windowgram larger or smaller -- by any multiplier, on either axis -- to help with fine-tuning.  This will be especially useful if you want very small panes on a window.
+For a list of command line features, run `tmuxomatic --help`.  For example, tmuxomatic can scale your windowgram larger or smaller -- by any multiplier, on either axis -- to help with fine-tuning.  This will be especially useful if you want very small panes on a window.
 
 **Support for YAML session files coming soon.**
 
@@ -38,12 +40,12 @@ For a list of additional features, run `tmuxomatic --help`.  For example, tmuxom
 
 This application requires:
 
-* [Python 3 +](http://www.python.org/getit/)
-* [tmux 1.8 +](http://tmux.sourceforge.net/)
+* [Python 3](http://www.python.org/getit/) +
+* [tmux 1.8](http://tmux.sourceforge.net/) +
 
 Install with `pip install tmuxomatic`, or download the latest release or development version:
 
-* Release: [https://pypi.python.org/pypi/tmuxomatic](https://pypi.python.org/pypi/tmuxomatic) [![Version](https://pypip.in/v/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic) [![Downloads](https://pypip.in/d/tmuxomatic/badge.png)](https://pypi.python.org/pypi/tmuxomatic)
+* Release: [https://pypi.python.org/pypi/tmuxomatic](https://pypi.python.org/pypi/tmuxomatic) [![Version](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![Downloads](http://img.shields.io/pypi/dd/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 * Development: [https://github.com/oxidane/tmuxomatic](https://github.com/oxidane/tmuxomatic)
 
 

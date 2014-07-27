@@ -40,7 +40,7 @@ classifiers = [
 setup(
 
 	name="tmuxomatic",
-	version="1.0.15",
+	version="1.0.16", # TODO: Extract this from tmuxomatic
 
 	description="An altogether better way to do session management with tmux",
 	license="BSD 3-Clause",
