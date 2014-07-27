@@ -70,7 +70,9 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##-------------------+
 ##
 DISTRIBUTION = "https://github.com/oxidane/tmuxomatic"
-VERSION = "1.0.15" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
+VERSION = "1.0.16" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
+##
+##	1.0.16	2014-07-26	Restructured the session file into an object for easier integration
 ##
 ##	1.0.15	2014-07-25	Began working on YAML support, this will not be enabled until it's ready
 ##						Fixed issue #4: Support for Solaris and other hosts without "stty size"
@@ -267,7 +269,7 @@ VERSION = "1.0.15" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-import sys, os, time, subprocess, argparse, signal, re, math, copy
+import sys, os, time, subprocess, argparse, signal, re, math, copy, yaml
 
 
 
@@ -475,7 +477,7 @@ def satisfies_minimum_version(minimum, version):
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Generation
+## Windowgram
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
@@ -532,8 +534,6 @@ def tmux_split( dim, at_linkid, linkid, list_split, list_links, how, of_this ):
 	# Now the new window's pane id, this is shifted up as insertions below it occur (see above)
 	at_tmux += 1
 	list_links.append( (linkid[0], at_tmux) )
-
-
 
 def find_clean_break( vertical, pos, list_panes, bx, by, bw, bh ):
 	"""
@@ -597,8 +597,6 @@ def find_clean_break( vertical, pos, list_panes, bx, by, bw, bh ):
 
 	# ~ Nothing found, return False
 	return False
-
-
 
 def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_linkid, bx, by, bw, bh ):
 	"""
@@ -704,49 +702,40 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Session Files
-##
-##----------------------------------------------------------------------------------------------------------------------
-##
-## YAML plan:
-##
-##		1.0.15 ... Separate session file load/save from session parser
-##		1.0.16 ... Add Shorthand<->YAML conversion, tie into load/save
-##		1.1.0  ... Officially support YAML session files (add to readme)
-##
-##		Add YAML<->SESSION conversion, support on read/write, detect format on session file load.  Windowgrams are
-##		easily supported by YAML as block literals.
+## Session File
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-def session_text2list(text_file): # -> list_of_lines
-	# Shorthand -> LineList
-	session_data = []
-	for line in text_file.split("\n"):
-		session_data.append(line)
-	return session_data
-
-def session_load(filename): # -> text_file, user_file_format
-	# File (Shorthand or YAML) -> LineList
-	f = open(ARGS.filename, "rU")
-	text_file = ""
-	while True:
-		line = f.readline()
-		if not line: break
-		line = line.rstrip() # Remove spaces from end of line only
-		text_file += line + "\n"
-	user_file_format = "shorthand"
-	return session_text2list(text_file), user_file_format
-
-def session_save(filename, text_file, user_file_format):
-	# Do nothing if the format is invalid
-	if user_file_format == "shorthand":
-		# Shorthand -> File
-		f = open(ARGS.filename, 'w')
-		f.write( text_file )
-	if user_file_format == "yaml":
-		# Shorthand -> YAML -> File
-		pass
+class SessionFile(object):
+	def __init__(self):
+		self.filename = ""
+		self.format = None		# "shorthand" or "yaml"
+		self.data = ""
+#		self.data = []			# [ [ [comments, title], [comments, windowgram], [comments, directions] ], ... ]
+	def Load(self, filename):
+		self.filename = filename
+		self.data = ""
+		f = open(self.filename, "rU")
+		while True:
+			line = f.readline()
+			if not line: break
+			line = line.rstrip() # Only remove whitespace from end of line
+			self.data += line + "\n"
+		self.format = "shorthand"
+#		# Parse it into common list format
+#		state = 0 # 0 = comments + title, 2 = comments + windowgram, 3 = comments + directions
+#		while True:
+#			if state == 0:
+#				pass
+	def Save(self):
+		if self.filename and self.format:
+			if self.format == "shorthand":
+				# Shorthand -> File
+				f = open(self.filename, 'w')
+				f.write( self.data )
+			if self.format == "yaml":
+				# Shorthand -> YAML -> File
+				pass
 
 
 
@@ -756,7 +745,7 @@ def session_save(filename, text_file, user_file_format):
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-def tmuxomatic( program_cli, full_cli, user_wh, session ):
+def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 	"""
 
 	Parse session file, build commands, execute.
@@ -766,7 +755,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 	# Show configuration
 	if ARGS.verbose >= 1:
 		print( "" )
-		print( "(1) Session   : " + session )
+		print( "(1) Session   : " + session_name )
 		print( "(1) Running   : " + full_cli )
 		print( "(1) Xterm     : " + str(user_wh[0]) + "x" + str(user_wh[1]) + " (WxH)" )
 		print( "(1) Filename  : " + ARGS.filename )
@@ -798,12 +787,11 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 	#
 	# Load session file
 	#
-	session_data, session_format = session_load( ARGS.filename )
+	session = SessionFile()
+	session.Load( ARGS.filename )
 
 	#
 	# Parse session file
-	#
-	# The file format is conducive to a simple state machine parser:
 	#
 	# 	1 = Skipping to next window block
 	#	2 = Parsing window block
@@ -812,6 +800,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 	#	5 = Generate tmux commands
 	#	6 = Loop
 	#
+	session_list = session.data.split("\n")
 	session_iter = 0
 	while True:
 
@@ -820,10 +809,10 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 		#
 		if preserve: preserve = False
 		else:
-			if session_iter >= len(session_data): # EOF
+			if session_iter >= len(session_list): # EOF
 				line = None
 			else:
-				line = session_data[session_iter] # Next line
+				line = session_list[session_iter] # Next line
 				session_iter += 1
 			errpkg['line'] += 1 # Line number tracking for error messages
 		if line is None: # EOF
@@ -1025,11 +1014,11 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 					window_stops_at_line_number = errpkg['line']
 					data_top = data_bot = ""
 					for idx in range( 0, window_starts_at_line_number-1 ): # Skip window header
-						data_top += session_data[idx] + "\n"
-					for idx in range( window_stops_at_line_number, len(session_data)-1 ):
-						data_bot += session_data[idx] + "\n"
-					session_save( ARGS.filename,
-						data_top + header + "\n\n" + wincfg_scaled + "\n" + data_bot, session_format )
+						data_top += session_list[idx] + "\n"
+					for idx in range( window_stops_at_line_number, len(session_list)-1 ):
+						data_bot += session_list[idx] + "\n"
+					session.data = data_top + header + "\n\n" + wincfg_scaled + "\n" + data_bot
+					session.Save()
 					print("Replaced it in session file \"" + ARGS.filename + "\"...")
 				else:
 					# STDOUT ... Print scaled window for the user to review
@@ -1199,15 +1188,16 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 						# The shell's cwd must be set, the only other way to do this is to discard the
 						# window that is automatically created when calling "new-session".
 						cwd = "cd " + list_panes_dir + " ; " if list_panes_dir else ""
-						list_build.append( cwd + EXE + " new-session -d -s " + session + " -n \"" + window_name + "\"" )
+						list_build.append(
+							cwd + EXE + " new-session -d -s " + session_name + " -n \"" + window_name + "\"" )
 						# Normally, tmux automatically renames windows based on whatever is running in the focused pane.
 						# There are two ways to fix this.  1) Add "set-option -g allow-rename off" to your ".tmux.conf".
 						# 2) Add "export DISABLE_AUTO_TITLE=true" to your shell's run commands file (e.g., ".bashrc").
 						# Here we automatically do method 1 for the user, unless the user requests otherwise.
-						list_build.append( EXE + " set-option -t " + session + " quiet on" )
+						list_build.append( EXE + " set-option -t " + session_name + " quiet on" )
 						renaming = [ "off", "on" ][ARGS.renaming]
-						list_build.append( EXE + " set-option -t " + session + " allow-rename " + renaming )
-						list_build.append( EXE + " set-option -t " + session + " automatic-rename " + renaming )
+						list_build.append( EXE + " set-option -t " + session_name + " allow-rename " + renaming )
+						list_build.append( EXE + " set-option -t " + session_name + " automatic-rename " + renaming )
 					else:
 						# First pane of successive window
 						list_build.append( EXE + " new-window -n \"" + window_name + "\"" + adddir )
@@ -1317,7 +1307,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 	#
 	# Attach to the newly created session
 	#
-	tmux_run( EXE + " attach-session -t " + session )
+	tmux_run( EXE + " attach-session -t " + session_name )
 
 
 
@@ -1328,11 +1318,6 @@ def tmuxomatic( program_cli, full_cli, user_wh, session ):
 ##----------------------------------------------------------------------------------------------------------------------
 
 def main():
-	"""
-
-	Prepare for processing.
-
-	"""
 
 	# Verify pane count
 	if MAXIMUM_PANES != 62 or len(PANE_CHARACTERS) != MAXIMUM_PANES:
@@ -1342,7 +1327,7 @@ def main():
 	# Check tmux version (req = required, rep = reported)
 	tmux_req = MINIMUM_VERSION
 	tmux_cli, tmux_rep = tmux_version()
-	if tmux_cli != "tmux":
+	if tmux_cli != "tmux" or not tmux_rep:
 		print("The tmux executable cannot be found")
 		exit(0)
 	if not satisfies_minimum_version( tmux_req, tmux_rep ):
@@ -1384,30 +1369,30 @@ def main():
 
 	# Session name in tmux is always derived from the filename (pathname is dropped to avoid confusion)
 	filename_only = ARGS.filename[ARGS.filename.rfind('/')+1:] # Get the filename only (drop the pathname)
-	session = PROGRAM_THIS + "_" + filename_only # Session name with the executable name as a prefix
-	session = re.sub(r'([/])', r'_', session) # In case of session path: replace '/' with '_'
-	session = re.sub(r'\_\_+', r'_', session) # Replace two or more consecutive underscores with one
+	session_name = PROGRAM_THIS + "_" + filename_only # Session name with the executable name as a prefix
+	session_name = re.sub(r'([/])', r'_', session_name) # In case of session path: replace '/' with '_'
+	session_name = re.sub(r'\_\_+', r'_', session_name) # Replace two or more consecutive underscores with one
 
 	# Kill session on disconnect
 	def destruct():
 		if ARGS.destruct:
-			tmux_run( EXE + " kill-session -t " + session, True, False, True ) # Nopipe, Force, Real
+			tmux_run( EXE + " kill-session -t " + session_name, True, True, True ) # Nopipe, Force, Real
 
 	# Existing session handler (skipped when printing or scaling)
 	if not ancillary:
 		# Detect existing session
-		result = tmux_run( EXE + " has-session -t " + session, False, True, True ) # Nopipe, Force, Real
+		result = tmux_run( EXE + " has-session -t " + session_name, False, True, True ) # Nopipe, Force, Real
 		if not result:
 			# Handle existing session
 			if ARGS.recreate:
 				# Destroy existing session (optional)
-				print("Destroying running session, \"" + session + "\"...")
-				tmux_run( EXE + " kill-session -t " + session, False, False, True ) # Nopipe, Force, Real
+				print("Destroying running session, \"" + session_name + "\"...")
+				tmux_run( EXE + " kill-session -t " + session_name, False, False, True ) # Nopipe, Force, Real
 			else:
 				# Attach existing session
-				print("Attaching running session, \"" + session + "\"...")
+				print("Attaching running session, \"" + session_name + "\"...")
 				try:
-					tmux_run( EXE + " attach-session -t " + session, True, False, True ) # Nopipe, Force, Real
+					tmux_run( EXE + " attach-session -t " + session_name, True, False, True ) # Nopipe, Force, Real
 				except KeyboardInterrupt: # User disconnected
 					destruct()
 				exit(0)
@@ -1415,15 +1400,15 @@ def main():
 	# If printing, display header
 	if ARGS.printonly:
 		print("###")
-		print("### Session \"" + session + "\"")
+		print("### Session \"" + session_name + "\"")
 		print("### Generated by tmuxomatic for static configurations")
 		print("### Using screen dimensions: " + str(user_wh[0]) + "x" + str(user_wh[1]) + " (WxH)")
 		print("###")
 
 	# Process session: generates a new session and attaches, or prints, or scales
-	if not ancillary: print("Running new session, \"" + session + "\"...")
+	if not ancillary: print("Running new session, \"" + session_name + "\"...")
 	try:
-		tmuxomatic( program_cli, " ".join(sys.argv), user_wh, session )
+		tmuxomatic( program_cli, " ".join(sys.argv), user_wh, session_name )
 	except KeyboardInterrupt: # User disconnected
 		destruct()
 	exit(0)
