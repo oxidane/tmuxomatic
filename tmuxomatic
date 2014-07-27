@@ -350,7 +350,7 @@ def tmux_version(): # -> name, version
 	"""
 	Queries tmux for the version
 	"""
-	result = tmux_run( EXE + " -V", False, True, True ) # Nopipe, Force, Real
+	result = tmux_run( EXE + " -V", nopipe=False, force=True, real=True )
 	result = [ line.strip() for line in result.split("\n") if line.strip() ]
 	name = result[0].split(" ", 1)[0] # Name that was reported by tmux (should be "tmux")
 	version = result[0].split(" ", 1)[1] # Only the version is needed
@@ -1376,23 +1376,23 @@ def main():
 	# Kill session on disconnect
 	def destruct():
 		if ARGS.destruct:
-			tmux_run( EXE + " kill-session -t " + session_name, True, True, True ) # Nopipe, Force, Real
+			tmux_run( EXE + " kill-session -t " + session_name, nopipe=True, force=True, real=True )
 
 	# Existing session handler (skipped when printing or scaling)
 	if not ancillary:
 		# Detect existing session
-		result = tmux_run( EXE + " has-session -t " + session_name, False, True, True ) # Nopipe, Force, Real
+		result = tmux_run( EXE + " has-session -t " + session_name, nopipe=False, force=True, real=True )
 		if not result:
 			# Handle existing session
 			if ARGS.recreate:
 				# Destroy existing session (optional)
 				print("Destroying running session, \"" + session_name + "\"...")
-				tmux_run( EXE + " kill-session -t " + session_name, False, False, True ) # Nopipe, Force, Real
+				tmux_run( EXE + " kill-session -t " + session_name, nopipe=False, force=False, real=True )
 			else:
 				# Attach existing session
 				print("Attaching running session, \"" + session_name + "\"...")
 				try:
-					tmux_run( EXE + " attach-session -t " + session_name, True, False, True ) # Nopipe, Force, Real
+					tmux_run( EXE + " attach-session -t " + session_name, nopipe=True, force=False, real=True )
 				except KeyboardInterrupt: # User disconnected
 					destruct()
 				exit(0)
