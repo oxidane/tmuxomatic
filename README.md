@@ -32,8 +32,6 @@ With tmuxomatic, you'll never have to manually split, position, or size a pane a
 
 There are some other features, run `tmuxomatic --help` for a full list of command line options.  For example, tmuxomatic can scale your windowgram larger or smaller -- by any multiplier, on either axis -- to help with fine-tuning.  This will be especially useful if you want very small panes on a window.
 
-**Support for YAML session files coming soon.**
-
 
 
 ## Installation

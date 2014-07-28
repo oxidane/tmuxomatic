@@ -844,7 +844,7 @@ class SessionFile(object):
 				f.write( outfile )
 			if self.format == "yaml":
 				# YAML
-				print("Saving to a YAML session file is not yet supported")
+				print("Saving to a YAML session file is not yet supported") # TODO
 				exit()
 	def Replace_Windowgram(self, window, windowgram):
 		if window > len(self.blocks): return

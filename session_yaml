@@ -1,0 +1,32 @@
+#-------------------------------------------------------------------------------------------------
+#
+# YAML Session File Example
+#
+# This only demonstrates sessions in YAML format, for specifics on tmuxomatic see the readme.
+#
+# IMPORTANT: When tmuxomatic updates a YAML session file, the comments are not preserved.  If you
+# would like to keep comment blocks like this when you scale your windowgrams, use shorthand.
+# 
+#-------------------------------------------------------------------------------------------------
+
+- name: one
+  windowgram: |
+    12
+    34
+  directions: |
+    dir ~                 # Applies to any undefined panes that follow
+    foc
+    1 run pwd
+    dir /tmp              # Example of changing the default directory
+    2 run pwd
+
+- name: two
+  windowgram: |
+    1aaaaa
+    2AAAAA
+    3AAAAA
+  directions: |
+    dir ~
+    a dir /tmp
+    A foc
+
