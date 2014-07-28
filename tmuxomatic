@@ -42,7 +42,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##     About     |
 ##---------------+
 ##
-## QUICKSTART: See the session file "session_example", and run it with "tmuxomatic session_example".
+## QUICKSTART: Examine the session file "session_example", and run it with "tmuxomatic session_example".
 ##
 ## The tmux interface for creating window splits is technically simple, but to use those splits to arrange layouts is a
 ## tedious and inefficient process.  Other tmux-related programs offer no solutions when it comes to splitting windows,
@@ -55,15 +55,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 ## So that's exactly what tmuxomatic does.
 ##
-## This will be most useful to tmux users who make use of window panes.  Even if you've already settled on an existing
-## tmux configuration, tmuxomatic may be worth learning for the flexibility and ease of future modifications.
-##
-## By default tmuxomatic attaches to an existing session before creating one.  Also by default, when the user
-## disconnects, it leaves the session active.  For a full list of command line options, see "tmuxomatic --help".
-##
-## New users of tmux: You'll still need to learn tmux bindings, and probably configure it for your personal preferences,
-## and any tmux tutorial will get you started with these.  It's recommended to obtain a tailored "tmux.conf" file for a
-## better experience with tmux in general.
+## For more information, see the readme file.
 ##
 ##-------------------+--------------------------------------------------------------------------------------------------
 ##     Revisions     |
@@ -72,8 +64,10 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 DISTRIBUTION = "https://github.com/oxidane/tmuxomatic"
 VERSION = "1.0.16" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
 ##
-##	1.0.16	2014-07-27	Session file management (pre-parser) has been moved into its own class
-##						Simplified the session file parser now that the loader is separate
+##	1.0.16	2014-07-27	Session file management moved from session parser into its own class
+##						Simplified the session parser now that load and save are separate
+##						Finished YAML support, note that scale is not yet supported
+##						Added new session file that demonstrates how to use YAML
 ##
 ##	1.0.15	2014-07-25	Began working on YAML support, this will not be enabled until it's ready
 ##						Fixed issue #4: Support for Solaris and other hosts without "stty size"
@@ -252,9 +246,7 @@ VERSION = "1.0.16" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##
 ## For a list of other tmux feature requests that would improve tmuxomatic support, see the "Expansions" section.
 ##
-## Many of the PEP8 style guide problems reported by pylint have been ignored.  This may change in a future version.
-##
-## I'm new to Python, so not everything is pythonic.  This may change in a future version.
+## This was largely written when I was still new to Python, so not everything is pythonic.
 ##
 ##--------------------+-------------------------------------------------------------------------------------------------
 ##     Other Uses     |
@@ -316,8 +308,10 @@ def synerr( errpkg, errmsg ):
 
 	if 'quiet' in errpkg:
 		print("Error: " + errmsg)
-	else:
+	elif errpkg['format'] == "shorthand": # Shorthand has exact line numbers
 		print("Error on line " + str(errpkg['line']) + ": " + errmsg)
+	else: # The exact line number in YAML is not known with pyyaml
+		print("Error after line " + str(errpkg['line']) + ": " + errmsg)
 	exit(0)
 
 def tmux_run( command, nopipe=False, force=False, real=False ):
@@ -482,7 +476,7 @@ def satisfies_minimum_version(minimum, version):
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-def tmux_split( dim, at_linkid, linkid, list_split, list_links, how, of_this ):
+def tmuxomatic_split( dim, at_linkid, linkid, list_split, list_links, how, of_this ):
 	"""
 
 	Splits the window 'at_linkid' along axis 'how'
@@ -669,7 +663,7 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 		# Perform vertical split
 		if at:
 			linkid_1 = this_linkid
-			tmux_split( dim, this_linkid, linkid, l_split, l_links, 'v', bh-(at-by) )
+			tmuxomatic_split( dim, this_linkid, linkid, l_split, l_links, 'v', bh-(at-by) )
 			linkid_2 = linkid[0]
 			tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_1, bx, by, bw, at-by )
 			tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_2, bx, at, bw, bh-(at-by) )
@@ -688,7 +682,7 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 		# Perform horizontal split
 		if at:
 			linkid_1 = this_linkid
-			tmux_split( dim, this_linkid, linkid, l_split, l_links, 'h', bw-(at-bx) )
+			tmuxomatic_split( dim, this_linkid, linkid, l_split, l_links, 'h', bw-(at-bx) )
 			linkid_2 = linkid[0]
 			tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_1, bx, by, at-bx, bh )
 			tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_2, at, by, bw-(at-bx), bh )
@@ -707,23 +701,23 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-class Block(object): # Needs cleanup
+class Block(object):
 	def __init__(self):
 		self.__dict__['data'] = {}
 		self.__dict__['line'] = {}
 		for key in self.ValidKeys():
 			self.__dict__['line'][key] = 0
-	def ValidKeys(self): # Ordered by appearance
-		return "title title_comments windowgram windowgram_comments directions directions_comments".split(" ")
 	def __getitem__(self, key): # Invalid keys always return ""
 		return self.__dict__['data'][key] if key in self.__dict__['data'] and self.__dict__['data'][key] else ""
 	def __setitem__(self, key, value): # Invalid keys quietly dropped
 		if key in self.ValidKeys(): self.__dict__['data'][key] = value
-	def Serialize(self): # Serialized by appearance
-		return "".join( [ self[key] for key in self.ValidKeys() ] )
-	def __repr__(self):
+	def __repr__(self): # Debugging
 		return "[ " + ", ".join( [ key + " = \"" + self[key].replace("\n", "\\n") + "\"" \
 			for key in self.ValidKeys() if self[key] is not "" ] ) + " ]"
+	def ValidKeys(self): # Ordered by appearance
+		return "title title_comments windowgram windowgram_comments directions directions_comments".split(" ")
+	def Serialize(self): # Serialized by appearance
+		return "".join( [ self[key] for key in self.ValidKeys() ] )
 	def WorkingKeys(self):
 		return [ key for key in self.ValidKeys() if self[key] is not "" ]
 	def IsHeader(self):
@@ -747,13 +741,13 @@ class SessionFile(object):
 		self.format = None		# "shorthand" or "yaml"
 		self.header = ""		# title comments
 		self.blocks = []		# [ block, block, ... ]
-	def Load_Shorthand(self, rawfile):
-		self.format = "shorthand"
-		self.state = 0 # File header saved as "title_comments" in its own block
+	def Load_Shorthand_SharedCore(self, rawfile):
+		# Actually locals
+		self.state = 0
 		self.block = Block()
 		self.line = None
 		# Iterate lines and append onto respective block keys
-		lines = rawfile.split("\n")[:-1] # Is this a Python bug or something?  Why does it add the extra line?
+		lines = rawfile.split("\n")[:-1] # Why does Python always add the extra line?
 		index = 0
 		while True:
 			def nextblock(newstate=None):
@@ -766,9 +760,9 @@ class SessionFile(object):
 			line = self.line
 			if line.find("#") >= 0: line = line[:line.find("#")+1]
 			line = line.strip()
-			# Channel into corresponding sectional strings
-			if self.state != 1 and line.startswith( "window" ): nextblock(1)
-			elif self.state == 1 and not line.startswith( "window" ): self.state = 2
+			# Append this line onto its corresponding section string
+			if self.state != 1 and line.startswith( "window " ): nextblock(1)
+			elif self.state == 1 and not line.startswith( "window " ): self.state = 2
 			elif ( self.state == 2 or self.state == 4 or self.state == 6 ) and line:
 				if self.state == 6:
 					# Move directions_comments into directions, since we only ever loop when "window" is found
@@ -783,14 +777,15 @@ class SessionFile(object):
 				self.state = 5 # Presence of "foc" or space in windowgram forces jump to parsing directions
 			else:
 				switchboard = [
-					"title_comments",		# state == 0
-					"title",				# state == 1 <- loop to
+					"title_comments",		# state == 0 <- file header saved here in its own block
+					"title",				# state == 1 <- loops to
 					"title_comments",		# state == 2
 					"windowgram",			# state == 3
 					"windowgram_comments",	# state == 4
 					"directions",			# state == 5
 					"directions_comments",	# state == 6
 				]
+				# The full line (self.line) is saved, not the cleaned line (line) that was used in analysis
 				if self.state < len(switchboard): self.block[switchboard[self.state]] += self.line + "\n"
 				self.block.SetIfFirstLine(switchboard[self.state], index)
 				self.line = None
@@ -798,10 +793,30 @@ class SessionFile(object):
 		if len(self.blocks) and self.blocks[0].IsHeader():
 			block = self.blocks.pop(0)
 			self.header = block.Serialize()
-	def Load_Yaml(self, rawfile):
-		pass
-	def Load(self):
+	def Load_Shorthand(self, rawfile):
 		self.Clear()
+		self.format = "shorthand"
+		self.Load_Shorthand_SharedCore( rawfile )
+	def Load_Yaml(self, rawfile):
+		self.Clear()
+		self.format = "yaml"
+		# Yaml -> Dict
+		try:
+			filedict = yaml.safe_load( rawfile )
+		except:
+			filedict = {}
+		# Dict -> Shorthand
+		rawfile_shorthand = "\n\n\n"
+		if type(filedict) is list:
+			for entry in filedict:
+				if type(entry) is dict:
+					name = entry['name'] if 'name' in entry else ""
+					windowgram = entry['windowgram'] if 'windowgram' in entry else ""
+					directions = entry['directions'] if 'directions' in entry else ""
+					rawfile_shorthand += "window " + name + "\n\n" + windowgram + "\n" + directions + "\n\n\n"
+		# Shorthand -> Core
+		self.Load_Shorthand_SharedCore( rawfile_shorthand )
+	def Load(self):
 		# Load raw data
 		rawfile = ""
 		f = open(self.filename, "rU")
@@ -809,8 +824,15 @@ class SessionFile(object):
 			line = f.readline()
 			if not line: break # EOF
 			rawfile += line
-		# Shorthand
-		self.Load_Shorthand( rawfile )
+		# There are no session filename extensions, load both and go with whichever has the most windows
+		shrt = copy.copy(self)
+		yaml = copy.copy(self)
+		shrt.Load_Shorthand( rawfile )
+		yaml.Load_Yaml( rawfile )
+		# Choose
+		source = shrt if len(shrt.blocks) >= len(yaml.blocks) else yaml
+		self.header = copy.copy(source.header)
+		self.blocks = copy.copy(source.blocks)
 	def Save(self):
 		if self.filename and self.format:
 			if self.format == "shorthand":
@@ -822,7 +844,8 @@ class SessionFile(object):
 				f.write( outfile )
 			if self.format == "yaml":
 				# YAML
-				pass
+				print("Saving to a YAML session file is not yet supported")
+				exit()
 	def Replace_Windowgram(self, window, windowgram):
 		if window > len(self.blocks): return
 		self.blocks[window]["windowgram"] = windowgram
@@ -850,9 +873,6 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 	# Initialize
 	list_execution = [] # List of tmux command lists for a session, only executed on successful parsing
 	list_build = [] # Separate list per window
-	errpkg = {}
-	errpkg['command'] = program_cli
-	errpkg['line'] = 0
 	window_number = 0
 	window_name = ""
 	layout = {} # Indexed by line
@@ -867,6 +887,23 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 	#
 	session = SessionFile( ARGS.filename )
 	session.Load()
+
+	#
+	# Error reporting
+	#
+	errpkg = {}
+	errpkg['command'] = program_cli
+	errpkg['format'] = session.format
+	errpkg['line'] = 0
+
+	#
+	# Reporting line numbers
+	#
+	def SetLineNumber(linebase, lineoffset):
+		if errpkg['format'] == "shorthand":
+			errpkg['line'] = linebase + lineoffset # Exact line
+		else:
+			errpkg['line'] = linebase # Approximate line
 
 	#
 	# Parse session file
@@ -889,8 +926,8 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 		#
 		title_lines = block.SplitCleanByKey('title')
 		line = title_lines[0] if len(title_lines) else ""
-		errpkg['line'] = block.GetLines('title')
-		if not line or not line.startswith("window"):
+		SetLineNumber( block.GetLines('title'), 0 )
+		if not line or not line.startswith("window "):
 			synerr(errpkg, "Expecting a window block, received nothing")
 		window_number += 1
 		if window_number > MAXIMUM_WINDOWS:
@@ -912,7 +949,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 		#
 		found = False
 		for ix, line in enumerate(block.SplitCleanByKey('windowgram')):
-			errpkg['line'] = block.GetLines('windowgram') + ix
+			SetLineNumber( block.GetLines('windowgram'), ix )
 			if not line: continue
 			found = True
 			panes_y += 1
@@ -1087,7 +1124,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 		#
 		first_pdl = False # Verbose only
 		for ix, line in enumerate(block.SplitCleanByKey('directions')):
-			errpkg['line'] = block.GetLines('windowgram') + ix
+			SetLineNumber( block.GetLines('directions'), ix )
 			if not line: continue
 			if ARGS.verbose >= 2:
 				if not first_pdl: print("") ; first_pdl = True
