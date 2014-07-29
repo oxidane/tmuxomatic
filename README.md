@@ -2,35 +2,31 @@
 
 # tmuxomatic
 
-The other tmux session managers are doing it wrong.  From the ridiculous list of unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of pane splits.  Instead, what if session management were more flexible and more powerful, yet so easy that anybody could use it after just one example.  Session management that gets out of the way.
+The other tmux session managers are doing it wrong.  From the ridiculous list of unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of pane splits.  Instead, session management could be more flexible and more powerful, yet so easy that anybody could use it after just one example.
 
 At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character identifies the position, size, and shape of a pane (up to 62 panes per window).  It should take only one short example to demonstrate the flexibility and power of the windowgram.
 
 Compare this window from `session_example`, with its screenshot from `tmuxomatic session_example`:
 
-	window an_example         # <-- A new window begins like this, spaces in names are acceptable
+	window an_example         # <-- A new window begins like this, spaces in names are allowed
 
-	HHHOOOOOVVVVXXXXAAAA      # <-- This is a windowgram, it defines shapes and positions of panes
-	HHHOOOOOTTTTXXXXAAAA      # <-- You make your own, any size and arrangement, 62 panes maximum
-	HHHqqqqqqqqkkkkkAAAA
-	jjjqqqqqqqqkkkkkAAAA
-	jjjqqqqqqqqkkkkk1234
-	jjjqqqqqqqqkkkkk5678
+	AAAAAAvvvvvXXXXXTTTT      # <-- The windowgram, it defines the shapes and positions of panes
+	jjjQQQQQQQuuuuuuTTTT      # <-- Make your own, of any size and arrangement, 62 panes maximum
+	jjjQQQQQQQuuuuuuTTTT
 	0000llllllllllaaaaaa
-	tmuxllllllllllaaaaaa
+	1234llllllllllaaaaaa
 
-	  foc                     # <-- Only 3 three-letter commands to remember: Focus, Directory, Run
-	  dir ~                   # <-- An unlinked command becomes the default for all following panes
-	a run figlet "a"          # <-- Here is a linked command to print a large "a" on pane a
-	q run figlet "q"
-	q foc
-	A run figlet "A"
+	  foc                     # <-- 3 three-letter commands to remember: Focus, Directory, Run
+	  dir ~                   # <-- Unlinked directory becomes default for all successive panes
+	A run figlet "A"          # <-- Linked to pane A, this command prints "A" in large lettering
+	Q run figlet "Q"
+	A foc
 
 ![](https://github.com/oxidane/tmuxomatic/blob/master/img/example.png)
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
 
-There are some other features, run `tmuxomatic --help` for a full list of command line options.  For example, tmuxomatic can scale your windowgram larger or smaller -- by any multiplier, on either axis -- to help with fine-tuning.  This will be especially useful if you want very small panes on a window.
+For additional features, run `tmuxomatic --help`.  For example, there's a feature to scale your windowgram larger or smaller -- by any multiplier, on either axis -- to help with fine-tuning.  This is useful if you need very small panes on a window.
 
 
 

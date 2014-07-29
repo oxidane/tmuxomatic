@@ -45,8 +45,8 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ## QUICKSTART: Examine the session file "session_example", and run it with "tmuxomatic session_example".
 ##
 ## The tmux interface for creating window splits is technically simple, but to use those splits to arrange layouts is a
-## tedious and inefficient process.  Other tmux-related programs offer no solutions when it comes to splitting windows,
-## so they have the same usability problem of tmux, compounded by their needy configuration files.
+## tedious and inefficient process.  Other tmux session management tools offer no solutions when it comes to splitting
+## windows, so they have the same usability problem of tmux, compounded by their needy configuration files.
 ##
 ## Ideally I wanted a more intuitive interface, completely reinvented to be as simple and as user-friendly as possible.
 ## You depict the window pane layout in a "windowgram", where each unique character identifies a pane.  Then each pane
@@ -55,14 +55,17 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 ## So that's exactly what tmuxomatic does.
 ##
-## For more information, see the readme file.
+## For a simple introduction that demonstrates the core feature set of tmuxomatic, see the readme file.
 ##
 ##-------------------+--------------------------------------------------------------------------------------------------
 ##     Revisions     |
 ##-------------------+
 ##
 DISTRIBUTION = "https://github.com/oxidane/tmuxomatic"
-VERSION = "1.0.16" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
+VERSION = "1.0.17" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
+##
+##	1.0.17	TBD			Added save to YAML session file, this allows scale to be used with YAML sessions
+##						Loading shorthand session files was broken in 1.0.16, this has been fixed
 ##
 ##	1.0.16	2014-07-27	Session file management moved from session parser into its own class
 ##						Simplified the session parser now that load and save are separate
@@ -160,6 +163,10 @@ VERSION = "1.0.16" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##		listed and chosen with the flex command "window <number>".  Maintain changes as an action chain, and modifiable
 ##		with the commands: undo, redo.  Store serialized action chain in the session file as a base64 block between the
 ##		window header and the windowgram.  User may exit or run the session when they're done.
+##
+##		If filename is not specified, show running tmuxomatic sessions, and allow reconnect without file being present.
+##
+##		Port the readme to a format compatible with pypi.
 ##
 ## Major:
 ##
@@ -369,7 +376,7 @@ def signal_handler_hup( signal_number, frame ):
 def get_xterm_dimensions_wh(): # cols (x), rows (y)
 	"""
 	Returns the dimensions of the user's xterm
-	Modified of: http://stackoverflow.com/a/566752
+	Modified of: https://stackoverflow.com/a/566752
 	"""
 
 	rows = cols = None
@@ -427,7 +434,7 @@ def get_xterm_dimensions_wh(): # cols (x), rows (y)
 def which(program):
 	"""
 	Returns the absolute path of specified executable
-	Source: http://stackoverflow.com/a/377028
+	Source: https://stackoverflow.com/a/377028
 	"""
 
 	def is_exe(fpath):
@@ -758,7 +765,7 @@ class SessionFile(object):
 			if self.line is None: nextblock() ; break # EOF
 			# Stripped of comments and whitespace
 			line = self.line
-			if line.find("#") >= 0: line = line[:line.find("#")+1]
+			if line.find("#") >= 0: line = line[:line.find("#")]
 			line = line.strip()
 			# Append this line onto its corresponding section string
 			if self.state != 1 and line.startswith( "window " ): nextblock(1)
@@ -809,8 +816,10 @@ class SessionFile(object):
 		rawfile_shorthand = "\n\n\n"
 		if type(filedict) is list:
 			for entry in filedict:
-				if type(entry) is dict:
-					name = entry['name'] if 'name' in entry else ""
+				if type(entry) is dict and 'name' in entry:
+					# Windows are identified by 'name' key
+					# Should contain 'windowgram' and 'directions' as block literals
+					name = entry['name']
 					windowgram = entry['windowgram'] if 'windowgram' in entry else ""
 					directions = entry['directions'] if 'directions' in entry else ""
 					rawfile_shorthand += "window " + name + "\n\n" + windowgram + "\n" + directions + "\n\n\n"
@@ -825,12 +834,13 @@ class SessionFile(object):
 			if not line: break # EOF
 			rawfile += line
 		# There are no session filename extensions, load both and go with whichever has the most windows
-		shrt = copy.copy(self)
+		shorthand = copy.copy(self)
 		yaml = copy.copy(self)
-		shrt.Load_Shorthand( rawfile )
+		shorthand.Load_Shorthand( rawfile )
 		yaml.Load_Yaml( rawfile )
 		# Choose
-		source = shrt if len(shrt.blocks) >= len(yaml.blocks) else yaml
+		source = shorthand if len(shorthand.blocks) >= len(yaml.blocks) else yaml
+		self.format = copy.copy(source.format)
 		self.header = copy.copy(source.header)
 		self.blocks = copy.copy(source.blocks)
 	def Save(self):
@@ -838,14 +848,39 @@ class SessionFile(object):
 			if self.format == "shorthand":
 				# Shorthand
 				f = open(self.filename, 'w')
-				outfile = self.header
-				for block in self.blocks:
-					outfile += block.Serialize()
-				f.write( outfile )
+				f.write( self.header )
+				for block in self.blocks: f.write( block.Serialize() )
 			if self.format == "yaml":
 				# YAML
-				print("Saving to a YAML session file is not yet supported") # TODO
-				exit()
+				unformatted = []
+				# Required for writing block literals, source: https://stackoverflow.com/a/6432605
+				def change_style(style, representer):
+					def new_representer(dumper, data):
+						scalar = representer(dumper, data)
+						scalar.style = style
+						return scalar
+					return new_representer
+				class literal_str(str): pass
+				represent_literal_str = change_style('|', yaml.representer.SafeRepresenter.represent_str)
+				yaml.add_representer(literal_str, represent_literal_str)
+				# Now add all windows to a dictionary for saving
+				for block in self.blocks:
+					# Extract name: "window panel 1\n" -> "panel 1"
+					name = block['title'].split("\n")[0].strip()
+					if name.startswith("window "): name = name.split(" ", 2)[1]
+					# Append window definition
+					# TODO: Sort as "name", "windowgram", "directions".  Maybe use: http://pyyaml.org/ticket/29
+					window_dict = {
+						'name': name,
+						'windowgram': literal_str(block['windowgram']),
+						'directions': literal_str(block['directions']),
+					}
+					unformatted.append( window_dict )
+				# Format as YAML
+				formatted = yaml.dump( unformatted, indent=2, default_flow_style=False, explicit_start=True )
+				# Write file
+				f = open(self.filename, 'w')
+				f.write( formatted )
 	def Replace_Windowgram(self, window, windowgram):
 		if window > len(self.blocks): return
 		self.blocks[window]["windowgram"] = windowgram

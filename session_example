@@ -1,32 +1,28 @@
 #-------------------------------------------------------------------------------------------------
 #
-# A simple example tmuxomatic session with two windows defined in tmuxomatic shorthand
+# Simple two window example (session_example)
 #
 #-------------------------------------------------------------------------------------------------
 
-window an_example         # <-- A new window begins like this, spaces in names are acceptable
+window an_example         # <-- A new window begins like this, spaces in names are allowed
 
-HHHOOOOOVVVVXXXXAAAA      # <-- This is a windowgram, it defines shapes and positions of panes
-HHHOOOOOTTTTXXXXAAAA      # <-- You make your own, any size and arrangement, 62 panes maximum
-HHHqqqqqqqqkkkkkAAAA
-jjjqqqqqqqqkkkkkAAAA
-jjjqqqqqqqqkkkkk1234
-jjjqqqqqqqqkkkkk5678
+AAAAAAvvvvvXXXXXTTTT      # <-- The windowgram, it defines the shapes and positions of panes
+jjjQQQQQQQuuuuuuTTTT      # <-- Make your own, of any size and arrangement, 62 panes maximum
+jjjQQQQQQQuuuuuuTTTT
 0000llllllllllaaaaaa
-tmuxllllllllllaaaaaa
+1234llllllllllaaaaaa
 
-  foc                     # <-- Only 3 three-letter commands to remember: Focus, Directory, Run
-  dir ~                   # <-- An unlinked command becomes the default for all following panes
-a run figlet "a"          # <-- Here is a linked command to print a large "a" on pane a
-q run figlet "q"
-q foc
-A run figlet "A"
+  foc                     # <-- 3 three-letter commands to remember: Focus, Directory, Run
+  dir ~                   # <-- Unlinked directory becomes default for all successive panes
+A run figlet "A"          # <-- Linked to pane A, this command prints "A" in large lettering
+Q run figlet "Q"
+A foc
 
 #-------------------------------------------------------------------------------------------------
 
-window another_example    # <-- Try scaling with "tmuxomatic session_example --scale 2 5x 4x"
+window second_example     # <-- Multiple windows per session
 
-111XYZ
+111XYZ                    # <-- Try scaling with "tmuxomatic session_example --scale 2 5x 4x"
 000000
 000000
 

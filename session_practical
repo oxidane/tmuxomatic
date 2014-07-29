@@ -1,15 +1,17 @@
 #-------------------------------------------------------------------------------------------------
 #
-# This is a practical example of how you might use tmuxomatic to lay out tmux windows for system
-# monitoring.  This session will cover three example windowgrams.  All windowgrams are unique,
-# you can make your windowgrams exactly as you want them to appear.  Try the built in scale tool
-# if you need to create large windowgrams to support very small panes.
+# Practical example (session_practical)
+#
+# This is a more practical example of how one might use tmuxomatic.  Three example windows, each
+# for a specific purpose.  Note all windowgrams are unique, so you can make your own exactly as
+# you want it to appear.  Try the scale feature if you need large windowgrams for small panes.
 #
 #-------------------------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------------------------
 #
-# For the first window in this session, you might have an overview of your system: its hostname
-# and network addresses, a process list, some log tails, service summary for whatever you're
-# running, etc.
+# First window: Administrative overview.  Summary of the system, its hostname, network addresses,
+# process list, some log tails, package installation, service summaries, etc.
 #
 #-------------------------------------------------------------------------------------------------
 
@@ -40,8 +42,8 @@ s run tail --follow=name /var/log/secure
 
 #-------------------------------------------------------------------------------------------------
 #
-# Say you're using an irc client, and since you're on there a lot, maybe you want stock tickers
-# running on the same screen, but you want your IRC session to take up most of the space.
+# Second window: An irc client that you want to take up most of the screen, but you also want
+# tickers and scrollers for various feeds like twitter, news, financial monitoring, etc.
 #
 #-------------------------------------------------------------------------------------------------
 
@@ -53,10 +55,10 @@ iiiiiii
 iiiiiii
 iiiiiii
 iiiiiii
-ttttttt
+TTTTTTT
 
 dir ~
-t run echo "scroller or ticker or something"
+T run echo "running feed here"
 1 run echo "chart 1"
 2 run echo "chart 2"
 a run echo "graph 1"
@@ -68,9 +70,8 @@ i run echo "you'd run irc here"
 
 #-------------------------------------------------------------------------------------------------
 #
-# Perhaps you have a few cryptocurrency wallets running on this server, and you occasionally need
-# to upgrade or change them.  Say you want the actual currency panes to take up very little space
-# compared to a shell where you do related work.
+# Third window: A few cryptocurrency peers, the panes where they're running are configured to take
+# up very little space compared to a shell where you perform installations or check some logs.
 #
 #-------------------------------------------------------------------------------------------------
 
@@ -95,7 +96,7 @@ dir /cc/namecoin
 c run figlet namecoin
 C run keepup
 dir /cc
-X run echo "chart"
+X run echo "disk monitor"
 1 run echo "work here"
 1 run ls -la
 
