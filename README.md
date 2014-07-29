@@ -2,21 +2,22 @@
 
 # tmuxomatic
 
-The other tmux session managers are doing it wrong.  From the ridiculous list of unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of pane splits.  Instead, session management could be more flexible and more powerful, yet so easy that anybody could use it after just one example.
+The other tmux session managers are doing it wrong.  From the ridiculous list of unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of pane splits.  Instead, session management should be more flexible and more powerful, yet so easy that anybody could use it after just one example.
 
 At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character identifies the position, size, and shape of a pane (up to 62 panes per window).  It should take only one short example to demonstrate the flexibility and power of the windowgram.
 
 Compare this window from `session_example`, with its screenshot from `tmuxomatic session_example`:
 
-	window an_example         # <-- A new window begins like this, spaces in names are allowed
+	window example_one        # <-- A new window begins like this, spaces in names are allowed
 
 	AAAAAAvvvvvXXXXXTTTT      # <-- The windowgram, it defines the shapes and positions of panes
 	jjjQQQQQQQuuuuuuTTTT      # <-- Make your own, of any size and arrangement, 62 panes maximum
 	jjjQQQQQQQuuuuuuTTTT
+	jjjQQQQQQQuuuuuuTTTT
 	0000llllllllllaaaaaa
 	1234llllllllllaaaaaa
 
-	  foc                     # <-- 3 three-letter commands to remember: Focus, Directory, Run
+	  foc                     # <-- Three 3-letter commands to remember: Focus, Directory, Run
 	  dir ~                   # <-- Unlinked directory becomes default for all successive panes
 	A run figlet "A"          # <-- Linked to pane A, this command prints "A" in large lettering
 	Q run figlet "Q"

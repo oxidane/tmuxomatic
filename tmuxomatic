@@ -61,11 +61,13 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##     Revisions     |
 ##-------------------+
 ##
-DISTRIBUTION = "https://github.com/oxidane/tmuxomatic"
-VERSION = "1.0.17" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or bug fix
+HOMEPAGE = "https://github.com/oxidane/tmuxomatic"	# NOTE: Variables HOMEPAGE and VERSION are now used by setup.py
+VERSION = "1.0.17"									# x.y.z: x = Rewrite, y = Major feature, z = Minor feature / Bug fix
 ##
-##	1.0.17	TBD			Added save to YAML session file, this allows scale to be used with YAML sessions
-##						Loading shorthand session files was broken in 1.0.16, this has been fixed
+##	1.0.17	2014-07-29	Added save to YAML session file, this allows scale to be used with YAML sessions
+##						Shorthand session file loader was broken in 1.0.16, this has been fixed
+##						The pypi setup.py file now extracts the version and homepage from the source
+##						Added error reporting of YAML line numbers (limited to a range)
 ##
 ##	1.0.16	2014-07-27	Session file management moved from session parser into its own class
 ##						Simplified the session parser now that load and save are separate
@@ -156,6 +158,7 @@ VERSION = "1.0.17" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ##		more rapidly assessed at-a-glance.
 ##
 ##		Support other multiplexers like screen, if they have similar capabilities (vertical splits, shell driven, etc).
+##		Screen currently does not have the ability to modify panes from the command line, this is required for support.
 ##
 ##		Add tmuxomatic flex.  A windowgram modification console.  Allows users to perform multiple actions on their
 ##		windowgrams, including: scale, rotate, mirror, flip, break <pane>, rename <pane1> <pane2>, swap <pane1> <pane2>.
@@ -240,7 +243,7 @@ VERSION = "1.0.17" # x.y.z: x = Rewrite, y = Major feature, z = Minor feature or
 ## This program addresses only the session layout (windows, panes).  For tmux settings (status bar, key bindings)
 ## consult an online tutorial for ".tmux.conf".
 ##
-## For best results, design windowgrams that has a similar width-to-height ratio as your xterm.
+## For best results, design windowgrams that have a similar width-to-height ratio as your xterm.
 ##
 ## The way tmuxomatic (and tmux) works is by recursively subdividing the window using vertical and horizontal splits.
 ## If you specify a windowgram where such a split is not possible, then it cannot be supported by tmux, or tmuxomatic.
@@ -315,10 +318,12 @@ def synerr( errpkg, errmsg ):
 
 	if 'quiet' in errpkg:
 		print("Error: " + errmsg)
-	elif errpkg['format'] == "shorthand": # Shorthand has exact line numbers
+	elif errpkg['format'] == "shorthand":
+		# Shorthand has exact line numbers
 		print("Error on line " + str(errpkg['line']) + ": " + errmsg)
-	else: # The exact line number in YAML is not known with pyyaml
-		print("Error after line " + str(errpkg['line']) + ": " + errmsg)
+	else:
+		# The exact line number in YAML is not easily known with pyyaml
+		print("Error on or after line " + str(errpkg['line']) + ": " + errmsg)
 	exit(0)
 
 def tmux_run( command, nopipe=False, force=False, real=False ):
@@ -708,19 +713,38 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-class Block(object):
+class BatchOfLines(object): # A batch of lines (delimited string) with the corresponding line numbers (int list)
 	def __init__(self):
-		self.__dict__['data'] = {}
-		self.__dict__['line'] = {}
-		for key in self.ValidKeys():
-			self.__dict__['line'][key] = 0
+		self.lines = ""				# Lines delimited by \n, expects this on the last line in each batch of lines
+		self.counts = []			# For each line in lines, an integer representing the corresponding line number
+	def __repr__(self): # Debugging
+		return "lines = \"" + self.lines.replace("\n", "\\n") + "\", counts = " + repr(self.counts)
+	def AppendBatch(self, lines, start, increment=True):
+		linecount = len(lines.split("\n")[:-1])
+		self.lines += lines
+		self.counts += [line for line in range(1, linecount+1)] if increment else ([start] * linecount)
+
+class Window(object): # Common container of window data, divided into sections identified by the keys below
+	def __init__(self):
+		self.__dict__['data'] = {} # { 'title': string_of_lines, 'title_comments': string_of_lines, ... }
+		self.__dict__['line'] = {} # { 'title': first_line_number, 'title_comments': first_line_number, ... }
+		for key in self.ValidKeys(): self.ClearKey(key) # Clear all keys
 	def __getitem__(self, key): # Invalid keys always return ""
-		return self.__dict__['data'][key] if key in self.__dict__['data'] and self.__dict__['data'][key] else ""
+		return self.__dict__['data'][key] if key in self.ValidKeys() else ""
 	def __setitem__(self, key, value): # Invalid keys quietly dropped
 		if key in self.ValidKeys(): self.__dict__['data'][key] = value
 	def __repr__(self): # Debugging
-		return "[ " + ", ".join( [ key + " = \"" + self[key].replace("\n", "\\n") + "\"" \
-			for key in self.ValidKeys() if self[key] is not "" ] ) + " ]"
+		return "[ " + \
+			", ".join(
+				[ key + ": [ data = \"" + self.__dict__['data'][key].replace("\n", "\\n") + \
+				"\", starting_line_number = " + str(self.__dict__['line'][key]) + " ] " \
+				for key in self.ValidKeys() if self[key] is not "" ] \
+			) + \
+		" ]"
+	def ClearKey(self, key):
+		if key in self.ValidKeys():
+			self.__dict__['data'][key] = ""
+			self.__dict__['line'][key] = 0
 	def ValidKeys(self): # Ordered by appearance
 		return "title title_comments windowgram windowgram_comments directions directions_comments".split(" ")
 	def Serialize(self): # Serialized by appearance
@@ -733,7 +757,7 @@ class Block(object):
 		return True if key in self.ValidKeys() and self.__dict__['line'][key] == 0 else False
 	def SetLine(self, key, line):
 		if key in self.ValidKeys(): self.__dict__['line'][key] = line
-	def SetIfFirstLine(self, key, line):
+	def SetIfNotSet(self, key, line):
 		if self.FirstLine(key): self.SetLine(key, line)
 	def GetLines(self, key):
 		return self.__dict__['line'][key]
@@ -747,35 +771,40 @@ class SessionFile(object):
 	def Clear(self):
 		self.format = None		# "shorthand" or "yaml"
 		self.header = ""		# title comments
-		self.blocks = []		# [ block, block, ... ]
-	def Load_Shorthand_SharedCore(self, rawfile):
+		self.windows = []		# [ window, window, ... ]
+	def Load_Shorthand_SharedCore(self, bol):
 		# Actually locals
 		self.state = 0
-		self.block = Block()
+		self.window = Window()
 		self.line = None
-		# Iterate lines and append onto respective block keys
-		lines = rawfile.split("\n")[:-1] # Why does Python always add the extra line?
-		index = 0
+		self.actual_line_number = 0
+		# Iterate lines and append onto respective window keys
+		lines = bol.lines.split("\n")[:-1] # Why does Python always add the extra line?
+		lines_index = 0
 		while True:
-			def nextblock(newstate=None):
-				self.blocks.append( self.block )
-				self.block = Block()
+			def nextwindow(newstate=None):
+				self.windows.append( self.window )
+				self.window = Window()
 				if newstate is not None: self.state = newstate
-			if self.line is None and index < len(lines): self.line = lines[index] ; index += 1 # Line
-			if self.line is None: nextblock() ; break # EOF
+			if self.line is None and lines_index < len(lines): # Line
+				self.line = lines[lines_index]
+				self.actual_line_number = bol.counts[lines_index]
+				lines_index += 1
+			if self.line is None: # EOF
+				nextwindow()
+				break
 			# Stripped of comments and whitespace
 			line = self.line
-			if line.find("#") >= 0: line = line[:line.find("#")]
+			if line.find("#") >= 0: line = line[:line.find("#")] # 1.0.17: Fixed
 			line = line.strip()
 			# Append this line onto its corresponding section string
-			if self.state != 1 and line.startswith( "window " ): nextblock(1)
-			elif self.state == 1 and not line.startswith( "window " ): self.state = 2
+			if self.state != 1 and re.search(r"window[ \t]", line): nextwindow(1)
+			elif self.state == 1 and not re.search(r"window[ \t]", line): self.state = 2
 			elif ( self.state == 2 or self.state == 4 or self.state == 6 ) and line:
 				if self.state == 6:
 					# Move directions_comments into directions, since we only ever loop when "window" is found
-					self.block['directions'] += self.block['directions_comments']
-					self.block['directions_comments'] = ""
-					self.block.SetLine('directions_comments', 0)
+					self.window['directions'] += self.window['directions_comments']
+					self.window.ClearKey('directions_comments')
 					self.state = 5 # Step back and resume
 				else: self.state += 1
 			elif ( self.state == 3 or self.state == 5 ) and not line:
@@ -784,7 +813,7 @@ class SessionFile(object):
 				self.state = 5 # Presence of "foc" or space in windowgram forces jump to parsing directions
 			else:
 				switchboard = [
-					"title_comments",		# state == 0 <- file header saved here in its own block
+					"title_comments",		# state == 0 <- file header saved here in its own window
 					"title",				# state == 1 <- loops to
 					"title_comments",		# state == 2
 					"windowgram",			# state == 3
@@ -793,27 +822,44 @@ class SessionFile(object):
 					"directions_comments",	# state == 6
 				]
 				# The full line (self.line) is saved, not the cleaned line (line) that was used in analysis
-				if self.state < len(switchboard): self.block[switchboard[self.state]] += self.line + "\n"
-				self.block.SetIfFirstLine(switchboard[self.state], index)
+				if self.state < len(switchboard): self.window[switchboard[self.state]] += self.line + "\n"
+				self.window.SetIfNotSet( switchboard[self.state], self.actual_line_number )
 				self.line = None
 		# Any comments at the start of the file should be extracted into the header string
-		if len(self.blocks) and self.blocks[0].IsHeader():
-			block = self.blocks.pop(0)
-			self.header = block.Serialize()
+		if len(self.windows) and self.windows[0].IsHeader():
+			window = self.windows.pop(0)
+			self.header = window.Serialize()
 	def Load_Shorthand(self, rawfile):
 		self.Clear()
 		self.format = "shorthand"
-		self.Load_Shorthand_SharedCore( rawfile )
+		bol = BatchOfLines()
+		bol.AppendBatch( rawfile, 1 )
+		self.Load_Shorthand_SharedCore( bol )
 	def Load_Yaml(self, rawfile):
 		self.Clear()
 		self.format = "yaml"
 		# Yaml -> Dict
 		try:
-			filedict = yaml.safe_load( rawfile )
+			# Line numbers (per window) with pyyaml from: https://stackoverflow.com/a/13319530
+			loader = yaml.SafeLoader(rawfile)
+			def compose_node(parent, index):
+				line = loader.line # The line number where the previous token has ended (plus empty lines)
+				node = yaml.SafeLoader.compose_node(loader, parent, index)
+				node.__line__ = line + 1
+				return node
+			def construct_mapping(node, deep=False):
+				mapping = yaml.SafeLoader.construct_mapping(loader, node, deep=deep)
+				mapping['__line__'] = node.__line__
+				return mapping
+			loader.compose_node = compose_node
+			loader.construct_mapping = construct_mapping
+			# Load into dict, now with line numbers for location of window in YAML
+			filedict = loader.get_single_data() # filedict = yaml.safe_load( rawfile ) # Without line numbers
 		except:
 			filedict = {}
 		# Dict -> Shorthand
-		rawfile_shorthand = "\n\n\n"
+		bol = BatchOfLines()
+		bol.AppendBatch( "\n", 0, False ) # Translated YAML -> Shorthand, no need for header
 		if type(filedict) is list:
 			for entry in filedict:
 				if type(entry) is dict and 'name' in entry:
@@ -822,9 +868,12 @@ class SessionFile(object):
 					name = entry['name']
 					windowgram = entry['windowgram'] if 'windowgram' in entry else ""
 					directions = entry['directions'] if 'directions' in entry else ""
-					rawfile_shorthand += "window " + name + "\n\n" + windowgram + "\n" + directions + "\n\n\n"
+					linenumber = entry['__line__'] if '__line__' in entry else 0
+					rawfile_shorthand = "window " + name + "\n\n" + windowgram + "\n" + directions + "\n\n\n"
+					# Append lines
+					bol.AppendBatch( rawfile_shorthand, linenumber, False )
 		# Shorthand -> Core
-		self.Load_Shorthand_SharedCore( rawfile_shorthand )
+		self.Load_Shorthand_SharedCore( bol )
 	def Load(self):
 		# Load raw data
 		rawfile = ""
@@ -839,17 +888,17 @@ class SessionFile(object):
 		shorthand.Load_Shorthand( rawfile )
 		yaml.Load_Yaml( rawfile )
 		# Choose
-		source = shorthand if len(shorthand.blocks) >= len(yaml.blocks) else yaml
+		source = shorthand if len(shorthand.windows) >= len(yaml.windows) else yaml
 		self.format = copy.copy(source.format)
 		self.header = copy.copy(source.header)
-		self.blocks = copy.copy(source.blocks)
+		self.windows = copy.copy(source.windows)
 	def Save(self):
 		if self.filename and self.format:
 			if self.format == "shorthand":
 				# Shorthand
 				f = open(self.filename, 'w')
 				f.write( self.header )
-				for block in self.blocks: f.write( block.Serialize() )
+				for window in self.windows: f.write( window.Serialize() )
 			if self.format == "yaml":
 				# YAML
 				unformatted = []
@@ -864,16 +913,16 @@ class SessionFile(object):
 				represent_literal_str = change_style('|', yaml.representer.SafeRepresenter.represent_str)
 				yaml.add_representer(literal_str, represent_literal_str)
 				# Now add all windows to a dictionary for saving
-				for block in self.blocks:
+				for window in self.windows:
 					# Extract name: "window panel 1\n" -> "panel 1"
-					name = block['title'].split("\n")[0].strip()
-					if name.startswith("window "): name = name.split(" ", 2)[1]
+					name = window['title'].split("\n")[0].strip()
+					if re.search(r"window[ \t]", name): name = name.split(" ", 2)[1]
 					# Append window definition
 					# TODO: Sort as "name", "windowgram", "directions".  Maybe use: http://pyyaml.org/ticket/29
 					window_dict = {
 						'name': name,
-						'windowgram': literal_str(block['windowgram']),
-						'directions': literal_str(block['directions']),
+						'windowgram': literal_str(window['windowgram']),
+						'directions': literal_str(window['directions']),
 					}
 					unformatted.append( window_dict )
 				# Format as YAML
@@ -882,8 +931,8 @@ class SessionFile(object):
 				f = open(self.filename, 'w')
 				f.write( formatted )
 	def Replace_Windowgram(self, window, windowgram):
-		if window > len(self.blocks): return
-		self.blocks[window]["windowgram"] = windowgram
+		if window > len(self.windows): return
+		self.windows[window]["windowgram"] = windowgram
 
 def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 	"""
@@ -952,18 +1001,18 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 	#		5 = Generate tmux commands
 	#
 	eof = False
-	block = 0
+	window = 0
 	line = 0
-	for block in session.blocks:
+	for window in session.windows:
 
 		#
 		# 1) Initialize window
 		#
-		title_lines = block.SplitCleanByKey('title')
+		title_lines = window.SplitCleanByKey('title')
 		line = title_lines[0] if len(title_lines) else ""
-		SetLineNumber( block.GetLines('title'), 0 )
-		if not line or not line.startswith("window "):
-			synerr(errpkg, "Expecting a window block, received nothing")
+		SetLineNumber( window.GetLines('title'), 0 )
+		if not line or not re.search(r"window[ \t]", line):
+			synerr(errpkg, "Expecting a window section, found nothing")
 		window_number += 1
 		if window_number > MAXIMUM_WINDOWS:
 			synerr(errpkg, "There's a maximum of " + MAXIMUM_WINDOWS + " windows in this version")
@@ -983,10 +1032,11 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 		# 2) Windowgram parser
 		#
 		found = False
-		for ix, line in enumerate(block.SplitCleanByKey('windowgram')):
-			SetLineNumber( block.GetLines('windowgram'), ix )
+		for ix, line in enumerate(window.SplitCleanByKey('windowgram')):
+			SetLineNumber( window.GetLines('windowgram'), ix )
 			if not line: continue
 			found = True
+			panes_h += 1 # 1.0.17: Should be here to detect Nx2 windowgram width mismatch
 			panes_y += 1
 			panes_x = 0
 			invalid = False
@@ -997,7 +1047,6 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 				synerr(errpkg, "Windowgram width does not match previous lines")
 			else:
 				if ARGS.verbose >= 2: print("(2) Windowgram: " + line)
-				panes_h += 1
 				if panes_w == 0:
 					panes_w = len(line)
 				for ch in line:
@@ -1158,8 +1207,8 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 		# 4) Directions parser
 		#
 		first_pdl = False # Verbose only
-		for ix, line in enumerate(block.SplitCleanByKey('directions')):
-			SetLineNumber( block.GetLines('directions'), ix )
+		for ix, line in enumerate(window.SplitCleanByKey('directions')):
+			SetLineNumber( window.GetLines('directions'), ix )
 			if not line: continue
 			if ARGS.verbose >= 2:
 				if not first_pdl: print("") ; first_pdl = True
@@ -1327,7 +1376,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 					list_build.append( EXE + " resize-pane -t " + str(list_split_paneid + 1) + addaxis )
 
 		#
-		# 5.3b) Shell run commands ... This is done separately after the pane size has been established
+		# 5.3b) Prepare shell commands ... This is done separately after the pane size has been established
 		#
 		for ent_panes in list_panes:
 			# Now that the tmux pane index correlates, cross-reference for easier lookups
@@ -1396,7 +1445,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 				synerr(errpkg, msg )
 
 	#
-	# Scale should not make it this far
+	# A valid scale should not have made it this far
 	#
 	if ARGS.scale:
 		print("Window " + ARGS.scale[0] + " is out of range in session file \"" + ARGS.filename + "\"")
@@ -1532,7 +1581,7 @@ if __name__ == "__main__":
 	# Argument parser
 	PARSER = argparse.ArgumentParser( description=\
 		"The easiest way to define tmux sessions! ... An introduction and example " + \
-		"sessions are on the project home page: " + DISTRIBUTION )
+		"sessions are on the project home page: " + HOMEPAGE )
 	PARSER.add_argument( "-V", "--version", action="version", version=PROGRAM_THIS + " " + VERSION, help=\
 		"Show the version number and exit" )
 	PARSER.add_argument( "-v", "--verbose", action="count", help=\

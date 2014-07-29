@@ -2,6 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from distutils.core import setup
+import re
+
+lines = open("tmuxomatic", "r").read().split("\n")
+extract = lambda what: [re.search(r'"([^"]*)"', line).group() for line in lines if line.startswith(what)][0][1:-1]
+
+version = extract("VERSION")
+homepage = extract("HOMEPAGE")
 
 files = [
 	("Program", ["tmuxomatic"]),
@@ -40,11 +47,11 @@ classifiers = [
 setup(
 
 	name="tmuxomatic",
-	version="1.0.16", # TODO: Extract this from tmuxomatic
+	version=version,
 
 	description="An altogether better way to do session management with tmux",
 	license="BSD 3-Clause",
-	url="https://github.com/oxidane/tmuxomatic",
+	url=homepage,
 	download_url="https://pypi.python.org/pypi/tmuxomatic",
 
 	author="Oxidane",
