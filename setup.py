@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Debugging: python3 setup.py
+
 from distutils.core import setup
+from distutils import sysconfig
 import re
 
-lines = open("tmuxomatic", "r").read().split("\n")
+name = "tmuxomatic"
+
+lines = open(name, "r").read().split("\n")
 extract = lambda what: [re.search(r'"([^"]*)"', line).group() for line in lines if line.startswith(what)][0][1:-1]
 
 version = extract("VERSION")
 homepage = extract("HOMEPAGE")
 
+extras = sysconfig.get_python_lib() + "/" + name
+
 files = [
-	("Program", ["tmuxomatic"]),
-	("Setup", ["setup.py"]),
-#	("Examples", ["session_example", "session_practical", "session_unsupported"]),
-#	("Documentation", ["README.md"]),
+	("bin", ["tmuxomatic"]),
+#	(extras, ["session_example", "session_practical", "session_unsupported", "session_yaml"]),
+#	(extras, ["README.md"]),
 ]
 
 classifiers = [

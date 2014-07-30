@@ -62,7 +62,10 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##-------------------+
 ##
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"	# NOTE: Variables HOMEPAGE and VERSION are now used by setup.py
-VERSION = "1.0.17"									# x.y.z: x = Rewrite, y = Major feature, z = Minor feature / Bug fix
+VERSION = "1.0.18"									# x.y.z: x = Rewrite, y = Major feature, z = Minor feature / Bug fix
+##
+##	1.0.18	2014-07-29	Added support for multiple panes per command, this is an undocumented feature
+##						Fixed issue #6: Installation with pip now installs to the bin directory
 ##
 ##	1.0.17	2014-07-29	Added save to YAML session file, this allows scale to be used with YAML sessions
 ##						Shorthand session file loader was broken in 1.0.16, this has been fixed
@@ -1227,43 +1230,59 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 			# Splits the line into easier to handle strings, there's probably a better way to do this
 			if not ' ' in line and not '\t' in line:
 				synerr(errpkg, "Pane definition line syntax error")
-			panedef_paneid, panedef_cmdplusargs = line.split( None, 1 )
+			panedef_paneids, panedef_cmdplusargs = line.split( None, 1 )
 			if not ' ' in panedef_cmdplusargs and not '\t' in panedef_cmdplusargs:
 				panedef_cmd = panedef_cmdplusargs
 				panedef_args = ''
 			else:
 				panedef_cmd, panedef_args = panedef_cmdplusargs.split( None, 1 )
-			# Handle the strings
-			if len(panedef_paneid) != 1:
-				synerr(errpkg, "Pane definition id must be one digit")
-			if not panedef_paneid in PANE_CHARACTERS:
-				synerr(errpkg, "Pane definition id is outside of the supported range: [0-9a-zA-Z]")
-			into = None
-			for pane in list_panes:
-				if pane['n'] == panedef_paneid:
-					into = pane
-					break
-			if not into:
-				synerr(errpkg, "Pane definition id was not specified in the windowgram")
+			#
+			# Make the list of targets from the specified panes
+			#
+			panelist = list(panedef_paneids)
+			for paneid in panelist:
+				if not paneid in PANE_CHARACTERS:
+					synerr(errpkg, "Pane definition id is outside of the supported range: [0-9a-zA-Z]")
+			def into(key, value, mode=0): # 0 = Set, 1 = Set or append if present, 2 = Set or skip if present
+				found = []
+				for pane in list_panes:
+					if pane['n'] in panelist:
+						if mode == 0:
+							pane[key] = value
+						if mode == 1:
+							if key in pane: pane[key].append( value )
+							else: pane[key] = [value]
+						if mode == 2:
+							if not key in pane or not pane[key]: pane[key] = value
+						found.append( pane['n'] )
+				delta = list(set(panelist) - set(found))
+				if delta:
+					synerr(errpkg, "Pane(s) '" + "".join(delta) + "' were not specified in the windowgram")
+			def all_panes_that_have_key(key):
+				found = []
+				for pane in list_panes:
+					if pane['n'] in panelist:
+						if key in pane:
+							found += [ pane['n'] ]
+				return "".join(found)
 			#
 			# Target pane specified ... Set default directory if not already set for this pane
 			#
-			if not 'dir' in into or not into['dir']:
-				into['dir'] = default_directory
+			into('dir', default_directory, 2)
 			#
 			# Command handlers
 			#
 			if command_matches(panedef_cmd, "run"):
 				if not panedef_args: synerr(errpkg, "Pane definition command 'run' must have arguments")
-				if not 'run' in into: into['run'] = [ panedef_args ]
-				else: into['run'].append( panedef_args )
+				into('run', panedef_args, 1)
 			elif command_matches(panedef_cmd, "dir"):
 				if not panedef_args: synerr(errpkg, "Pane definition command 'dir' must have arguments")
-				into['dir'] = panedef_args
+				into('dir', panedef_args)
 			elif command_matches(panedef_cmd, "foc"):
 				if panedef_args: synerr(errpkg, "Pane definition command 'foc' must have no arguments")
-				if 'foc' in into: synerr(errpkg, "Pane definition command 'foc' already specified for this pane")
-				into['foc'] = True
+				panes = all_panes_that_have_key('foc')
+				if panes: synerr(errpkg, "Pane definition command 'foc' already specified for panes: " + panes)
+				into('foc', True)
 			else:
 				synerr(errpkg, "Unknown command '" + panedef_cmd + "'")
 
