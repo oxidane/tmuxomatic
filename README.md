@@ -1,8 +1,6 @@
 
 
-# tmuxomatic
-![Version](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)
-![Downloads](http://img.shields.io/pypi/dd/tmuxomatic.svg?style=flat)
+# tmuxomatic [![Version](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![Downloads](http://img.shields.io/pypi/dd/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
 The other tmux session managers are doing it wrong.  From unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of pane splits.  Instead, session management should be more flexible and more powerful, yet so easy that anybody could use it after just one example.
 
@@ -20,7 +18,7 @@ Compare this window from `session_example`, with its screenshot from `tmuxomatic
 	1234llllllllllaaaaaa
 
 	  foc                     # <-- Three 3-letter commands to remember: Focus, Directory, Run
-	  dir ~                   # <-- Unlinked directory becomes default for all undefined panes
+	  dir ~                   # <-- Unlinked directory, becomes default for all undefined panes
 	A run figlet "A"          # <-- Linked to pane A, this command prints "A" in large lettering
 	Q run figlet "Q"
 	A foc
@@ -42,16 +40,16 @@ This application requires:
 
 There are three ways to install tmuxomatic, in order of convenience:
 
-**Automatically**
+**Automatically** using pip
 
 * `pip-python3 install tmuxomatic`
 
-**Manually**
+**Manually** using python
 
 * Download and extract the archive file from https://pypi.python.org/pypi/tmuxomatic
 * In the tmuxomatic directory, run `python3 setup.py install`
 
-**From Development**
+**Development**
 
 * Visit https://github.com/oxidane/tmuxomatic for up-to-date installation instructions
 * `git clone git://github.com/oxidane/tmuxomatic.git`

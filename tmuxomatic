@@ -64,8 +64,8 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"	# NOTE: Variables HOMEPAGE and VERSION are used by setup.py
 VERSION = "1.0.20"									# x.y.z: x = Rewrite, y = Major feature, z = Minor feature / Bug fix
 ##
-##	1.0.20	TBD
-## TODO: Fix issue #4: More precise divider placement in the pane splitting algorithm
+##	1.0.20	2014-07-31	Fixed session file bugs: No header before window, and missing default directory
+##						The option "--absolute" is now the default, this fixes issue #5
 ##
 ##	1.0.19	2014-07-30	Installation with pip should now be fully functional
 ##						If the user is not using YAML, installation of PyYAML is optional
@@ -541,14 +541,14 @@ def tmuxomatic_split( dim, at_linkid, linkid, list_split, list_links, how, of_th
 			w = this_ent['inst_w']
 			h = of_this - 1
 			per = str( float(of_this) / float(this_ent['inst_h']) * 100.0 )
-			if not ARGS.absolute:
+			if ARGS.relative:
 				this_ent['inst_h'] = int(this_ent['inst_h']) - of_this # Subtract split from root pane
 		else: # elif how == 'h':
 			of_this = translate( of_this, dim['win'][0], dim['scr'][0] ) # From size-in-definition to size-on-screen
 			w = of_this - 1
 			h = this_ent['inst_h']
 			per = str( float(of_this) / float(this_ent['inst_w']) * 100.0 )
-			if not ARGS.absolute:
+			if ARGS.relative:
 				this_ent['inst_w'] = int(this_ent['inst_w']) - of_this # Subtract split from root pane
 
 	# Split list tracks tmux pane number at the time of split (for building the split commands)
@@ -571,7 +571,7 @@ def find_clean_break( vertical, pos, list_panes, bx, by, bw, bh ):
 	all qualifying panes to complete a match (see scanline).  If the result is a clean break,
 	this function returns True, and the caller has the location of the break.  While there's room
 	for optimization (probably best ported to C++, where the scanline technique will be really
-	fast), additional optimization isn't needed as it's probably adequate even on embedded systems.
+	fast), it probably isn't needed since it's likely to be adequate even on embedded systems.
 
 	"""
 
@@ -736,7 +736,7 @@ class BatchOfLines(object): # A batch of lines (delimited string) with the corre
 	def __repr__(self): # Debugging
 		return "lines = \"" + self.lines.replace("\n", "\\n") + "\", counts = " + repr(self.counts)
 	def AppendBatch(self, lines, start, increment=True):
-		linecount = len(lines.split("\n")[:-1])
+		linecount = len(lines.split("\n")[:-1]) # Account for extra line
 		self.lines += lines
 		self.counts += [line for line in range(1, linecount+1)] if increment else ([start] * linecount)
 
@@ -768,7 +768,9 @@ class Window(object): # Common container of window data, divided into sections i
 	def WorkingKeys(self):
 		return [ key for key in self.ValidKeys() if self[key] is not "" ]
 	def IsHeader(self):
-		return True if " ".join( self.WorkingKeys() ) == "title_comments" else False
+		# This should also return True if entirely blank, to allow for session files with "window" on line 1
+		summary = " ".join( self.WorkingKeys() )
+		return True if summary == "title_comments" or summary == "" else False
 	def FirstLine(self, key):
 		return True if key in self.ValidKeys() and self.__dict__['line'][key] == 0 else False
 	def SetLine(self, key, line):
@@ -795,7 +797,7 @@ class SessionFile(object):
 		self.line = None
 		self.actual_line_number = 0
 		# Iterate lines and append onto respective window keys
-		lines = bol.lines.split("\n")[:-1] # Why does Python always add the extra line?
+		lines = bol.lines.split("\n")[:-1] # Account for extra line
 		lines_index = 0
 		while True:
 			def nextwindow(newstate=None):
@@ -811,7 +813,7 @@ class SessionFile(object):
 				break
 			# Stripped of comments and whitespace
 			line = self.line
-			if line.find("#") >= 0: line = line[:line.find("#")] # 1.0.17: Fixed
+			if line.find("#") >= 0: line = line[:line.find("#")]
 			line = line.strip()
 			# Append this line onto its corresponding section string
 			if self.state != 1 and re.search(r"window[ \t]", line): nextwindow(1)
@@ -976,7 +978,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 			" (" + ", ".join([ 'summary', 'inputs', 'fitting', 'commands' ][:ARGS.verbose]) + ")" )
 		print( "(1) Recreate  : " + str(ARGS.recreate) )
 		print( "(1) Noexecute : " + str(ARGS.noexecute) )
-		print( "(1) Sizing    : " + [ "Relative (percentages)", "Absolute (characters)" ][ARGS.absolute] )
+		print( "(1) Sizing    : " + [ "Absolute (characters)", "Relative (percentages)" ][ARGS.relative] )
 
 	# Initialize
 	list_execution = [] # List of tmux command lists for a session, only executed on successful parsing
@@ -1230,6 +1232,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 		#
 		# 4) Directions parser
 		#
+		default_directory = "" # Never set a default, assume the path that tmuxomatic was run from
 		first_pdl = False # Verbose only
 		for ix, line in enumerate(window.SplitCleanByKey('directions')):
 			SetLineNumber( window.GetLines('directions'), ix )
@@ -1404,7 +1407,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 				# Perform the split on this pane
 				list_build.append( EXE + " select-pane -t " + str(list_split_paneid) )
 				# Pane sizing
-				if not ARGS.absolute:
+				if ARGS.relative:
 					# Relative pane sizing (percentage)
 					percentage = str( int( float( list_split_percnt ) ) ) # Integers are required by tmux 1.8
 					list_build.append( EXE + " split-window -" + list_split_orient + " -p " + percentage + adddir )
@@ -1636,8 +1639,7 @@ if __name__ == "__main__":
 	PARSER.add_argument( "-x", "--noexecute", action="store_true", help=\
 		"Do everything except issue commands to tmux" )
 	PARSER.add_argument( "-a", "--absolute", action="store_true", help=\
-		"Absolute pane sizing (default is relative).  This " + \
-		"feature requires tmux 1.8 or later." )
+		"This is now the default and should not be used." )
 	PARSER.add_argument( "-d", "--destroy", action="store_true", help=\
 		"When you disconnect, the session will be destroyed.  " + \
 		"Most useful in situations where you don't want to " + \
@@ -1657,6 +1659,14 @@ if __name__ == "__main__":
 	PARSER.add_argument( "filename", help=\
 		"The tmuxomatic session filename (required)" )
 	ARGS = PARSER.parse_args()
+
+	# Placement algorithm switch
+	if ARGS.absolute:
+		print("WARNING: The option -a/--absolute is now default and this switch be invalid in a future version.")
+		print("WARNING: Pausing 10 seconds...")
+		time.sleep( 10.0 )
+	# Set the flag that determines tmux placement technique, in a future version the relative placement may be removed
+	ARGS.relative = False # This could be added as an option, but somebody would have to make a case for its usefulness
 
 	# Locate tmux
 	EXE = which(EXE)
