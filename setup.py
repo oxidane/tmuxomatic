@@ -5,22 +5,29 @@
 
 from distutils.core import setup
 from distutils import sysconfig
-import re
+import re, os, sys
 
-name = "tmuxomatic"
-
-lines = open(name, "r").read().split("\n")
+lines = open("tmuxomatic", "r").read().split("\n")
 extract = lambda what: [re.search(r'"([^"]*)"', line).group() for line in lines if line.startswith(what)][0][1:-1]
 
 version = extract("VERSION")
 homepage = extract("HOMEPAGE")
+keywords = "tmux, screen, awesome"
 
-extras = sysconfig.get_python_lib() + "/" + name
+# Maybe someone could help get this sorted out properly.  I don't want to use a subdirectory or a manifest file for this.
+# When the user installs, I want tmuxomatic to go into the user's bin directory.  I have been able to accomplish this by
+# using the data_files parameter, which seems to work except for setup() imposing chmod 644.  So afterwards, if setup was
+# called with "install", we search for tmuxomatic in the user's path, and then chmod 755.  If you happen know of a way to
+# do this install without the chmod step, or in some more correct manner, please send a pull request with the changes.
 
-files = [
-	("bin", ["tmuxomatic"]),
-#	(extras, ["session_example", "session_practical", "session_unsupported", "session_yaml"]),
-#	(extras, ["README.md"]),
+packages = [] # ["tmuxomatic"]
+package_dir = {} # {'tmuxomatic': "/usr/bin"}
+package_data = {} # {'tmuxomatic': ["tmuxomatic"]}
+data_files = [
+	( "bin", [ "tmuxomatic" ] ),
+# Add readme after it's ported to pypi+github friendly format, add example sessions after install has been sorted out
+#	( sysconfig.get_python_lib() + "/tmuxomatic",
+#		[ "README.md", "session_example", "session_practical", "session_unsupported", "session_yaml" ] ),
 ]
 
 classifiers = [
@@ -63,10 +70,38 @@ setup(
 	author="Oxidane",
 	author_email="",
 
-	data_files=files,
+	packages=packages,
+	package_dir=package_dir,
+	package_data=package_data,
+	data_files=data_files,
 
+	keywords=keywords,
 	classifiers=classifiers,
-	packages=[],
 
 )
+
+def which(program):
+	"""
+	Returns the absolute path of specified executable
+	Source: https://stackoverflow.com/a/377028
+	"""
+
+	def is_exe(fpath):
+		# Return true if file exists (not expected to be executable)
+		return os.path.isfile(fpath)
+
+	fpath, _ = os.path.split(program)
+	if fpath:
+		if is_exe(program):
+			return program
+	else:
+		for path in os.environ["PATH"].split(os.pathsep):
+			path = path.strip('"')
+			exe_file = os.path.join(path, program)
+			if is_exe(exe_file):
+				return exe_file
+	return None
+
+if "install" in sys.argv:
+	os.chmod( which("tmuxomatic"), 0o755 )
 

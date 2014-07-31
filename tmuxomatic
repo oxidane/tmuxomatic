@@ -62,7 +62,10 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##-------------------+
 ##
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"	# NOTE: Variables HOMEPAGE and VERSION are now used by setup.py
-VERSION = "1.0.18"									# x.y.z: x = Rewrite, y = Major feature, z = Minor feature / Bug fix
+VERSION = "1.0.19"									# x.y.z: x = Rewrite, y = Major feature, z = Minor feature / Bug fix
+##
+##	1.0.19	2014-07-30	Installation with pip should be fully functional now
+##						If the user is not using YAML, installation of PyYAML is optional
 ##
 ##	1.0.18	2014-07-29	Added support for multiple panes per command, this is an undocumented feature
 ##						Fixed issue #6: Installation with pip now installs to the bin directory
@@ -275,7 +278,14 @@ VERSION = "1.0.18"									# x.y.z: x = Rewrite, y = Major feature, z = Minor fe
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-import sys, os, time, subprocess, argparse, signal, re, math, copy, yaml
+import sys, os, time, subprocess, argparse, signal, re, math, copy
+
+YAML = False
+try:
+	import yaml
+	YAML = True
+except ImportError as e:
+	pass
 
 
 
@@ -885,12 +895,21 @@ class SessionFile(object):
 			line = f.readline()
 			if not line: break # EOF
 			rawfile += line
-		# There are no session filename extensions, load both and go with whichever has the most windows
+		# To make the pyyaml installation completely optional, some basic detection is required
+		if not YAML:
+			for line in rawfile.split("\n"):
+				if line.find("#") >= 0: line = line[:line.find("#")]
+				line = line.strip()
+				if line and line[0] == "-":
+					print("You have specified a session file in YAML format, yet you do not have pyyaml installed.")
+					print("Install pyyaml first, usually with a command like: `sudo pip-python3 install pyyaml`")
+					exit(0)
+		# Load as both shorthand and yaml
 		shorthand = copy.copy(self)
 		yaml = copy.copy(self)
 		shorthand.Load_Shorthand( rawfile )
 		yaml.Load_Yaml( rawfile )
-		# Choose
+		# Choose whichever has more windows
 		source = shorthand if len(shorthand.windows) >= len(yaml.windows) else yaml
 		self.format = copy.copy(source.format)
 		self.header = copy.copy(source.header)
