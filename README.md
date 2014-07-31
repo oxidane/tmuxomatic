@@ -1,10 +1,12 @@
 
 
 # tmuxomatic
+![Version](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)
+![Downloads](http://img.shields.io/pypi/dd/tmuxomatic.svg?style=flat)
 
-The other tmux session managers are doing it wrong.  From the ridiculous list of unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of pane splits.  Instead, session management should be more flexible and more powerful, yet so easy that anybody could use it after just one example.
+The other tmux session managers are doing it wrong.  From unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of pane splits.  Instead, session management should be more flexible and more powerful, yet so easy that anybody could use it after just one example.
 
-At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character identifies the position, size, and shape of a pane (up to 62 panes per window).  It should take only one short example to demonstrate the flexibility and power of the windowgram.
+At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character identifies the position, size, and shape of a pane.  It should take only one short example to demonstrate the flexibility and power of the windowgram.
 
 Compare this window from `session_example`, with its screenshot from `tmuxomatic session_example`:
 
@@ -18,7 +20,7 @@ Compare this window from `session_example`, with its screenshot from `tmuxomatic
 	1234llllllllllaaaaaa
 
 	  foc                     # <-- Three 3-letter commands to remember: Focus, Directory, Run
-	  dir ~                   # <-- Unlinked directory becomes default for all successive panes
+	  dir ~                   # <-- Unlinked directory becomes default for all undefined panes
 	A run figlet "A"          # <-- Linked to pane A, this command prints "A" in large lettering
 	Q run figlet "Q"
 	A foc
@@ -38,10 +40,22 @@ This application requires:
 * [Python 3](http://www.python.org/getit/) +
 * [tmux 1.8](http://tmux.sourceforge.net/) +
 
-Install with `pip install tmuxomatic`, or download the latest release or development version:
+There are three ways to install tmuxomatic, in order of convenience:
 
-* Release: [https://pypi.python.org/pypi/tmuxomatic](https://pypi.python.org/pypi/tmuxomatic) [![Version](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![Downloads](http://img.shields.io/pypi/dd/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
-* Development: [https://github.com/oxidane/tmuxomatic](https://github.com/oxidane/tmuxomatic)
+**Automatically**
+
+* `pip-python3 install tmuxomatic`
+
+**Manually**
+
+* Download and extract the archive file from https://pypi.python.org/pypi/tmuxomatic
+* In the tmuxomatic directory, run `python3 setup.py install`
+
+**From Development**
+
+* Visit https://github.com/oxidane/tmuxomatic for up-to-date installation instructions
+* `git clone git://github.com/oxidane/tmuxomatic.git`
+* `cp -a tmuxomatic/tmuxomatic /usr/bin`
 
 
 

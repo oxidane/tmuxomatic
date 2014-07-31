@@ -80,28 +80,10 @@ setup(
 
 )
 
-def which(program):
-	"""
-	Returns the absolute path of specified executable
-	Source: https://stackoverflow.com/a/377028
-	"""
-
-	def is_exe(fpath):
-		# Return true if file exists (not expected to be executable)
-		return os.path.isfile(fpath)
-
-	fpath, _ = os.path.split(program)
-	if fpath:
-		if is_exe(program):
-			return program
-	else:
-		for path in os.environ["PATH"].split(os.pathsep):
-			path = path.strip('"')
-			exe_file = os.path.join(path, program)
-			if is_exe(exe_file):
-				return exe_file
-	return None
-
 if "install" in sys.argv:
-	os.chmod( which("tmuxomatic"), 0o755 )
+	for path in os.environ["PATH"].split(os.pathsep):
+		path = path.strip('"')
+		exe_file = os.path.join(path, "tmuxomatic")
+		if os.path.isfile(exe_file):
+			os.chmod( exe_file, 0o755 )
 

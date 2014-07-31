@@ -14,7 +14,7 @@ jjjQQQQQQQuuuuuuTTTT
 1234llllllllllaaaaaa
 
   foc                     # <-- Three 3-letter commands to remember: Focus, Directory, Run
-  dir ~                   # <-- Unlinked directory becomes default for all successive panes
+  dir ~                   # <-- Unlinked directory becomes default for all undefined panes
 A run figlet "A"          # <-- Linked to pane A, this command prints "A" in large lettering
 Q run figlet "Q"
 A foc
