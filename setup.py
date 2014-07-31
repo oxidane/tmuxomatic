@@ -18,7 +18,7 @@ keywords = "tmux, screen, awesome"
 # When the user installs, I want tmuxomatic to go into the user's bin directory.  I have been able to accomplish this by
 # using the data_files parameter, which seems to work except for setup() imposing chmod 644.  So afterwards, if setup was
 # called with "install", we search for tmuxomatic in the user's path, and then chmod 755.  If you happen know of a way to
-# do this install without the chmod step, or in some more correct manner, please send a pull request with the changes.
+# do this install without the chmod step, or in a more correct manner, please send a pull request with the changes.
 
 packages = [] # ["tmuxomatic"]
 package_dir = {} # {'tmuxomatic': "/usr/bin"}
