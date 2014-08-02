@@ -40,16 +40,16 @@ This application requires:
 
 There are three ways to install tmuxomatic, in order of convenience:
 
-  1. **Automatically** (pip)
+  * **Automatically** (pip)
 
     * `pip-python3 install tmuxomatic`
 
-  2. **Manually** (python)
+  * **Manually** (python)
 
     * Download and extract the archive file from https://pypi.python.org/pypi/tmuxomatic
     * In the tmuxomatic directory, run `python3 setup.py install`
 
-  3. **From Development** (git)
+  * **From Development** (git)
 
     * Visit https://github.com/oxidane/tmuxomatic for up-to-date installation instructions
     * `git clone git://github.com/oxidane/tmuxomatic.git`
