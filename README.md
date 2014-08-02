@@ -57,12 +57,12 @@ There are three ways to install tmuxomatic, in order of convenience:
 
 Verify that you have the current version installed:
 
-    * `tmuxomatic -V`
+* `tmuxomatic -V`
 
 On some systems pip will not upgrade properly, this may be fixed by cleaning the pip cache:
 
-    * `rm -rf /tmp/pip-build-root/tmuxomatic`
-    * `pip-python3 install --upgrade tmuxomatic`
+* `rm -rf /tmp/pip-build-root/tmuxomatic`
+* `pip-python3 install --upgrade tmuxomatic`
 
 
 
