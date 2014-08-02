@@ -1,6 +1,6 @@
 
 
-# tmuxomatic [![Version](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![Downloads](http://img.shields.io/pypi/dd/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
+# tmuxomatic [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dd/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
 The other tmux session managers are doing it wrong.  From unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of pane splits.  Instead, session management should be more flexible and more powerful, yet so easy that anybody could use it after just one example.
 
@@ -40,20 +40,29 @@ This application requires:
 
 There are three ways to install tmuxomatic, in order of convenience:
 
-**Automatically** using pip
+  1. **Automatically** (pip)
 
-* `pip-python3 install tmuxomatic`
+    * `pip-python3 install tmuxomatic`
 
-**Manually** using python
+  2. **Manually** (python)
 
-* Download and extract the archive file from https://pypi.python.org/pypi/tmuxomatic
-* In the tmuxomatic directory, run `python3 setup.py install`
+    * Download and extract the archive file from https://pypi.python.org/pypi/tmuxomatic
+    * In the tmuxomatic directory, run `python3 setup.py install`
 
-**Development**
+  3. **From Development** (git)
 
-* Visit https://github.com/oxidane/tmuxomatic for up-to-date installation instructions
-* `git clone git://github.com/oxidane/tmuxomatic.git`
-* `cp -a tmuxomatic/tmuxomatic /usr/bin`
+    * Visit https://github.com/oxidane/tmuxomatic for up-to-date installation instructions
+    * `git clone git://github.com/oxidane/tmuxomatic.git`
+    * `cp -a tmuxomatic/tmuxomatic /usr/bin`
+
+Verify that you have the current version installed:
+
+    * `tmuxomatic -V`
+
+On some systems pip will not upgrade properly, this may be fixed by cleaning the pip cache:
+
+    * `rm -rf /tmp/pip-build-root/tmuxomatic`
+    * `pip-python3 install --upgrade tmuxomatic`
 
 
 
