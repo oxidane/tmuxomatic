@@ -62,7 +62,13 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##-------------------+
 ##
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"	# NOTE: Variables HOMEPAGE and VERSION are used by setup.py
-VERSION = "1.0.20"									# x.y.z: x = Rewrite, y = Major feature, z = Minor feature / Bug fix
+VERSION = "1.1.0"									# x.y.z: x = Rewrite, y = Major Feature, z = Minor Feature / Fix
+## TODO 1.1.x: Flex Console, Windowgram Library, Pypi Readme
+##
+##	1.1.0	TBD			Began tmuxomatic --flex, commands will be added over the next few releases
+##						Fixed the readme to fit the recent github style changes
+##
+##	------	----------	------------------------------------------------------------------------------------
 ##
 ##	1.0.20	2014-07-31	Fixed session file bugs: No header before window, and missing default directory
 ##						The option "--absolute" is now the default, this fixes issue #5
@@ -107,7 +113,7 @@ VERSION = "1.0.20"									# x.y.z: x = Rewrite, y = Major feature, z = Minor fe
 ##						Various updates including using the absolute location of tmux
 ##
 ##	1.0.10	2013-11-05	Added the readme file
-##						Added write option for scaling that updates session file
+##						Added write option for scaling, that updates session file
 ##
 ##	1.0.9	2013-11-04	Window renaming is now disabled by default, added option to turn it on
 ##						Various changes to the source, documentation, and session files
@@ -169,23 +175,30 @@ VERSION = "1.0.20"									# x.y.z: x = Rewrite, y = Major feature, z = Minor fe
 ##		Support other multiplexers like screen, if they have similar capabilities (vertical splits, shell driven, etc).
 ##		Screen currently does not have the ability to modify panes from the command line, this is required for support.
 ##
+##		If filename is not specified, show running tmuxomatic sessions, and allow reconnect without file being present.
+##
+##		Port the readme to a format compatible with pypi.  Add readme and sample sessions to the distribution.
+##
+##		Command line auto-completion support for zsh, etc.
+##
+##		Reversing function.  This takes a split-centric configuration and produces a windowgram.  Has size or accuracy
+##		parameter that defines the size of the windowgram.  Utility is dubious, as it has not been requested, but it
+##		would be easy to code.  Add conversions from popular managers.
+##
+##		Runnable session files.  Basically the session file invokes tmuxomatic with fixed and/or forwarded arguments.
+##		It copies itself via stdin or a /tmp file.  For easy application to any session file, constrain code to only a
+##		few short lines at the top of the session file that are easily cut and pasted into another.  A prototype of this
+##		concept was done in early development, though it had a slightly different design, so it's best rewritten.
+##
+## Major:
+##
 ##		Add tmuxomatic flex.  A windowgram modification console.  Allows users to perform multiple actions on their
 ##		windowgrams, including: scale, rotate, mirror, flip, break <pane>, rename <pane1> <pane2>, swap <pane1> <pane2>.
 ##		Session is specified from command line, console is entered with "--flex" argument.  Windows from session are
 ##		listed and chosen with the flex command "window <number>".  Maintain changes as an action chain, and modifiable
 ##		with the commands: undo, redo.  Store serialized action chain in the session file as a base64 block between the
-##		window header and the windowgram.  User may exit or run the session when they're done.
-##
-##		If filename is not specified, show running tmuxomatic sessions, and allow reconnect without file being present.
-##
-##		Port the readme to a format compatible with pypi.
-##
-## Major:
-##
-##		Session Binding: A mode that keeps the session file and its running session synchronized.  Some things won't be
-##		easy to do.  Changing the name of a window is easy, but changing windowgram may not be (without unique
-## 		identifiers in tmux).  Use threading to keep them in sync.  Error handling could be shown in a created error
-##		window, which would be destroyed on next session load if there was no error.
+##		window header and the windowgram.  User may exit or run the session when they're done.  This should be in the
+##		major section.  Reconsider using the urwid library as a dependency, or make it optional.
 ##
 ##		Possible console-driven option that allows individual window adjustments on a specified session.  It would also
 ##		automatically save the session file on every change, and with it a compressed and encoded undo list in case the
@@ -194,6 +207,11 @@ VERSION = "1.0.20"									# x.y.z: x = Rewrite, y = Major feature, z = Minor fe
 ##		is added, it has to be kept simple, and then a user could describe how they want a window laid out in a very
 ##		responsive manner that is guaranteed to be read by the loader properly.  Could probably put this in flex.
 ##
+##		Session Binding: A mode that keeps the session file and its running session synchronized.  Some things won't be
+##		easy to do.  Changing the name of a window is easy, but changing windowgram may not be (without unique
+## 		identifiers in tmux).  Use threading to keep them in sync.  Error handling could be shown in a created error
+##		window, which would be destroyed on next session load if there was no error.
+##
 ## Possible:
 ##
 ##		Multiple commands in a single call to tmux for faster execution (requires tmux "stdin").
@@ -201,56 +219,56 @@ VERSION = "1.0.20"									# x.y.z: x = Rewrite, y = Major feature, z = Minor fe
 ##		Creating two differently-named tmuxomatic sessions at the same time may conflict.  If all the tmux commands
 ##		could be sent at once then this won't be a problem (requires tmux "stdin").
 ##
-##		The tmuxomatic pane numbers could be made equal to tmux pane numbers (a=10, A=36, etc), but only if tmux will
+##		The tmuxomatic pane numbers could be made equal to tmux pane numbers (0=0, a=10, A=36), but only if tmux will
 ##		support pane renumbering, which is presently not supported (requires tmux "renumber-pane").
 ##
 ##		If tmux ever supports some kind of aggregate window pane arrangements then the tmux edge case represented by the
 ##		example "session_unsupported" could be fixed (requires tmux "add-pane").
 ##
-##		Maybe support pane groups in the windowgram linker.  For example "12 run ls" instead of "1 run ls\n2 run ls".
-##		This might introduce complexity that could be confusing for new users.  Perhaps as an undocumented feature.
-##
 ##------------------+---------------------------------------------------------------------------------------------------
 ##     Requests     |
 ##------------------+
 ##
-## Further development largely depends on tmux.  These are some features I would like to see in tmux that would improve
-## tmuxomatic.  If anyone adds these features to tmux, notify me and I'll upgrade tmuxomatic accordingly.
+## These are some features I would like to see in tmux that would improve tmuxomatic.  If anyone adds these features to
+## tmux, notify me and I'll upgrade tmuxomatic accordingly.
 ##
 ##		1) tmux --stdin					Run multiple line-delimited commands in one tmux call (with error reporting).
 ##										Upgrades: Faster tmuxomatic run time, no concurrent session conflicts.
 ##
-##		2) tmux renumber-pane old new	Changes the pane number, once set it doesn't change, except with this command.
+##		2) tmux renumber-pane old new	Changes the pane number, once set it doesn't change, except from this command.
 ##										Upgrades: The tmux pane numbers will reflect those in the session file.
 ##
 ##		3) tmux add-pane x y w h		Explicit pane creation (exact placement and dimensions).  This automatically
 ##										pushes neighbors, subdivides, or re-appropriates, the affected unassigned panes.
 ##										Upgrades: Fast, precise arbitrary windowgram algorithm; resolves the edge case.
 ##
-## If tmux could preserve pane percentages, when xterm is resized, the panes would be proportionally adjusted.  This
-## feature would save users from having to restart tmuxomatic when the xterm size at session creation differed from what
-## they intend to use.  See relative pane sizing notes for more information.
+##		4) tmux preserve-proportions	If tmux preserves proportional pane sizes, when xterm is resized, the panes will
+##										be proportionally adjusted.  This feature would save from having to restart
+##										tmuxomatic when the xterm size at session creation differed from what they
+##										intend to use.  See relative pane sizing notes for more information.
 ##
 ##---------------+------------------------------------------------------------------------------------------------------
 ##     Terms     |
 ##---------------+
 ##
-##		windowgram	An rectangle comprised of unique alphanumeric rectangles representing panes in a window.
+##		windowgram		A rectangle comprised of unique alphanumeric rectangles representing panes in a window.
 ##
-##		xterm		Represents the user's terminal window, this may be xterm, putty, securecrt, or similar.
+##		xterm			Represents the user's terminal window, may be xterm, PuTTY, SecureCRT, iTerm, or similar.
 ##
-##		session		A single session that contains one or more windows.
+##		tmux			The terminal multiplexer program, currently tmuxomatic only supports tmux.
 ##
-##		window		One window within a session that contains one or more panes.
+##		session			A single tmux attachment, containing one or more windows.
 ##
-##		pane		A division of a window that contains its own shell.
+##		window			One window within a session that contains one or more panes.
+##
+##		pane			Any subdivision of a window with its own shell.
 ##
 ##---------------+------------------------------------------------------------------------------------------------------
 ##     Notes     |
 ##---------------+
 ##
-## This program addresses only the session layout (windows, panes).  For tmux settings (status bar, key bindings)
-## consult an online tutorial for ".tmux.conf".
+## This program addresses only the session layout (windows, panes).  For tmux settings (status bar, key bindings), users
+## should consult an online tutorial for ".tmux.conf".
 ##
 ## For best results, design windowgrams that have a similar width-to-height ratio as your xterm.
 ##
@@ -284,124 +302,56 @@ VERSION = "1.0.20"									# x.y.z: x = Rewrite, y = Major feature, z = Minor fe
 import sys, os, time, subprocess, argparse, signal, re, math, copy
 
 INSTALLED_PYYAML = False
-try:
-	import yaml
-	INSTALLED_PYYAML = True
-except ImportError as e:
-	pass
+try: import yaml ; INSTALLED_PYYAML = True
+except ImportError as e: pass
 
 
 
+##----------------------------------------------------------------------------------------------------------------------
 ##
-## Globals
+## Globals ... Mostly constants
 ##
+##----------------------------------------------------------------------------------------------------------------------
 
 ARGS 			= None
 
 # Flexible Settings (may be safely changed)
 
+PROGRAM_THIS	= "tmuxomatic"			# Name of this executable, alternatively: sys.argv[0][sys.argv[0].rfind('/')+1:]
+EXE_TMUX		= "tmux"				# Short variable name for short line lengths, also changes to an absolute path
 MAXIMUM_WINDOWS	= 16					# Maximum windows (not panes), easily raised by changing this value alone
 VERBOSE_WAIT	= 1.5					# Wait time prior to running commands, time is seconds, only in verbose mode
-DEBUG_SCANLINE	= False					# DEBUG: Shows the clean break scanline in action (run with -vvv)
-PROGRAM_THIS	= "tmuxomatic"			# Name of this executable, alternatively: sys.argv[0][sys.argv[0].rfind('/')+1:]
-EXE				= "tmux"				# Short variable name for short line lengths, also changes to an absolute path
+DEBUG_SCANLINE	= False					# Shows the clean break scanline in action if set to True and run with -vvv
 
 # Fixed Settings (requires source update)
 
 PANE_CHARACTERS	= "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" # "[0-9a-zA-Z]"
-MINIMUM_VERSION	= "1.8"					# Minimum supported tmux version (1.8 is required for absolute sizing)
+MINIMUM_TMUX	= "1.8"					# Minimum supported tmux version (1.8 is required for absolute sizing)
 VERBOSE_MAX		= 4						# 0 = quiet, 1 = summary, 2 = inputs, 3 = fitting, 4 = commands
 MAXIMUM_PANES	= len(PANE_CHARACTERS)	# 62 maximum panes (not windows)
 
-# Expandable Settings
+# Aliases for directions block, this is intended to leverage intuitiveness for the broadest possible audience
 
-ALIASES			= { 'foc': "focus keys cursor",
-					'dir': "path cd directory",
-					'run': "exec exe execute" }
+ALIASES = {
+	'foc': "focus key keys cur cursor", # Use "use user" or reserve them for other use?
+	'dir': "directory path cd pwd cwd home",
+	'run': "exe exec execute",
+}
 
 
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Miscellaneous
+## Public derivations ... These two functions come from credited sources believed to be in the public domain
 ##
 ##----------------------------------------------------------------------------------------------------------------------
-
-def synerr( errpkg, errmsg ):
-	"""
-	Syntax error: Display error and exit
-	"""
-
-	if 'quiet' in errpkg:
-		print("Error: " + errmsg)
-	elif errpkg['format'] == "shorthand":
-		# Shorthand has exact line numbers
-		print("Error on line " + str(errpkg['line']) + ": " + errmsg)
-	else:
-		# The exact line number in YAML is not easily known with pyyaml
-		print("Error on or after line " + str(errpkg['line']) + ": " + errmsg)
-	exit(0)
-
-def tmux_run( command, nopipe=False, force=False, real=False ):
-	"""
-	Executes the specified shell command (i.e., tmux)
-		nopipe ... Do not return stdout or stderr
-		force .... Force the command to execute even if ARGS.noexecute is set
-	 	real ..... Command should be issued regardless, required for checking version, session exists, etc
-	"""
-
-	noexecute = ARGS.noexecute if ARGS and ARGS.noexecute else False
-	printonly = ARGS.printonly if ARGS and ARGS.printonly else False
-	verbose   = ARGS.verbose   if ARGS and ARGS.verbose   else 0
-	if not noexecute or force:
-		if printonly and not real:
-			# Print only, do not run
-			print(str(command)) # Use "print(str(command), end=';')" to display all commands on one line
-			return
-		if verbose >= 4 and not real:
-			print("(4) " + str(command))
-		if nopipe:
-			os.system(command)
-		else:
-			proc = subprocess.Popen( command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
-			stdout, stderr = proc.communicate()
-			# Return stderr or stdout
-			if stderr: return str(stderr, "ascii")
-			return str(stdout, "ascii")
-
-def tmux_version(): # -> name, version
-	"""
-	Queries tmux for the version
-	"""
-	result = tmux_run( EXE + " -V", nopipe=False, force=True, real=True )
-	result = [ line.strip() for line in result.split("\n") if line.strip() ]
-	name = result[0].split(" ", 1)[0] # Name that was reported by tmux (should be "tmux")
-	version = result[0].split(" ", 1)[1] # Only the version is needed
-	return name, version
-
-def signal_handler_break( signal_number, frame ):
-	"""
-	On break, displays interruption message and exits.
-	"""
-	_ = repr(signal_number) + repr(frame) # Satisfies pylint
-	print("User interrupted...")
-	exit(0)
-
-def signal_handler_hup( signal_number, frame ):
-	"""
-	Use the KeyboardInterrupt exception to communicate user disconnection
-	"""
-	_ = repr(signal_number) + repr(frame) # Satisfies pylint
-	raise KeyboardInterrupt
 
 def get_xterm_dimensions_wh(): # cols (x), rows (y)
 	"""
 	Returns the dimensions of the user's xterm
-	Modified of: https://stackoverflow.com/a/566752
+	Based on: https://stackoverflow.com/a/566752
 	"""
-
 	rows = cols = None
-
 	#
 	# Linux
 	#
@@ -413,7 +363,6 @@ def get_xterm_dimensions_wh(): # cols (x), rows (y)
 			cols = stty_exec[1]
 	if rows and cols:
 		return int(cols), int(rows) # cols, rows
-
 	#
 	# Solaris
 	#
@@ -421,7 +370,6 @@ def get_xterm_dimensions_wh(): # cols (x), rows (y)
 	cols = os.popen("tput cols", "r").read()
 	if rows and cols:
 		return int(cols), int(rows) # cols, rows
-
 	#
 	# Unix
 	#
@@ -446,7 +394,6 @@ def get_xterm_dimensions_wh(): # cols (x), rows (y)
 		cr = (env.get("LINES", 25), env.get("COLUMNS", 80))
 	if cr and len(cr) == 2 and int(cr[0]) > 0 and int(cr[1]) > 0:
 		return int(cr[1]), int(cr[0]) # cols, rows
-
 	#
 	# Unsupported ... Other platforms not needed since tmux doesn't run there
 	#
@@ -457,11 +404,9 @@ def which(program):
 	Returns the absolute path of specified executable
 	Source: https://stackoverflow.com/a/377028
 	"""
-
 	def is_exe(fpath):
 		# Return true if file exists and is executable
 		return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
 	fpath, _ = os.path.split(program)
 	if fpath:
 		if is_exe(program):
@@ -474,17 +419,84 @@ def which(program):
 				return exe_file
 	return None
 
-def command_matches(command, primary):
-	"""
-	Matches the command (from file) with the primary (for branch)
-	Returns True if command is primary or a supported alias
-	"""
 
-	if command == primary: return True
-	if primary in ALIASES and command in ALIASES[primary].split(" "): return True
-	return False
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Miscellaneous functions ... These are general use functions used throughout tmuxomatic
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+def synerr( errpkg, errmsg ):
+	"""
+	Syntax error: Display error and exit
+	"""
+	if 'quiet' in errpkg:
+		print("Error: " + errmsg)
+	elif errpkg['format'] == "shorthand":
+		# Shorthand has exact line numbers
+		print("Error on line " + str(errpkg['line']) + ": " + errmsg)
+	else:
+		# The exact line number in YAML is not easily known with pyyaml
+		print("Error on or after line " + str(errpkg['line']) + ": " + errmsg)
+	exit(0)
+
+def tmux_run( command, nopipe=False, force=False, real=False ):
+	"""
+	Executes the specified shell command (i.e., tmux)
+		nopipe ... Do not return stdout or stderr
+		force .... Force the command to execute even if ARGS.noexecute is set
+	 	real ..... Command should be issued regardless, required for checking version, session exists, etc
+	"""
+	noexecute = ARGS.noexecute if ARGS and ARGS.noexecute else False
+	printonly = ARGS.printonly if ARGS and ARGS.printonly else False
+	verbose   = ARGS.verbose   if ARGS and ARGS.verbose   else 0
+	if not noexecute or force:
+		if printonly and not real:
+			# Print only, do not run
+			print(str(command)) # Use "print(str(command), end=';')" to display all commands on one line
+			return
+		if verbose >= 4 and not real:
+			print("(4) " + str(command))
+		if nopipe:
+			os.system(command)
+		else:
+			proc = subprocess.Popen( command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+			stdout, stderr = proc.communicate()
+			# Return stderr or stdout
+			if stderr: return str(stderr, "ascii")
+			return str(stdout, "ascii")
+
+def tmux_version(): # -> name, version
+	"""
+	Queries tmux for the version
+	"""
+	result = tmux_run( EXE_TMUX + " -V", nopipe=False, force=True, real=True )
+	result = [ line.strip() for line in result.split("\n") if line.strip() ]
+	name = result[0].split(" ", 1)[0] # Name that was reported by tmux (should be "tmux")
+	version = result[0].split(" ", 1)[1] # Only the version is needed
+	return name, version
+
+def signal_handler_break( signal_number, frame ):
+	"""
+	On break, displays interruption message and exits.
+	"""
+	_ = repr(signal_number) + repr(frame) # Satisfies pylint
+	print("User interrupted...")
+	exit(0)
+
+def signal_handler_hup( signal_number, frame ):
+	"""
+	Use the KeyboardInterrupt exception to communicate user disconnection
+	"""
+	_ = repr(signal_number) + repr(frame) # Satisfies pylint
+	raise KeyboardInterrupt
 
 def satisfies_minimum_version(minimum, version):
+	"""
+	Asserts compliance by tmux version.  I've since seen a similar version check somewhere that may come with Python
+	and could probably replace this code, but this works fine for now.
+	"""
 	qn = len(minimum.split("."))
 	pn = len(version.split("."))
 	if qn < pn: minimum += ".0" * (pn-qn) # Equalize the element counts
@@ -496,11 +508,20 @@ def satisfies_minimum_version(minimum, version):
 		return False
 	return True
 
+def command_matches(command, primary):
+	"""
+	Matches the command (from file) with the primary (for branch)
+	Returns True if command is primary or a supported alias
+	"""
+	if command == primary: return True
+	if primary in ALIASES and command in ALIASES[primary].split(" "): return True
+	return False
+
 
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Windowgram
+## Window splitter logic
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
@@ -725,7 +746,7 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Session
+## Session file objects
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
@@ -960,7 +981,15 @@ class SessionFile(object):
 		if window > len(self.windows): return
 		self.windows[window]["windowgram"] = windowgram
 
-def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Processing (session file -> tmux commands)
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 	"""
 
 	Parse session file, build commands, execute.
@@ -993,12 +1022,6 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 	scale___existing_window_table = []
 
 	#
-	# Load session file
-	#
-	session = SessionFile( ARGS.filename )
-	session.Load()
-
-	#
 	# Error reporting
 	#
 	errpkg = {}
@@ -1011,9 +1034,9 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 	#
 	def SetLineNumber(linebase, lineoffset):
 		if errpkg['format'] == "shorthand":
-			errpkg['line'] = linebase + lineoffset # Exact line
+			errpkg['line'] = linebase + lineoffset # Exact line (shorthand)
 		else:
-			errpkg['line'] = linebase # Approximate line
+			errpkg['line'] = linebase # Approximate line (yaml)
 
 	#
 	# Parse session file
@@ -1041,7 +1064,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 			synerr(errpkg, "Expecting a window section, found nothing")
 		window_number += 1
 		if window_number > MAXIMUM_WINDOWS:
-			synerr(errpkg, "There's a maximum of " + MAXIMUM_WINDOWS + " windows in this version")
+			synerr(errpkg, "There's a maximum of " + str(MAXIMUM_WINDOWS) + " windows in this version")
 		window_process = line[6:].strip()
 		window_name = "" # Window name enclosed in double-quotes
 		for ch in window_process:
@@ -1065,7 +1088,6 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 			panes_h += 1 # 1.0.17: Should be here to detect Nx2 windowgram width mismatch
 			panes_y += 1
 			panes_x = 0
-			invalid = False
 			for ch in line:
 				if ch not in PANE_CHARACTERS:
 					synerr(errpkg, "Windowgram must contain valid identifiers: [0-9a-zA-Z]")
@@ -1084,7 +1106,8 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 					if not ch in layout:
 						# New pane
 						layout[ch] = {
-							'n':ch, 'x': panes_x, 'y': panes_y, 'w': 1, 'h': 1,
+							'n': ch,
+							'x': panes_x, 'y': panes_y, 'w': 1, 'h': 1,
 							'l': 0 # init link to 0
 						}
 					else:
@@ -1118,9 +1141,8 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 				if not pane: pane = it
 				elif layout[it]['y'] < layout[pane]['y']: pane = it
 				elif layout[it]['y'] == layout[pane]['y'] and layout[it]['x'] < layout[pane]['x']: pane = it
-			if pane:
-				list_panes.append(layout[pane].copy()) 	# Add to list
-				del layout[pane] 						# Remove from dict
+			list_panes.append(layout[pane].copy()) 	# Add to list
+			del layout[pane] 						# Remove from dict
 
 		#
 		# 3.2) Now check for overlaps
@@ -1333,7 +1355,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 		# Note: The first pane does not use the entires 'split' or 'tmux'.
 		iw = user_wh[0]
 		ih = user_wh[1]
-		list_split = [ { 'linkid':linkid[0], 'split':"", 'tmux':65536, 'inst_w':iw, 'inst_h':ih, 'per':"100.0" } ]
+		list_split = [ { 'linkid': linkid[0], 'split': "", 'tmux': 65536, 'inst_w': iw, 'inst_h': ih, 'per': "100.0" } ]
 		list_links = [ ( linkid[0], 0 ) ]	# List of cross-references (linkid, pane_tmux)
 		# Verbose
 		if ARGS.verbose >= 3:
@@ -1391,32 +1413,32 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 					# window that is automatically created when calling "new-session".
 					cwd = "cd " + list_panes_dir + " ; " if list_panes_dir else ""
 					list_build.append(
-						cwd + EXE + " new-session -d -s " + session_name + " -n \"" + window_name + "\"" )
+						cwd + EXE_TMUX + " new-session -d -s " + session_name + " -n \"" + window_name + "\"" )
 					# Normally, tmux automatically renames windows based on whatever is running in the focused pane.
 					# There are two ways to fix this.  1) Add "set-option -g allow-rename off" to your ".tmux.conf".
 					# 2) Add "export DISABLE_AUTO_TITLE=true" to your shell's run commands file (e.g., ".bashrc").
 					# Here we automatically do method 1 for the user, unless the user requests otherwise.
-					list_build.append( EXE + " set-option -t " + session_name + " quiet on" )
+					list_build.append( EXE_TMUX + " set-option -t " + session_name + " quiet on" )
 					renaming = [ "off", "on" ][ARGS.renaming]
-					list_build.append( EXE + " set-option -t " + session_name + " allow-rename " + renaming )
-					list_build.append( EXE + " set-option -t " + session_name + " automatic-rename " + renaming )
+					list_build.append( EXE_TMUX + " set-option -t " + session_name + " allow-rename " + renaming )
+					list_build.append( EXE_TMUX + " set-option -t " + session_name + " automatic-rename " + renaming )
 				else:
 					# First pane of successive window
-					list_build.append( EXE + " new-window -n \"" + window_name + "\"" + adddir )
+					list_build.append( EXE_TMUX + " new-window -n \"" + window_name + "\"" + adddir )
 			else: # Successive
 				# Perform the split on this pane
-				list_build.append( EXE + " select-pane -t " + str(list_split_paneid) )
+				list_build.append( EXE_TMUX + " select-pane -t " + str(list_split_paneid) )
 				# Pane sizing
 				if ARGS.relative:
 					# Relative pane sizing (percentage)
 					percentage = str( int( float( list_split_percnt ) ) ) # Integers are required by tmux 1.8
-					list_build.append( EXE + " split-window -" + list_split_orient + " -p " + percentage + adddir )
+					list_build.append( EXE_TMUX + " split-window -" + list_split_orient + " -p " + percentage + adddir )
 				else:
 					# Absolute pane sizing (characters)
 					if list_split_orient == 'v': addaxis = " -y " + str( list_split_inst_h )
 					else: addaxis = " -x " + str( list_split_inst_w )
-					list_build.append( EXE + " split-window -" + list_split_orient + adddir )
-					list_build.append( EXE + " resize-pane -t " + str(list_split_paneid + 1) + addaxis )
+					list_build.append( EXE_TMUX + " split-window -" + list_split_orient + adddir )
+					list_build.append( EXE_TMUX + " resize-pane -t " + str(list_split_paneid + 1) + addaxis )
 
 		#
 		# 5.3b) Prepare shell commands ... This is done separately after the pane size has been established
@@ -1441,12 +1463,12 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 				for run in list_panes_run:
 					clean_run = re.sub(r'([\"])', r'\\\1', run) # Escape double-quotes
 					if clean_run:
-						list_build.append( EXE + " select-pane -t " + list_panes_index )
-						list_build.append( EXE + " send-keys \"" + clean_run + "\" C-m" )
+						list_build.append( EXE_TMUX + " select-pane -t " + list_panes_index )
+						list_build.append( EXE_TMUX + " send-keys \"" + clean_run + "\" C-m" )
 			if not focus_actual_tmux_pane_index or list_panes_foc:
 				focus_actual_tmux_pane_index = list_panes_index
 		if focus_actual_tmux_pane_index:
-			list_build.append( EXE + " select-pane -t " + focus_actual_tmux_pane_index )
+			list_build.append( EXE_TMUX + " select-pane -t " + focus_actual_tmux_pane_index )
 
 		#
 		# 5.4) Add this batch to the main execution list to be run later
@@ -1460,7 +1482,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 	#
 	# Set default window
 	#
-	list_build.append( EXE + " select-window -t " + str(focus_window - 1) ) # Windows are 0+ in tmux
+	list_build.append( EXE_TMUX + " select-window -t " + str(focus_window - 1) ) # Windows are 0+ in tmux
 
 	#
 	# Notify user that tmux execution will begin and allow for time to break (ARGS.verbose >= 1)
@@ -1501,7 +1523,241 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name ):
 	#
 	# Attach to the newly created session
 	#
-	tmux_run( EXE + " attach-session -t " + session_name )
+	tmux_run( EXE_TMUX + " attach-session -t " + session_name )
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Flex (windowgram modification console)
+##
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Planned Commands:
+##
+##		help
+##		list
+##		use <name_or_serial>
+##		new <name>
+##		scale <xy_how>							how == 10, 5x5 (characters); .5x, 2x (multiplier); 500% (percentage)
+##		scale <x_how> <y_how>					how == 10, 5x5 (characters); .5x, 2x (multiplier); 500% (percentage)
+##		break <pane> <shapes>					shapes == 2x2; x 2x2 3x1; y 1 3x3 1
+##		move <pane_or_intersection> <direction>	pane == A, ab ... direction == up 2, u2, 50%, l 100%, +2, -50%
+##		split <pane> <how>						pane == A, ab ... how == v, h
+##		join <pane1> <pane2>					must have fully shared edge
+##		rename <pane1> <pane2>					rename pane, target must be unused
+##		swap <pane1> <pane2>					swap two panes (mutual rename), both panes must exist
+##		mv <pane1> <pane2>						move: swap if both panes are defined, otherwise rename
+##		rotate <how>							how = cw, ccw, 180
+##		mirror									reverse horizontally (left/right)
+##		flip									reverse vertically (top/bottom)
+##		undo									undo
+##		redo									redo
+##		print									show windowgram (automatically called after every modification)
+##		clear									destroy the windowgram modification history (cannot undo)
+##		oops									restore original session file and exit without execution
+##		done / exit								execute this modified session, as if without --flux argument
+##
+##		Any modification of the windowgram outside of flex will result in an automatic clear on the next use in flex
+##		Add aliases, resize->scale, etc
+##
+## Stack Sketch:
+##
+## 		new					base
+## 		scale				base < scale
+## ...	mirror				base   scale   scale   break   scale < mirror
+## ...	undo				base   scale < scale > break   scale   mirror
+## 		redo				base   scale   scale < break > scale   mirror
+## ...	undo				base < scale > scale   break   scale   mirror
+## 		break				base   scale < break
+## ...	undo				base > scale   break
+##		clear				base
+##
+##		The current element on stack should include arguments, all others show only the command
+##
+## Stack Storage:
+##
+##		@ FLEX HISTORY : Used by --flex console, use flex command "clear" to remove, or manually remove these lines
+##		@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+##		@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+##		@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+##		@ aaaaaaaaaaaaaaaaaaaaaaaaaa
+##
+##		Data has initial windowgram, current stack pointer, easily allows any step to be reproduced on demand
+##		Data also has version, length, data checksum, current windowgram checksum for detecting manual edits
+##		Data is stored between window header and the windowgram as compressed JSON + utf-8 encoded in base64
+##		Overwrites entire session file with updated history block for every windowgram modification
+##
+## Console will be simple text, possibly use ncurses or urwid if it's present (installation is optional like yaml)
+## Aliases for commands: "u" = undo.  Include control keys if possible: ^Z = undo, ^Y = redo, ^U = clear
+## Print warnings if common divisors could not be found (within a reasonable range, say up to 120 characters)
+## Display / print: windowgram, gap, warnings, stack, gap
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+describe = lambda kwargs: True if 'menu' in kwargs and kwargs['menu'] is True else False
+flexout = lambda line: print("    " + line)
+
+flexmenu = [] # Ordered by appearance
+
+##
+## Decorator
+##
+
+class flex(object):
+	def __init__(self, command, examples, description):
+		self.command = command.split()[0]
+		self.usage = command
+		self.description = description
+		self.examples = examples
+	def __call__(self, function):
+		# Adds new menu item, or appends usage and examples if it already exists
+		# Description is only used on first occurrence of the command, successive commands append without description
+		global flexmenu
+		flexmenu_new = []
+		append = False
+		for ent in flexmenu:
+			if ent[1]['about'][0] == self.command:
+				ent[1]['usage'] += [ self.usage, self.examples ]
+				append = True
+			flexmenu_new.append(
+				[ ent[0], {
+					'about': ent[1]['about'],
+					'usage': ent[1]['usage'],
+			} ] )
+		if not append:
+			flexmenu_new.append(
+				[ function, {
+					'about': [ self.command, self.description ],
+					'usage': [ self.usage, self.examples ],
+			} ] )
+		flexmenu = flexmenu_new
+		def wrapper(*args):
+			return function(*args)
+		return wrapper
+
+##
+## Commands
+##
+
+@flex( "help", [], "Show information for one or more commands (this list)" )
+def cmd_help_0():
+	return cmd_help_N() # Wrapper
+
+@flex( "help <commands>", [ "help new scale" ], None )
+def cmd_help_N(*commands):
+	# Filter specified commands into a list of unique commands, sorted by the official command order
+	args = commands
+	commands = []
+	for arg in args:
+		if arg not in commands:
+			commands.append(arg)
+	commands = [ cmd_dict['about'][0] for cmd_func, cmd_dict in flexmenu if cmd_dict['about'][0] in commands ]
+	# Macros
+	lengths = lambda name, about, usage, example: [ len(name), len(about), len(usage), len(example) ]
+	# All menus are four columns representing: name, about, usage, example
+	menu_title = [ "Command", "Description", "Usage", "Examples" ]
+	menu_lines = [] # Printed columns, padded before display
+	# Build menu print list from all known commands
+	add = lambda name="", about="", usage="", example="": menu_lines.append( [ name, about, usage, example ] )
+	for cmd_func, cmd_dict in flexmenu:
+		if commands and cmd_dict['about'][0] not in commands: continue
+		fnew = True
+		name, about = cmd_dict['about']
+		for ix in range( 0, len(cmd_dict['usage']), 2 ):
+			usage, examples = cmd_dict['usage'][ix:ix+2]
+			fuse = True
+			if not examples: examples = [ None ] # Allow usage without a corresponding example
+			for example in examples:
+				if fnew: add()
+				add( name if fnew else "", about if fnew else "", usage if fuse else "", example if example else "" )
+				fnew = fuse = False
+		if fnew:
+			add()
+			add( name, about )
+	add()
+	# Maximum width of each column, taking into account title and all lines
+	widths = [ len(title) for title in menu_title ]
+	for line in menu_lines: widths = [ l if l > n else n for l, n in zip( widths, [ len(n) for n in line ] ) ]
+	# Pad all lines
+	lines = menu_lines
+	menu_lines = []
+	for line in lines:
+		menu_lines.append( [ l + ((((w - len(l)) if len(l) < w else 0)) * " ") for w, l in zip( widths, line ) ] )
+	# Print introduction
+	flexout("Flex menu" + ((" (" + ", ".join(commands) + ")") if len(commands) else "") + ":" )
+	flexout("")
+	# Print menu table
+	def flexout_menu(a1, a2, a3, a4, mode=0):
+		if mode:
+			flexout( "+-" + len(a1)*"-" + "-+-" + len(a2)*"-" + "-+-" + len(a3)*"-" + "-+-" + len(a4)*"-" + "-+" )
+			if mode >= 2:
+				t1, t2, t3, t4 = [ t + (len(a) - len(t))*" " for t, a in zip(menu_title, [a1, a2, a3, a4]) ]
+				flexout( "| " + t1 + " | " + t2 + " | " + t3 + " | " + t4 + " |" )
+				flexout( "+-" + len(a1)*"-" + "-+-" + len(a2)*"-" + "-+-" + len(a3)*"-" + "-+-" + len(a4)*"-" + "-+" )
+		else:
+			flexout( "| " + a1 + " | " + a2 + " | " + a3 + " | " + a4 + " |" )
+	first = True
+	name = about = usage = example = ""
+	for name, about, usage, example in menu_lines:
+		if first:
+			flexout_menu( name, about, usage, example, mode=2 )
+		flexout_menu( name, about, usage, example )
+		first = False
+	if not first:
+		flexout_menu( name, about, usage, example, mode=1 )
+	flexout("")
+
+@flex( "list", [], "List all available windows in this tmuxomatic session" )
+def cmd_list():
+	flexout("TODO")
+
+@flex( "new <name>", [ "new some feeds" ], "Create a new window, initialized to '1'" )
+def cmd_new(name):
+	flexout("TODO")
+
+@flex( "use <name_or_serial>", [ "use my example", "use 1" ], "Select the window you would like to modify" )
+def cmd_use(name_or_serial):
+	flexout("TODO")
+
+@flex( "scale <xy_how>", [ "scale 25", "scale 500%", "scale 2x", "scale 64:36" ], \
+		"Scale by multipliers (x), or percentages (%), or to specific dimensions" )
+def cmd_scale_1(xy_how):
+	# Split directives like "64:36" and "64x36" into "64 36", also works using percentages "200%:50%", or using
+	# multipliers "2x:2x" as long as ":" is used instead of "x" as there would be a conflict with the multiplier
+	# This could be more flexible to cover cases like "2xx2" and "2x2x" by using regex
+	xy_spl = xy_how.split(":x") if xy_how.count("x") <= 1 else xy_how.split(":")
+	if len(xy_spl) == 2: return cmd_scale_2( *xy_spl )
+	# Others are simply cloned like "2x" into "2x 2x"
+	return cmd_scale_2( xy_how, xy_how )
+
+@flex( "scale <x_how> <y_how>", [ "scale 25 15", "scale 200% 50%", "scale 3x 2x" ], None )
+def cmd_scale_2(x_how, y_how):
+	flexout("TODO")
+
+##
+## Flex Console
+##
+
+def flex(session):
+	##
+	## Welcome Message
+	##
+	flexout("")
+	flexout("This is tmuxomatic flex -- Modify your windowgrams using simple, visually expressive commands!")
+	flexout("")
+	##
+	## Input Loop
+	##
+	while True:
+		cmd_help_0()
+		flexout("Initial features are still in development.")
+		flexout("Exiting...")
+		flexout("")
+		exit()
+	##
+	## The caller's session object should still be valid (no need to return one)
+	##
 
 
 
@@ -1519,7 +1775,7 @@ def main():
 		exit(0)
 
 	# Check tmux version (req = required, rep = reported)
-	tmux_req = MINIMUM_VERSION
+	tmux_req = MINIMUM_TMUX
 	tmux_cli, tmux_rep = tmux_version()
 	if tmux_cli != "tmux" or not tmux_rep:
 		print("The tmux executable cannot be found")
@@ -1567,26 +1823,34 @@ def main():
 	session_name = re.sub(r'([/])', r'_', session_name) # In case of session path: replace '/' with '_'
 	session_name = re.sub(r'\_\_+', r'_', session_name) # Replace two or more consecutive underscores with one
 
-	# Kill session on disconnect
+	# Load session file
+	session = SessionFile( ARGS.filename )
+	session.Load()
+
+	# Flex console entry
+	if ARGS.flex:
+		flex( session )
+
+	# Optional kill session on disconnect
 	def destroy():
 		if ARGS.destroy:
-			tmux_run( EXE + " kill-session -t " + session_name, nopipe=True, force=True, real=True )
+			tmux_run( EXE_TMUX + " kill-session -t " + session_name, nopipe=True, force=True, real=True )
 
 	# Existing session handler (skipped when printing or scaling)
 	if not ancillary:
 		# Detect existing session
-		result = tmux_run( EXE + " has-session -t " + session_name, nopipe=False, force=True, real=True )
+		result = tmux_run( EXE_TMUX + " has-session -t " + session_name, nopipe=False, force=True, real=True )
 		if not result:
 			# Handle existing session
 			if ARGS.recreate:
 				# Destroy existing session (optional)
 				print("Destroying running session, \"" + session_name + "\"...")
-				tmux_run( EXE + " kill-session -t " + session_name, nopipe=False, force=False, real=True )
+				tmux_run( EXE_TMUX + " kill-session -t " + session_name, nopipe=False, force=False, real=True )
 			else:
 				# Attach existing session
 				print("Attaching running session, \"" + session_name + "\"...")
 				try:
-					tmux_run( EXE + " attach-session -t " + session_name, nopipe=True, force=False, real=True )
+					tmux_run( EXE_TMUX + " attach-session -t " + session_name, nopipe=True, force=False, real=True )
 				except KeyboardInterrupt: # User disconnected
 					destroy()
 				exit(0)
@@ -1602,7 +1866,7 @@ def main():
 	# Process session: generates a new session and attaches, or prints, or scales
 	if not ancillary: print("Running new session, \"" + session_name + "\"...")
 	try:
-		tmuxomatic( program_cli, " ".join(sys.argv), user_wh, session_name )
+		tmuxomatic( program_cli, " ".join(sys.argv), user_wh, session_name, session )
 	except KeyboardInterrupt: # User disconnected
 		destroy()
 	exit(0)
@@ -1621,29 +1885,47 @@ if __name__ == "__main__":
 	signal.signal(signal.SIGINT, signal_handler_break) # SIGINT (user break)
 	signal.signal(signal.SIGHUP, signal_handler_hup) # SIGHUP (user disconnect)
 
+	# Argument deprecations
+	for arg in sys.argv[1:]:
+		dep = [ [ "Argument " + arg + " removed in version " + version + ": " + reason ] \
+			for version, reason, commands in [
+			[ "1.0.20", "Absolute positioning enabled by default", [ "-a", "--absolute" ] ],
+#			[ "1.1.0",  "Use --flex to scale your windowgrams",    [ "-s", "--scale" ] ],
+#			[ "1.1.0",  "Use --flex for windowgram modification",  [ "-w", "--scale-replace" ] ],
+			] if arg in commands ]
+		if dep:
+			print("!!! " + dep[0][0])
+			skip = True
+	if 'skip' in vars() and skip is True:
+		print("Exiting...")
+		exit()
+
 	# Argument parser
 	PARSER = argparse.ArgumentParser( description=\
-		"The easiest way to define tmux sessions! ... An introduction and example " + \
+		"The easiest way to define sessions in tmux! ... An introduction and example " + \
 		"sessions are on the project home page: " + HOMEPAGE )
 	PARSER.add_argument( "-V", "--version", action="version", version=PROGRAM_THIS + " " + VERSION, help=\
 		"Show the version number and exit" )
 	PARSER.add_argument( "-v", "--verbose", action="count", help=\
 		"Increase the verbosity level, up to " + str(VERBOSE_MAX) + " (-" + (VERBOSE_MAX * 'v') + ")" )
-	PARSER.add_argument( "-r", "--recreate", action="store_true", help=\
-		"If the session exists, it will be recreated.  Normally, " + \
-		"if it's already running, it will reconnect to it.")
 	PARSER.add_argument( "-n", "--renaming", action="store_true", help=\
 		"Let tmux automatically rename the windows" )
 	PARSER.add_argument( "-p", "--printonly", action="store_true", help=\
 		"Print only the tmux commands, then exit" )
 	PARSER.add_argument( "-x", "--noexecute", action="store_true", help=\
 		"Do everything except issue commands to tmux" )
-	PARSER.add_argument( "-a", "--absolute", action="store_true", help=\
-		"This is now the default and should not be used." )
+	PARSER.add_argument( "-r", "--recreate", action="store_true", help=\
+		"If the session exists, it will be destroyed then recreated.  " + \
+		"Normally, if it exists, tmuxomatic will reattach to it.")
 	PARSER.add_argument( "-d", "--destroy", action="store_true", help=\
-		"When you disconnect, the session will be destroyed.  " + \
-		"Most useful in situations where you don't want to " + \
-		"consume resources when you're not plugged in." )
+		"When you disconnect, your session will be destroyed.  This " + \
+		"is useful in situations where you don't want to consume " + \
+		"resources when you're not 'plugged in'." )
+	PARSER.add_argument( "-f", "--flex", action="store_true", help=\
+		"Windowgram modification console.  Flex gives you the ability " + \
+		"to bend your windowgrams to perfection using various fully " + \
+		"automated techniques (scale, break, etc)." )
+# TODO: Move scale to Flex
 	PARSER.add_argument( "-s", "--scale", nargs=3, metavar=('SEQ', 'XSCALE', 'YSCALE'), help=\
 		"Loads window SEQ, scales it by XSCALE and YSCALE, then " + \
 		"prints the resulting windowgram, then exits.  " + \
@@ -1656,23 +1938,19 @@ if __name__ == "__main__":
 		"session file.  This is only valid when used with window " + \
 		"scale (-s).  Use with caution since this overwrites the " + \
 		"specified session file." )
+# TODO: Move scale to Flex
 	PARSER.add_argument( "filename", help=\
 		"The tmuxomatic session filename (required)" )
 	ARGS = PARSER.parse_args()
 
-	# Placement algorithm switch
-	if ARGS.absolute:
-		print("WARNING: The option -a/--absolute is now default and this switch be invalid in a future version.")
-		print("WARNING: Pausing 10 seconds...")
-		time.sleep( 10.0 )
-	# Set the flag that determines tmux placement technique, in a future version the relative placement may be removed
-	ARGS.relative = False # This could be added as an option, but somebody would have to make a case for its usefulness
+	# Only absolute placement is supported in this version, relative placement could be useful for programs like weechat
+	ARGS.relative = False
 
 	# Locate tmux
-	EXE = which(EXE)
-	if not EXE:
+	EXE_TMUX = which( EXE_TMUX )
+	if not EXE_TMUX:
 		print("This requires tmux to be installed on your system...")
-		print("If it's already installed, add it to your $PATH, or set EXE to an absolute filename...")
+		print("If it's already installed, update your $PATH, or set EXE_TMUX in the source to an absolute filename...")
 		exit(0)
 
 	# Run tmuxomatic ... A separate function was needed to quiet pylint (local variable scope)

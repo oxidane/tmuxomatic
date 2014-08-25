@@ -1,6 +1,6 @@
 
 
-# tmuxomatic [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dd/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
+# tmuxomatic [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
 The other tmux session managers are doing it wrong.  From unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of pane splits.  Instead, session management should be more flexible and more powerful, yet so easy that anybody could use it after just one example.
 
@@ -8,18 +8,18 @@ At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux 
 
 Compare this window from `session_example`, with its screenshot from `tmuxomatic session_example`:
 
-	window example_one        # <-- A new window begins like this, spaces in names are allowed
+	window example_one        # A new window begins like this, spaces in names are allowed
 
-	AAAAAAvvvvvXXXXXTTTT      # <-- The windowgram, it defines the shapes and positions of panes
-	jjjQQQQQQQuuuuuuTTTT      # <-- Make your own, of any size and arrangement, 62 panes maximum
+	AAAAAAvvvvvXXXXXTTTT      # The windowgram, it defines the shapes and positions of panes
+	jjjQQQQQQQuuuuuuTTTT      # Make your own, of any size and arrangement, 62 panes maximum
 	jjjQQQQQQQuuuuuuTTTT
 	jjjQQQQQQQuuuuuuTTTT
 	0000llllllllllaaaaaa
 	1234llllllllllaaaaaa
 
-	  foc                     # <-- Three 3-letter commands to remember: Focus, Directory, Run
-	  dir ~                   # <-- Unlinked directory, becomes default for all undefined panes
-	A run figlet "A"          # <-- Linked to pane A, this command prints "A" in large lettering
+	  foc                     # Three 3-letter commands to remember: Focus, Directory, Run
+	  dir ~                   # Unlinked directory, becomes default for all undefined panes
+	A run figlet "A"          # Linked to pane A, this command prints a large "A" in pane A
 	Q run figlet "Q"
 	A foc
 
@@ -55,14 +55,18 @@ There are three ways to install tmuxomatic, in order of convenience:
     * `git clone git://github.com/oxidane/tmuxomatic.git`
     * `cp -a tmuxomatic/tmuxomatic /usr/bin`
 
-Verify that you have the current version installed:
+Verify that you have the current version [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) installed:
 
 * `tmuxomatic -V`
 
-On some systems pip will not upgrade properly, this may be fixed by cleaning the pip cache:
+On some systems pip will not upgrade properly, this might be fixable by clearing the pip cache prior to upgrade:
 
 * `rm -rf /tmp/pip-build-root/tmuxomatic`
 * `pip-python3 install --upgrade tmuxomatic`
+
+Optional packages:
+
+* For YAML session file support: `pip install pyyaml`
 
 
 
