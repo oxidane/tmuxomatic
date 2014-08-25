@@ -1017,7 +1017,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 	layout = {} # Indexed by line
 	panes_w = 0
 	panes_h = 0
-	focus_window = 1 # Windows in tmux are 1+
+	focus_window_name = None # Use window name rather than window index (supports tmux option: base-index)
 	line = "" # Loaded line stored here
 	scale___existing_window_table = []
 
@@ -1264,7 +1264,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 				print("(2) Pane definition: " + line)
 			if command_matches(line, "foc"):
 				# Window focus
-				focus_window = window_number
+				focus_window_name = window_name
 				continue # Next line
 			if command_matches(line[:3], "dir"):
 				# Default directory
@@ -1482,7 +1482,8 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 	#
 	# Set default window
 	#
-	list_build.append( EXE_TMUX + " select-window -t " + str(focus_window - 1) ) # Windows are 0+ in tmux
+	if focus_window_name is not None:
+		list_build.append( EXE_TMUX + " select-window -t " + focus_window_name )
 
 	#
 	# Notify user that tmux execution will begin and allow for time to break (ARGS.verbose >= 1)
