@@ -55,7 +55,7 @@ There are three ways to install tmuxomatic, in order of convenience:
     * `git clone git://github.com/oxidane/tmuxomatic.git`
     * `cp -a tmuxomatic/tmuxomatic /usr/bin`
 
-Verify that you have the current version [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) installed:
+Verify that you have the current version installed: [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
 * `tmuxomatic -V`
 
@@ -66,7 +66,7 @@ On some systems pip will not upgrade properly, this might be fixable by clearing
 
 Optional packages:
 
-* For YAML session file support: `pip install pyyaml`
+* `pip-python3 install pyyaml` ... For YAML session file support
 
 
 

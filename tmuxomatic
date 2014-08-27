@@ -67,6 +67,7 @@ VERSION = "1.1.0"									# x.y.z: x = Rewrite, y = Major Feature, z = Minor Fea
 ##
 ##	1.1.0	TBD			Began tmuxomatic --flex, commands will be added over the next few releases
 ##						Fixed the readme to fit the recent github style changes
+##						Fixed issue #8: Use window name for focus to support tmux base-index
 ##
 ##	------	----------	------------------------------------------------------------------------------------
 ##
@@ -299,7 +300,7 @@ VERSION = "1.1.0"									# x.y.z: x = Rewrite, y = Major Feature, z = Minor Fea
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-import sys, os, time, subprocess, argparse, signal, re, math, copy
+import sys, os, time, subprocess, argparse, signal, re, math, copy, inspect
 
 INSTALLED_PYYAML = False
 try: import yaml ; INSTALLED_PYYAML = True
@@ -325,7 +326,7 @@ DEBUG_SCANLINE	= False					# Shows the clean break scanline in action if set to 
 
 # Fixed Settings (requires source update)
 
-PANE_CHARACTERS	= "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" # "[0-9a-zA-Z]"
+PANE_CHARACTERS	= "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" # Official order "[0-9a-zA-Z]"
 MINIMUM_TMUX	= "1.8"					# Minimum supported tmux version (1.8 is required for absolute sizing)
 VERBOSE_MAX		= 4						# 0 = quiet, 1 = summary, 2 = inputs, 3 = fitting, 4 = commands
 MAXIMUM_PANES	= len(PANE_CHARACTERS)	# 62 maximum panes (not windows)
@@ -750,6 +751,18 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
+##
+## Window declaration macros
+## A window declaration without a specified name is not allowed, except during the file parsing
+##
+
+is_windowdeclaration = lambda line: re.search(r"window", line)
+windowdeclaration_extractname = lambda line: re.split(r"[ \t]+", line+" ")[1] if is_windowdeclaration(line) else ""
+
+##
+## Parsed session file classes
+##
+
 class BatchOfLines(object): # A batch of lines (delimited string) with the corresponding line numbers (int list)
 	def __init__(self):
 		self.lines = ""				# Lines delimited by \n, expects this on the last line in each batch of lines
@@ -807,6 +820,7 @@ class SessionFile(object):
 	def __init__(self, filename):
 		self.filename = filename
 		self.Clear()
+		self.modified = False	# Explicit modification
 	def Clear(self):
 		self.format = None		# "shorthand" or "yaml"
 		self.header = ""		# title comments
@@ -837,8 +851,8 @@ class SessionFile(object):
 			if line.find("#") >= 0: line = line[:line.find("#")]
 			line = line.strip()
 			# Append this line onto its corresponding section string
-			if self.state != 1 and re.search(r"window[ \t]", line): nextwindow(1)
-			elif self.state == 1 and not re.search(r"window[ \t]", line): self.state = 2
+			if self.state != 1 and is_windowdeclaration(line): nextwindow(1)
+			elif self.state == 1 and not is_windowdeclaration(line): self.state = 2
 			elif ( self.state == 2 or self.state == 4 or self.state == 6 ) and line:
 				if self.state == 6:
 					# Move directions_comments into directions, since we only ever loop when "window" is found
@@ -940,6 +954,7 @@ class SessionFile(object):
 		else:
 			self.Load_Shorthand( rawfile )
 	def Save(self):
+		self.modified = False
 		if self.filename and self.format:
 			if self.format == "shorthand":
 				# Shorthand
@@ -960,10 +975,10 @@ class SessionFile(object):
 				represent_literal_str = change_style('|', yaml.representer.SafeRepresenter.represent_str)
 				yaml.add_representer(literal_str, represent_literal_str)
 				# Now add all windows to a dictionary for saving
-				for window in self.windows:
+				for ix, window in enumerate(self.windows):
+					serial = 1+ix
 					# Extract name: "window panel 1\n" -> "panel 1"
-					name = window['title'].split("\n")[0].strip()
-					if re.search(r"window[ \t]", name): name = name.split(" ", 2)[1]
+					name = windowdeclaration_extractname( self.Get_WindowDecarationLine( serial ) )
 					# Append window definition
 					# TODO: Sort as "name", "windowgram", "directions".  Maybe use: http://pyyaml.org/ticket/29
 					window_dict = {
@@ -977,9 +992,51 @@ class SessionFile(object):
 				# Write file
 				f = open(self.filename, 'w')
 				f.write( formatted )
-	def Replace_Windowgram(self, window, windowgram):
-		if window > len(self.windows): return
-		self.windows[window]["windowgram"] = windowgram
+	def Replace_Windowgram(self, serial, windowgram):
+		if serial < 1 or serial > self.Count_Windows(): return
+		self.windows[serial-1]["windowgram"] = windowgram
+		self.modified = True
+	def Modified(self): # See flag use for limitations
+		return self.modified
+	def Count_Windows(self):
+		return len(self.windows)
+	def Serial_Is_Valid(self, serial):
+		return serial >= 1 and serial <= len(self.windows)
+	def Get_WindowDecarationLine(self, serial):
+		if serial < 1 or serial > self.Count_Windows(): return "???" # Out of range
+		return self.windows[serial-1]['title'].split("\n")[0].strip() # Assumes the window declaration is on first line
+	def Get_Name(self, serial):
+		if serial < 1 or serial > self.Count_Windows(): return "???" # Out of range
+		return windowdeclaration_extractname( self.Get_WindowDecarationLine( serial ) )
+	def Get_Windowgram(self, serial):
+		if serial < 1 or serial > self.Count_Windows(): return "" # Out of range
+		return self.windows[serial-1]['windowgram']
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Windowgram functions
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+def Windowgram_OrderedUniques(windowgram):
+	paneids = set(list("".join(windowgram.split("\n"))))
+	return "".join([ paneid for paneid in PANE_CHARACTERS if paneid in paneids ])
+
+def Windowgram_Dimensions_Int(windowgram):
+	w = h = 0
+	for h, l in enumerate(windowgram.split("\n")):
+		l = l.strip()
+		if len(l) > w: w = len(l)
+	return [ w, h ]
+
+def Windowgram_Dimensions_Float(windowgram):
+	return [ float(elem) for elem in Windowgram_Dimensions_Int(windowgram) ]
+
+def Windowgram_LostPanes(windowgram1, windowgram2):
+	return Windowgram_OrderedUniques( # Additionally useful in this context
+		"".join( list( set(Windowgram_OrderedUniques(windowgram1)) - set(Windowgram_OrderedUniques(windowgram2)) ) ) )
 
 
 
@@ -1012,8 +1069,9 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 	# Initialize
 	list_execution = [] # List of tmux command lists for a session, only executed on successful parsing
 	list_build = [] # Separate list per window
-	window_number = 0
+	window_serial = 0 # 1+
 	window_name = ""
+	window_names_seen = [] # Assert unique window names (related to issue #8)
 	layout = {} # Indexed by line
 	panes_w = 0
 	panes_h = 0
@@ -1060,21 +1118,26 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 		title_lines = window.SplitCleanByKey('title')
 		line = title_lines[0] if len(title_lines) else ""
 		SetLineNumber( window.GetLines('title'), 0 )
-		if not line or not re.search(r"window[ \t]", line):
+		if not line or not is_windowdeclaration(line):
 			synerr(errpkg, "Expecting a window section, found nothing")
-		window_number += 1
-		if window_number > MAXIMUM_WINDOWS:
+		window_serial += 1 # 1+
+		if window_serial > MAXIMUM_WINDOWS:
 			synerr(errpkg, "There's a maximum of " + str(MAXIMUM_WINDOWS) + " windows in this version")
 		window_process = line[6:].strip()
 		window_name = "" # Window name enclosed in double-quotes
-		for ch in window_process:
-			if ch == '\"': window_name = window_name + '\\"' # Escape double-quotes
-			else: window_name = window_name + ch
+		window_name = "".join( [ ch if ch != '\"' else '\\"' for ch in window_process ] ) # Escape double-quotes
+		if not window_name:
+			synerr(errpkg, "Window serial " + str(window_serial) + " does not have a name")
+		for ix, seen_name in enumerate(window_names_seen):
+			if window_name == seen_name:
+				synerr(errpkg, "As of version 1.1.0, all window names must be unique.  The duplicate name, \"" + \
+					window_name + "\", for window serial " + str(window_serial) + ", already used by " + str(1+ix))
+		window_names_seen.append( window_name )
 		layout = {}
 		panes_w = 0
 		panes_h = 0
 		panes_y = 0
-		if ARGS.scale: scale___existing_window_table.append("  " + str(window_number) + ": " + window_name)
+		if ARGS.scale: scale___existing_window_table.append("  " + str(window_serial) + ": " + window_name)
 		if ARGS.verbose >= 2: print("")
 
 		#
@@ -1123,7 +1186,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 						if layout[ch]['x'] > panes_x:
 							layout[ch]['x'] = panes_x
 		if not found:
-			synerr(errpkg, "Windowgram not specified for window number " + str(window_number))
+			synerr(errpkg, "Windowgram not specified for window serial " + str(window_serial))
 
 		#
 		# 3) Build list_panes
@@ -1166,7 +1229,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 		#
 		# 3.3) Scale window if user requested
 		#
-		if ARGS.scale and int(ARGS.scale[0]) == window_number:
+		if ARGS.scale and int(ARGS.scale[0]) == window_serial:
 			def scale_one( element, multiplier ):
 				# Scale element using integer rounding, multiplier must be float
 				q, r = math.modf( float(element - 1) * multiplier )
@@ -1230,12 +1293,12 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 			scaled = "x=" + str(ax) + ", y=" + str(ay)
 			header = "window " + window_name + " # User scaled: " + scaled
 			# Windowgram title
-			windowgram_title = "(" + str(window_number) + ") \"" + window_name + "\""
+			windowgram_title = "(" + str(window_serial) + ") \"" + window_name + "\""
 			# Either write to file or write to stdout
 			if ARGS.scale_replace:
 				# FILE ... Save session modified with the scaled windowgram
 				print("Scaled windowgram " + windowgram_title + "...")
-				session.Replace_Windowgram( window_number-1, wincfg_scaled )
+				session.Replace_Windowgram( window_serial-1, wincfg_scaled )
 				session.Save()
 				print("Replaced it in session file \"" + ARGS.filename + "\"...")
 			else:
@@ -1407,7 +1470,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 			#
 			if first_pane: # First
 				first_pane = False
-				if window_number == 1:
+				if window_serial == 1:
 					# First pane of first window
 					# The shell's cwd must be set, the only other way to do this is to discard the
 					# window that is automatically created when calling "new-session".
@@ -1556,8 +1619,9 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 ##		redo									redo
 ##		print									show windowgram (automatically called after every modification)
 ##		clear									destroy the windowgram modification history (cannot undo)
-##		oops									restore original session file and exit without execution
-##		done / exit								execute this modified session, as if without --flux argument
+##		oops									restore the original session and exit without execution
+##		done / run								save modified session, then execute
+##		exit									save modified session, but do not execute
 ##
 ##		Any modification of the windowgram outside of flex will result in an automatic clear on the next use in flex
 ##		Add aliases, resize->scale, etc
@@ -1590,62 +1654,113 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 ##		Overwrites entire session file with updated history block for every windowgram modification
 ##
 ## Console will be simple text, possibly use ncurses or urwid if it's present (installation is optional like yaml)
-## Aliases for commands: "u" = undo.  Include control keys if possible: ^Z = undo, ^Y = redo, ^U = clear
+## Aliases for commands: "u" = undo.  Include control keys if possible: ^Z = undo, ^Y = redo, ^U = clear, ^D = exit
 ## Print warnings if common divisors could not be found (within a reasonable range, say up to 120 characters)
-## Display / print: windowgram, gap, warnings, stack, gap
+## Display / print: clear, windowgram, gap, warnings, stack, gap, menu, gap, prompt
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
 describe = lambda kwargs: True if 'menu' in kwargs and kwargs['menu'] is True else False
-flexout = lambda line: print("    " + line)
+flexout = lambda lines: print("    " + str(lines)) if not '\n' in lines else [ flexout(l) for l in lines.split('\n') ]
+usage_triplets = lambda cmd_dict: [ cmd_dict['usage'][ix:ix+3] for ix in range( 0, len(cmd_dict['usage']), 3 ) ]
 
-flexmenu = [] # Ordered by appearance
+##
+## Lists of commands are ordered by appearance
+##
+
+flexmenu = []						# List of all commands and aliases (recognition)
+flexmenu_aliases = []				# List of all aliases (recognized not displayed)
+flexmenu_list = []					# List of primary commands (displayed at prompt)
+
+##
+## Other globals
+##
+
+flexmenu_session = None				# Session object in global scope for modification by commands
+flexmenu_index = [ 0 ]				# Selected window, list is for reference purposes only
+flexsense = {						# Sense information in dictionary for convenience
+	'finished': False,
+	'restore': False,
+	'execute': False,
+	'noshowcmds': False,
+	'printer': False,
+	'warning': None,
+}
+flexsense_reset = copy.deepcopy( flexsense )
 
 ##
 ## Decorator
 ##
 
 class flex(object):
-	def __init__(self, command, examples, description):
-		self.command = command.split()[0]
-		self.usage = command
+	def __init__(self, command="", examples=[], description=None, aliases=[]):
+		self.command_only = command
 		self.description = description
 		self.examples = examples
+		self.aliases = aliases
 	def __call__(self, function):
+		# From function build usage
+		self.usage = self.command_only
+		self.arglens = [ 0, 0 ] # [ Required, Total ]
+		spec = inspect.getargspec(function)
+		la = len(spec.args) if spec.args else 0
+		ld = len(spec.defaults) if spec.defaults else 0
+		class NoDefault: pass # Placeholder since None is a valid default argument
+		args_with_defaults = [ ( spec.args[ix], (NoDefault if ix < la-ld else spec.defaults[ix-(la-ld)]) ) \
+			for ix in range(0, len(spec.args)) ]
+		for arg, default in args_with_defaults:
+			self.arglens[1] += 1
+			if default is NoDefault: self.arglens[0] += 1
+			enclosed = "<>" if default is NoDefault else "[]"
+			self.usage += " " + enclosed[0] + arg + enclosed[1]
+		if spec.varargs:
+			self.usage += " [" + spec.varargs + "...]"
+			self.arglens[1] = -1 # Represents use of *args
 		# Adds new menu item, or appends usage and examples if it already exists
 		# Description is only used on first occurrence of the command, successive commands append without description
-		global flexmenu
-		flexmenu_new = []
 		append = False
-		for ent in flexmenu:
-			if ent[1]['about'][0] == self.command:
-				ent[1]['usage'] += [ self.usage, self.examples ]
+		for entdict in flexmenu:
+			if entdict['about'][0] == self.command_only:
+				entdict['funcs'] += [ function ]
+				entdict['usage'] += [ self.usage, self.examples, self.arglens ]
 				append = True
-			flexmenu_new.append(
-				[ ent[0], {
-					'about': ent[1]['about'],
-					'usage': ent[1]['usage'],
-			} ] )
 		if not append:
-			flexmenu_new.append(
-				[ function, {
-					'about': [ self.command, self.description ],
-					'usage': [ self.usage, self.examples ],
-			} ] )
-		flexmenu = flexmenu_new
+			flexmenu.append( {
+				'funcs': [ function ],
+				'about': [ self.command_only, self.description ],
+				'usage': [ self.usage, self.examples, self.arglens ],
+			} )
+			if not self.command_only in flexmenu_list: flexmenu_list.append( self.command_only )
+		# Add aliases if any
+		for ix, alias_tup in enumerate(self.aliases):
+			if type(alias_tup) is not list:
+				print("Flux command indexing error: " + self.command_only + " alias #" + str(1+ix) + " is not a list")
+				exit()
+			if len(alias_tup) != 2:
+				print("Flux command indexing error: " + self.command_only + " alias #" + str(1+ix) + " is not a pair")
+				exit()
+			flexmenu_aliases.append( alias_tup )
+		# Function wrapper
 		def wrapper(*args):
 			return function(*args)
 		return wrapper
 
 ##
-## Commands
+## Commands: Helpers
 ##
 
-@flex( "help", [], "Show information for one or more commands (this list)" )
+@flex(
+	command = "help",
+	description = "Show information for one or more commands (this list)",
+)
 def cmd_help_0():
 	return cmd_help_N() # Wrapper
 
-@flex( "help <commands>", [ "help new scale" ], None )
+@flex(
+	command = "help",
+	aliases = [["h", "help "], ["?", "help "], ["/", "help "]],
+	examples = [ "help new scale" ],
+)
 def cmd_help_N(*commands):
 	# Filter specified commands into a list of unique commands, sorted by the official command order
 	args = commands
@@ -1653,7 +1768,7 @@ def cmd_help_N(*commands):
 	for arg in args:
 		if arg not in commands:
 			commands.append(arg)
-	commands = [ cmd_dict['about'][0] for cmd_func, cmd_dict in flexmenu if cmd_dict['about'][0] in commands ]
+	commands = [ cmd_dict['about'][0] for cmd_dict in flexmenu if cmd_dict['about'][0] in commands ]
 	# Macros
 	lengths = lambda name, about, usage, example: [ len(name), len(about), len(usage), len(example) ]
 	# All menus are four columns representing: name, about, usage, example
@@ -1661,12 +1776,11 @@ def cmd_help_N(*commands):
 	menu_lines = [] # Printed columns, padded before display
 	# Build menu print list from all known commands
 	add = lambda name="", about="", usage="", example="": menu_lines.append( [ name, about, usage, example ] )
-	for cmd_func, cmd_dict in flexmenu:
+	for cmd_dict in flexmenu:
 		if commands and cmd_dict['about'][0] not in commands: continue
 		fnew = True
 		name, about = cmd_dict['about']
-		for ix in range( 0, len(cmd_dict['usage']), 2 ):
-			usage, examples = cmd_dict['usage'][ix:ix+2]
+		for usage, examples, arglens in usage_triplets(cmd_dict):
 			fuse = True
 			if not examples: examples = [ None ] # Allow usage without a corresponding example
 			for example in examples:
@@ -1709,56 +1823,240 @@ def cmd_help_N(*commands):
 		flexout_menu( name, about, usage, example, mode=1 )
 	flexout("")
 
-@flex( "list", [], "List all available windows in this tmuxomatic session" )
-def cmd_list():
-	flexout("TODO")
+##
+## Commands: Selectors
+##
 
-@flex( "new <name>", [ "new some feeds" ], "Create a new window, initialized to '1'" )
+@flex(
+	command = "list",
+	aliases = [["l", "list "]],
+	description = "List all available windows in this tmuxomatic session",
+)
+def cmd_list():
+	flexout("Available windows in this session file (use serial or name):\n")
+	for serial in range(1, flexmenu_session.Count_Windows()+1):
+		flexout( "    #" + str(serial) + ": " + flexmenu_session.Get_Name(serial) )
+	flexout("")
+
+@flex(
+	command = "new",
+	aliases = [["n", "new "]],
+	examples = [ "new some feeds" ],
+	description = "Create a new window, initialized to '1'",
+)
 def cmd_new(name):
 	flexout("TODO")
 
-@flex( "use <name_or_serial>", [ "use my example", "use 1" ], "Select the window you would like to modify" )
+@flex(
+	command = "use",
+	aliases = [["u", "use "]],
+	examples = [ "use my example", "use 1" ],
+	description = "Select the window you would like to modify",
+)
 def cmd_use(name_or_serial):
-	flexout("TODO")
+	def using(serial): flexsense['printer'] = True ; flexmenu_index[0] = serial
+	for serial in range(1, flexmenu_session.Count_Windows()+1):
+		if name_or_serial == flexmenu_session.Get_Name(serial): return using(serial)	# Matched name
+	if name_or_serial.isdigit():
+		if flexmenu_session.Serial_Is_Valid(serial): return using(int(name_or_serial))	# Matched number
+	flexout( "The name or serial you specified is invalid: " + name_or_serial + "\n" )	# No match
 
-@flex( "scale <xy_how>", [ "scale 25", "scale 500%", "scale 2x", "scale 64:36" ], \
-		"Scale by multipliers (x), or percentages (%), or to specific dimensions" )
+@flex(
+	command = "print",
+	aliases = [["p", "print"]],
+	description = "Display windowgram (automatically displayed on modification)",
+)
+def cmd_print():
+	serial = flexmenu_index[0]
+	if flexmenu_session.Serial_Is_Valid(serial):
+		flexout("Windowgram for window #" + str(serial) + ": " + flexmenu_session.Get_Name(serial) + "\n")
+		flexout( "\n".join([ "    " + l for l in flexmenu_session.Get_Windowgram(serial).split("\n") ]) )
+
+##
+## Commands: Modifiers
+##
+
+@flex(
+	command = "scale",
+	examples = [ "scale 25", "scale 500%", "scale 2x", "scale 64:36" ],
+	description = "Scale by multipliers (x), or percentages (%), or to specific dimensions",
+	aliases = [["s", "scale "], ["half", "scale 50%"], ["double", "scale 2x"]],
+)
 def cmd_scale_1(xy_how):
 	# Split directives like "64:36" and "64x36" into "64 36", also works using percentages "200%:50%", or using
 	# multipliers "2x:2x" as long as ":" is used instead of "x" as there would be a conflict with the multiplier
-	# This could be more flexible to cover cases like "2xx2" and "2x2x" by using regex
-	xy_spl = xy_how.split(":x") if xy_how.count("x") <= 1 else xy_how.split(":")
-	if len(xy_spl) == 2: return cmd_scale_2( *xy_spl )
+	# TODO: This could be more flexible to cover cases like "2xx2" and "2x2x" by using regex
+	if xy_how[-1:] != "x":
+		xy_spl = xy_how.split("x") if xy_how.count("x") <= 1 else xy_how.split(":")
+		if len(xy_spl) == 2: return cmd_scale_2( *xy_spl )
 	# Others are simply cloned like "2x" into "2x 2x"
 	return cmd_scale_2( xy_how, xy_how )
 
-@flex( "scale <x_how> <y_how>", [ "scale 25 15", "scale 200% 50%", "scale 3x 2x" ], None )
+@flex(
+	command = "scale",
+	examples = [ "scale 25 15", "scale 200% 50%", "scale 2x .5x" ],
+)
 def cmd_scale_2(x_how, y_how):
-	flexout("TODO")
+	# Because text is low resolution, fractional scaling may produce unsatisfactory results
+	serial = flexmenu_index[0]
+	if flexmenu_session.Serial_Is_Valid(serial):
+		# Generics
+		windowgram_before = flexmenu_session.Get_Windowgram(serial)
+		dim_before = Windowgram_Dimensions_Float(windowgram_before)
+		# Convert to common float multipliers for easy scaling
+		args = [ 1.0, 1.0 ] # Default to no scale on error
+		for ix, arg in enumerate([x_how, y_how]):
+			try:
+				if arg[-1:] == "x" or arg[-1:] == "X" or arg[-1:] == "*": args[ix] = float(arg[:-1])
+				elif arg[-1:] == "%": args[ix] = float(arg[:-1]) / 100.0
+				else: args[ix] = float(arg) / float(dim_before[ix])
+			except ValueError: pass
+		x_how, y_how = args
+		dim_after = [ x_how * dim_before[0], y_how * dim_before[1] ]
+		# Scale the windowgram
+		windowgram_after = []
+		windowgram_work = windowgram_before.split("\n")[:-1]
+		windowgram_work = [ [ ch for ch in list(ln) ] for ix, ln in enumerate(windowgram_work) ]
+		for y in range(0, int( dim_after[1] )):
+			windowgram_after.append( [ windowgram_work[ int(y/y_how) ][ int(x/x_how) ] \
+				for x in range(0, int( dim_after[0] )) ] )
+		windowgram_after = "\n".join( [ "".join(line) for line in windowgram_after ] )
+		# Alert user to any panes lost
+		lost_panes = Windowgram_LostPanes( windowgram_before, windowgram_after )
+		if len(lost_panes): flexsense['warning'] = "Lost " + str( len(lost_panes) ) + " panes: " + lost_panes
+		# Update
+		flexmenu_session.Replace_Windowgram( serial, windowgram_after )
+
+##
+## Commands: Terminators
+##
+
+@flex(
+	command = "oops",
+	description = "Restore the original session, then exit without execution",
+)
+def cmd_oops():
+	flexsense['finished'] = flexsense['restore'] = True
+
+@flex(
+	command = "done",
+	description = "Keep changes to session, then execute",
+	aliases = [["d", "done"], ["run", "done"], ["go", "done"]],
+)
+def cmd_done():
+	flexsense['finished'] = flexsense['execute'] = True
+
+@flex(
+	command = "exit",
+	aliases = [["x", "exit"]],
+	description = "Keep changes to session, but do not execute",
+)
+def cmd_exit():
+	flexsense['finished'] = True
 
 ##
 ## Flex Console
 ##
 
-def flex(session):
+def cls(rows=None):
+	flexout("\n" * 100)
+
+def flex(rows, session, select=None):
+	global flexmenu_session
+	flexmenu_session = session
+	session_original = session
 	##
-	## Welcome Message
+	## Welcome message
 	##
-	flexout("")
-	flexout("This is tmuxomatic flex -- Modify your windowgrams using simple, visually expressive commands!")
-	flexout("")
+	cls(rows)
+	flexout("\nFlex for tmuxomatic\nModify your windowgrams using simple, visually expressive commands\n")
 	##
-	## Input Loop
+	## Show list of windows (if select is None) or the selected windowgram
 	##
+	if select is None:
+		cmd_list()
+	else:
+		flexout("TODO: Select window")
+	##
+	## Input loop
+	##
+	modified = showcmds = True
+	printer = True if flexmenu_index[0] else False
 	while True:
-		cmd_help_0()
-		flexout("Initial features are still in development.")
-		flexout("Exiting...")
+		# Macros
+		string_to_list = lambda string: [ x.strip() for x in string.strip().split() ]
+		filter_input = lambda string: ( string_to_list( string ), " ".join( string_to_list( string ) ) )
+		# Prepare for new command
+		global flexsense
+		warning = flexsense['warning']
+		flexsense = copy.deepcopy(flexsense_reset)
+		modified = False
+		# Show windowgram if printing
+		if not flexmenu_session.Serial_Is_Valid(flexmenu_index[0]):
+			flexmenu_index[0] = 0 # If it's invalid, clear it; useful for session file indexing without redundant check
+		if printer:
+			cmd_print()
+		# Show warning
+		if warning:
+			flexout("WARNING: " + warning)
+		# Show command list
+		if showcmds:
+			flexout("Short Menu ... " + ", ".join(flexmenu_list) + "\n")
+		# User input
+		try: thisinput_str = input("<<< tmuxomatic flex >>> ")
+		except EOFError as e: thisinput_str = "exit" ; flexout("")
 		flexout("")
-		exit()
-	##
-	## The caller's session object should still be valid (no need to return one)
-	##
+		thisinput_lst, thisinput_str = filter_input( thisinput_str )
+		# Clear screen
+		cls(rows)
+		# Command specified
+		if len(thisinput_lst):
+			# Alias handler (repackages input) ... Note that trailing space means duplicate parameters
+			for alias_tup in flexmenu_aliases:
+				if alias_tup[0] == thisinput_lst[0]:
+					newinput = alias_tup[1]
+					# Duplicate arguments if target ends with a space, permits things like ["h", "help "]
+					if newinput[-1:] == ' ': newinput += " ".join(thisinput_lst[1:])
+					thisinput_lst, thisinput_str = filter_input( newinput )
+					break
+			# Command handler (based on provided arguments and first matching function)
+			invoked = False
+			argcount = len(thisinput_lst) - 1
+			for cmd_dict in flexmenu:
+				if cmd_dict['about'][0] == thisinput_lst[0]:
+					availability = [] # Available arguments if user error: [ [from, to], [from, to], ... ]
+					for ix, triplet in enumerate(usage_triplets(cmd_dict)):
+						usage, examples, arglens = triplet
+						if argcount >= arglens[0] and (argcount <= arglens[1] or arglens[1] == -1):
+							if argcount: cmd_dict['funcs'][ix]( *(thisinput_lst[1:]) )
+							else: cmd_dict['funcs'][ix]()
+							invoked = True
+							break
+					if not invoked:
+						# No invocation, could show available parameter counts, but showing help may be more useful
+						flexout("ERROR: Parameter mismatch for valid command \"" + thisinput_lst[0] + \
+							"\", displaying help...\n" )
+						cmd_help_N( thisinput_lst[0] )
+						invoked = True # Skips invalid command
+					break
+			if not invoked:
+				flexout("ERROR: Invalid command \"" + thisinput_lst[0] + "\"...\n")
+			# Save if session modified and print next pass
+			if session.Modified():
+				session.Save()
+				flexsense['printer'] = True
+			# Finish handler
+			if flexsense['finished']:
+				if flexsense['restore']:
+					session = session_original
+					session.Save()
+				if flexsense['execute']:
+					return session # Return object in case of restore
+				exit()
+		# Sense handler
+		showcmds = False if flexsense['noshowcmds'] else True # Not used?
+		printer = flexsense['printer']
+	# Not reached
 
 
 
@@ -1830,7 +2128,7 @@ def main():
 
 	# Flex console entry
 	if ARGS.flex:
-		flex( session )
+		session = flex( user_wh[1], session )
 
 	# Optional kill session on disconnect
 	def destroy():
