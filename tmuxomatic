@@ -65,10 +65,11 @@ HOMEPAGE = "https://github.com/oxidane/tmuxomatic"	# NOTE: Variables HOMEPAGE an
 VERSION = "1.1.0"									# x.y.z: x = Rewrite, y = Major Feature, z = Minor Feature / Fix
 ## TODO 1.1.x: Flex Console, Windowgram Library, Pypi Readme
 ##
-##	1.1.0	TBD			Began tmuxomatic --flex, commands will be added over the next few releases
+##	1.1.0	2014-08-28	Began tmuxomatic --flex, commands will be added over the next few releases
 ##						Fixed the readme to fit the recent github style changes
-##						Fixed issue #8: Use window name for focus to support tmux base-index
-##						Moved scale feature into flex, added flex to readme
+##						Fixed issue #8: Uses window name for focus to support tmux base-index
+##						Moved scale feature into flex, added flex section to readme
+##						Source indentation now uses spaces, for github readability
 ##
 ##	------	----------	------------------------------------------------------------------------------------
 ##
@@ -777,18 +778,18 @@ class BatchOfLines(object): # A batch of lines (delimited string) with the corre
 
 class Window(object): # Common container of window data, divided into sections identified by the keys below
 	def __init__(self):
-		self.__dict__['data'] = {} # { 'title': string_of_lines, 'title_comments': string_of_lines, ... }
-		self.__dict__['line'] = {} # { 'title': first_line_number, 'title_comments': first_line_number, ... }
+		self.__dict__['data'] = {} # { 'title_comments': string_of_lines, 'title': string_of_lines, ... }
+		self.__dict__['line'] = {} # { 'title_comments': first_line_number, 'title': first_line_number, ... }
 		for key in self.ValidKeys(): self.ClearKey(key) # Clear all keys
 	def __getitem__(self, key): # Invalid keys always return ""
 		return self.__dict__['data'][key] if key in self.ValidKeys() else ""
 	def __setitem__(self, key, value): # Invalid keys quietly dropped
 		if key in self.ValidKeys(): self.__dict__['data'][key] = value
 	def __repr__(self): # Debugging
-		return "__repr__ = [ " + \
+		return "\n__repr__ = [\n" + \
 			", ".join(
 				[ "'" + key + "': [ data = \"" + self.__dict__['data'][key].replace("\n", "\\n") + \
-				"\", starting_line_number = " + str(self.__dict__['line'][key]) + " ]" \
+				"\", starting_line_number = " + str(self.__dict__['line'][key]) + " ]\n" \
 				for key in self.ValidKeys() if self[key] is not "" ] \
 			) + \
 		" ]\n"
@@ -797,19 +798,20 @@ class Window(object): # Common container of window data, divided into sections i
 			self.__dict__['data'][key] = ""
 			self.__dict__['line'][key] = 0
 	def ValidKeys(self): # Ordered by appearance
-		return "title title_comments windowgram windowgram_comments directions directions_comments".split(" ")
+		return "title_comments title windowgram_comments windowgram directions_comments directions".split(" ")
 	def Serialize(self): # Serialized by appearance
 		return "".join( [ self[key] for key in self.ValidKeys() ] )
 	def WorkingKeys(self):
 		return [ key for key in self.ValidKeys() if self[key] is not "" ]
-	def IsHeader(self):
-		# This should also return True if entirely blank, to allow for session files with "window" on line 1
+	def IsFooter(self):
 		summary = " ".join( self.WorkingKeys() )
 		return True if summary == "title_comments" or summary == "" else False
 	def FirstLine(self, key):
 		return True if key in self.ValidKeys() and self.__dict__['line'][key] == 0 else False
 	def SetLine(self, key, line):
 		if key in self.ValidKeys(): self.__dict__['line'][key] = line
+	def GetLine(self, key):
+		return self.__dict__['line'][key] if key in self.ValidKeys() else 0
 	def SetIfNotSet(self, key, line):
 		if self.FirstLine(key): self.SetLine(key, line)
 	def GetLines(self, key):
@@ -824,65 +826,76 @@ class SessionFile(object):
 		self.modified = False	# Explicit modification
 	def Clear(self):
 		self.format = None		# "shorthand" or "yaml"
-		self.header = ""		# title comments
+		self.footer = ""		# footer comments
 		self.windows = []		# [ window, window, ... ]
 	def Load_Shorthand_SharedCore(self, bol):
 		# Actually locals
 		self.state = 0
-		self.window = Window()
-		self.line = None
-		self.actual_line_number = 0
+		self.window = None
+		self.line = [ None, None ]		# line without cr, line number
+		self.comments = [ "", None ]	# lines with cr, first line number
+		# Switchboard
+		switchboard = [
+			"title_comments",		# state == 0 <- loop to / file footer saved here in its own window
+			"title",				# state == 1
+			"windowgram_comments",	# state == 2
+			"windowgram",			# state == 3
+			"directions_comments",	# state == 4
+			"directions",			# state == 5
+			"UNUSED_comments",		# state == 6 <- loop from / always appends this to "title_comments"
+		]
 		# Iterate lines and append onto respective window keys
 		lines = bol.lines.split("\n")[:-1] # Account for extra line
 		lines_index = 0
 		while True:
-			def nextwindow(newstate=None):
-				self.windows.append( self.window )
-				self.window = Window()
-				if newstate is not None: self.state = newstate
-			if self.line is None and lines_index < len(lines): # Line
-				self.line = lines[lines_index]
-				self.actual_line_number = bol.counts[lines_index]
+			def transfercomments(): # Transfer comments (if any) to the current window block
+				if self.comments[0] is not None:
+					self.window[ switchboard[self.state] ] += self.comments[0]
+					self.window.SetIfNotSet( switchboard[self.state], self.comments[1] )
+				self.comments[0] = self.comments[1] = None
+			def nextwindow(): # This is called in two cases: 1) window declaration found, 2) end of file reached
+				if self.window: self.windows.append( self.window )
+				self.window = Window() ; self.state = 0 ; transfercomments() ; self.state = 1
+			def addline(): # Adds current line to current block or comments
+				if switchboard[self.state].endswith("_comments"): # Add to comments
+					if self.comments[0] is None: self.comments[0] = self.line[0] + "\n"
+					else: self.comments[0] += self.line[0] + "\n"
+					self.comments[1] = self.line[1] if self.comments[1] is None else self.comments[1]
+				else: # Add to block
+					self.window[ switchboard[self.state] ] += self.line[0] + "\n"
+					self.window.SetIfNotSet( switchboard[self.state], self.line[1] )
+				self.line[0] = self.line[1] = None # Ready to load next line
+			# Load line with corresponding line number
+			if self.line[0] is None and lines_index < len(lines): # Line
+				self.line[0] = lines[lines_index] ; self.line[1] = bol.counts[lines_index]
 				lines_index += 1
-			if self.line is None: # EOF
+			if self.line[0] is None: # EOF
+				# Hold comments so the footer doesn't get lost to the non-existent state 6 block
+				hold = [ None, None ]
+				hold[0], hold[1] = self.comments[0], self.comments[1]
+				self.comments[0], self.comments[1] = None, None
 				nextwindow()
+				# Restore comments so they are assimilated as a proper footer
+				self.comments[0], self.comments[1] = hold[0], hold[1]
+				if self.comments[0] is not None:
+					self.state = 0
+					transfercomments()
+					nextwindow()
+				# Done parsing
 				break
-			# Stripped of comments and whitespace
-			line = self.line
-			if line.find("#") >= 0: line = line[:line.find("#")]
-			line = line.strip()
-			# Append this line onto its corresponding section string
-			if self.state != 1 and is_windowdeclaration(line): nextwindow(1)
-			elif self.state == 1 and not is_windowdeclaration(line): self.state = 2
-			elif ( self.state == 2 or self.state == 4 or self.state == 6 ) and line:
-				if self.state == 6:
-					# Move directions_comments into directions, since we only ever loop when "window" is found
-					self.window['directions'] += self.window['directions_comments']
-					self.window.ClearKey('directions_comments')
-					self.state = 5 # Step back and resume
-				else: self.state += 1
-			elif ( self.state == 3 or self.state == 5 ) and not line:
-				self.state += 1
-			elif self.state == 3 and ( " " in line or command_matches(line.split(" ", 1)[0], "foc") ):
-				self.state = 5 # Presence of "foc" or space in windowgram forces jump to parsing directions
-			else:
-				switchboard = [ # TODO: Should be reordered to comments on top, with eof_comments after last directions
-					"title_comments",		# state == 0 <- file header saved here in its own window
-					"title",				# state == 1 <- loops to
-					"title_comments",		# state == 2
-					"windowgram",			# state == 3
-					"windowgram_comments",	# state == 4
-					"directions",			# state == 5
-					"directions_comments",	# state == 6
-				]
-				# The full line (self.line) is saved, not the cleaned line (line) that was used in analysis
-				if self.state < len(switchboard): self.window[switchboard[self.state]] += self.line + "\n"
-				self.window.SetIfNotSet( switchboard[self.state], self.actual_line_number )
-				self.line = None
-		# Any comments at the start of the file should be extracted into the header string
-		if len(self.windows) and self.windows[0].IsHeader():
-			window = self.windows.pop(0)
-			self.header = window.Serialize()
+			# Line used for analysis is stripped of all comments and whitespace
+			lineused = self.line[0].strip()
+			if lineused.find("#") >= 0: lineused = lineused[:lineused.find("#")].strip()
+			# Append this line to section or comments
+			if is_windowdeclaration(lineused): nextwindow() ; addline() ; self.state = 2 # New window declaration
+			elif ( self.state == 2 or self.state == 4 ) and lineused: transfercomments() ; self.state += 1 ; addline()
+			elif ( self.state == 3 or self.state == 5 ) and not lineused: self.state += 1 ; addline()
+			elif self.state == 6 and lineused: addline() ; self.state = 5 ; transfercomments() # Back up and add to 5
+			else: addline() # Everything else adds the line / Until first window declaration is found add to comments
+		# Any comments at end of file should be extracted into the footer string
+		if len(self.windows) and self.windows[len(self.windows)-1].IsFooter():
+			window = self.windows.pop(len(self.windows)-1)
+			self.footer = window.Serialize()
 	def Load_Shorthand(self, rawfile):
 		self.Clear()
 		self.format = "shorthand"
@@ -960,8 +973,8 @@ class SessionFile(object):
 			if self.format == "shorthand":
 				# Shorthand
 				f = open(self.filename, 'w')
-				f.write( self.header )
 				for window in self.windows: f.write( window.Serialize() )
+				f.write( self.footer )
 			if self.format == "yaml":
 				# YAML
 				unformatted = []
@@ -1005,19 +1018,18 @@ class SessionFile(object):
 		return "\n" * count
 	def Replace_TitleComments(self, serial, comments):
 		if serial < 1 or serial > self.Count_Windows(): return
-		padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["title_comments"], 2)
+		padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["title_comments"], 1)
 		self.windows[serial-1]["title_comments"] = comments + padding
 		self.modified = True
 	def Replace_Title(self, serial, name):
 		if serial < 1 or serial > self.Count_Windows(): return
-		padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["title"], 2)
+		padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["title"], 1)
 		self.windows[serial-1]["title"] = "window " + name + padding
 		self.modified = True
 	def Replace_Windowgram(self, serial, windowgram):
 		if serial < 1 or serial > self.Count_Windows(): return
-		padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["windowgram"], 2)
 		windowgram = Windowgram_Purify( windowgram ) # Force consistency
-		self.windows[serial-1]["windowgram"] = windowgram + padding
+		self.windows[serial-1]["windowgram"] = windowgram
 		self.modified = True
 	def Modified(self): # See flag use for limitations
 		return self.modified
@@ -1053,10 +1065,19 @@ class SessionFile(object):
 	def Add_Windowgram(self, comments, name, windowgram):
 		self.windows.append( Window() )
 		serial = len(self.windows)
-		# TODO: Requires reordering the switchboard so the comments come before the title as they should
-		# self.Replace_TitleComments( serial, comments ) # Flags as modified
-		self.Replace_Title( serial, name ) # Flags as modified
-		self.Replace_Windowgram( serial, windowgram ) # Flags as modified
+		# Transfer footer to title comments for new window
+		while len(self.footer) > 1 and not self.footer.endswith("\n\n"): self.footer += "\n"
+		if not self.footer: self.footer = "\n"
+		self.windows[serial-1]["title_comments"] = self.footer
+		self.footer = ""
+		# Build window
+		self.windows[serial-1]["title_comments"] += comments if comments[-1:] == "\n" else comments + "\n"
+		name = "window " + name # Make a declaration
+		self.windows[serial-1]["title"] = name if name[-1:] == "\n" else name + "\n"
+		self.windows[serial-1]["windowgram_comments"] = "\n"
+		self.windows[serial-1]["windowgram"] = windowgram if windowgram[-1:] == "\n" else windowgram + "\n"
+		# Modified
+		self.modified = True
 		return serial
 
 
@@ -1520,7 +1541,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 	# Set default window
 	#
 	if focus_window_name is not None:
-		list_build.append( EXE_TMUX + " select-window -t " + focus_window_name )
+		list_build.append( EXE_TMUX + " select-window -t \"" + focus_window_name + "\"" )
 
 	#
 	# Notify user that tmux execution will begin and allow for time to break (ARGS.verbose >= 1)
@@ -1851,7 +1872,7 @@ def cmd_use(*name_or_serial_REQUIRED):
 def cmd_new(*window_name_REQUIRED):
 	# Create window
 	name = " ".join(window_name_REQUIRED)
-	comments = "#\n# Added by tmuxomatic flex " + VERSION + "\n#\n"
+	comments = "#\n# Added by tmuxomatic flex " + VERSION + "\n#\n\n"
 	windowgram = "1"
 	serial = flexmenu_session.Add_Windowgram( comments, name, windowgram )
 	# Use it
@@ -1936,14 +1957,9 @@ def cmd_scale_2(x_how, y_how):
 		# Update the windowgram
 		flexmenu_session.Replace_Windowgram( serial, windowgram_after )
 
-## Saving this for possible use in scale command
-## The original scale produces superior results in certain situations
-## It may be worth filtering through the pane loader just to reuse this code
+## This original scale produces superior results in certain situations, may be worth reusing this code
 
 """
-		#
-		# 3.3) Scale window if user requested
-		#
 		if ARGS.scale and int(ARGS.scale[0]) == window_serial:
 			def scale_one( element, multiplier ):
 				# Scale element using integer rounding, multiplier must be float
@@ -1979,14 +1995,6 @@ def cmd_scale_2(x_how, y_how):
 				for line in windowgram:
 					windowgram_str += "".join(line) + "\n"
 				return windowgram_str
-			def get_multiplier( param, other ):
-				# Extracts multiplier from command line argument
-				# Returns (float_multiplier, bool_duplicate)
-				if param == "." or param == "dup": return (other if other else None), True
-				elif param == "-" or param == "none": return float(1), False
-				elif 'x' in param: return float(param[:len(param)-1]), False
-				elif '%' in param: return float(param[:len(param)-1]) / 100.0, False
-				return None, False
 			# Extract the multiplier
 			ax, dx = [ 1.0, 1.0 ] # Set this
 			# Perform the scale

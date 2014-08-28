@@ -78,8 +78,7 @@ To use tmuxomatic, you don't have to know everything about [how to use tmux](htt
 
 ## Copyright and License
 
-Copyright 2013-2014, Oxidane.
-All rights reserved.
+Copyright 2013-2014, Oxidane.  All rights reserved.
 
-Distributed under the [BSD 3-Clause license](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution of the source.  See the license for details.
+Distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution of the source.  See the license for details.
 
