@@ -68,6 +68,7 @@ VERSION = "1.1.0"									# x.y.z: x = Rewrite, y = Major Feature, z = Minor Fea
 ##	1.1.0	TBD			Began tmuxomatic --flex, commands will be added over the next few releases
 ##						Fixed the readme to fit the recent github style changes
 ##						Fixed issue #8: Use window name for focus to support tmux base-index
+##						Moved scale feature into flex, added flex to readme
 ##
 ##	------	----------	------------------------------------------------------------------------------------
 ##
@@ -151,7 +152,7 @@ VERSION = "1.1.0"									# x.y.z: x = Rewrite, y = Major Feature, z = Minor Fea
 ##						Improved the splitting algorithm, resolving an edge case from version 1.0
 ##						Limited support for complex layouts, full support requires tmux upgrades
 ##
-##	1.0.0	2013-10-04	First version
+##	1.0.0	2013-10-04	First version, development began in late September 2013
 ##
 ##--------------------+-------------------------------------------------------------------------------------------------
 ##     Expansions     |
@@ -757,7 +758,7 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 ##
 
 is_windowdeclaration = lambda line: re.search(r"window", line)
-windowdeclaration_extractname = lambda line: re.split(r"[ \t]+", line+" ")[1] if is_windowdeclaration(line) else ""
+windowdeclaration_name = lambda line: " ".join(re.split(r"[ \t]+", line)[1:]) if is_windowdeclaration(line) else ""
 
 ##
 ## Parsed session file classes
@@ -784,13 +785,13 @@ class Window(object): # Common container of window data, divided into sections i
 	def __setitem__(self, key, value): # Invalid keys quietly dropped
 		if key in self.ValidKeys(): self.__dict__['data'][key] = value
 	def __repr__(self): # Debugging
-		return "[ " + \
+		return "__repr__ = [ " + \
 			", ".join(
-				[ key + ": [ data = \"" + self.__dict__['data'][key].replace("\n", "\\n") + \
-				"\", starting_line_number = " + str(self.__dict__['line'][key]) + " ] " \
+				[ "'" + key + "': [ data = \"" + self.__dict__['data'][key].replace("\n", "\\n") + \
+				"\", starting_line_number = " + str(self.__dict__['line'][key]) + " ]" \
 				for key in self.ValidKeys() if self[key] is not "" ] \
 			) + \
-		" ]"
+		" ]\n"
 	def ClearKey(self, key):
 		if key in self.ValidKeys():
 			self.__dict__['data'][key] = ""
@@ -865,7 +866,7 @@ class SessionFile(object):
 			elif self.state == 3 and ( " " in line or command_matches(line.split(" ", 1)[0], "foc") ):
 				self.state = 5 # Presence of "foc" or space in windowgram forces jump to parsing directions
 			else:
-				switchboard = [
+				switchboard = [ # TODO: Should be reordered to comments on top, with eof_comments after last directions
 					"title_comments",		# state == 0 <- file header saved here in its own window
 					"title",				# state == 1 <- loops to
 					"title_comments",		# state == 2
@@ -978,7 +979,7 @@ class SessionFile(object):
 				for ix, window in enumerate(self.windows):
 					serial = 1+ix
 					# Extract name: "window panel 1\n" -> "panel 1"
-					name = windowdeclaration_extractname( self.Get_WindowDecarationLine( serial ) )
+					name = windowdeclaration_name( self.Get_WindowDecarationLine( serial ) )
 					# Append window definition
 					# TODO: Sort as "name", "windowgram", "directions".  Maybe use: http://pyyaml.org/ticket/29
 					window_dict = {
@@ -992,9 +993,31 @@ class SessionFile(object):
 				# Write file
 				f = open(self.filename, 'w')
 				f.write( formatted )
+	def Ascertain_Trailing_Padding(self, string):
+		count = 0
+		for ix in range( len(string)-1, -1, -1 ):
+			if string[ix] == "\n": count += 1
+			else: break
+		return count
+	def Duplicate_Trailing_Padding(self, string, minimum):
+		count = self.Ascertain_Trailing_Padding(string)
+		if count < minimum: count = minimum
+		return "\n" * count
+	def Replace_TitleComments(self, serial, comments):
+		if serial < 1 or serial > self.Count_Windows(): return
+		padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["title_comments"], 2)
+		self.windows[serial-1]["title_comments"] = comments + padding
+		self.modified = True
+	def Replace_Title(self, serial, name):
+		if serial < 1 or serial > self.Count_Windows(): return
+		padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["title"], 2)
+		self.windows[serial-1]["title"] = "window " + name + padding
+		self.modified = True
 	def Replace_Windowgram(self, serial, windowgram):
 		if serial < 1 or serial > self.Count_Windows(): return
-		self.windows[serial-1]["windowgram"] = windowgram
+		padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["windowgram"], 2)
+		windowgram = Windowgram_Purify( windowgram ) # Force consistency
+		self.windows[serial-1]["windowgram"] = windowgram + padding
 		self.modified = True
 	def Modified(self): # See flag use for limitations
 		return self.modified
@@ -1007,10 +1030,34 @@ class SessionFile(object):
 		return self.windows[serial-1]['title'].split("\n")[0].strip() # Assumes the window declaration is on first line
 	def Get_Name(self, serial):
 		if serial < 1 or serial > self.Count_Windows(): return "???" # Out of range
-		return windowdeclaration_extractname( self.Get_WindowDecarationLine( serial ) )
-	def Get_Windowgram(self, serial):
-		if serial < 1 or serial > self.Count_Windows(): return "" # Out of range
-		return self.windows[serial-1]['windowgram']
+		return windowdeclaration_name( self.Get_WindowDecarationLine( serial ) )
+	def Get_WindowgramDimensions_Int(self, serial):
+		windowgram = self.windows[serial-1]['windowgram']
+		return Windowgram_Dimensions_Int(windowgram)
+	def Get_Windowgram(self, serial, warning=None): # windowgram, warning
+		if serial < 1 or serial > self.Count_Windows():
+			if warning is None: return None
+			return None, "Out of range"
+		windowgram = None
+		message = None
+		while True:
+			windowgram = Windowgram_Purify(self.windows[serial-1]['windowgram'])
+			if Windowgram_IsBlank(windowgram):
+				flexmenu_session.Replace_Windowgram(serial, "1")
+				message = "The windowgram was blank and had to be reinitialized"
+			else:
+				break
+		if warning is None:
+			return windowgram
+		return windowgram, message
+	def Add_Windowgram(self, comments, name, windowgram):
+		self.windows.append( Window() )
+		serial = len(self.windows)
+		# TODO: Requires reordering the switchboard so the comments come before the title as they should
+		# self.Replace_TitleComments( serial, comments ) # Flags as modified
+		self.Replace_Title( serial, name ) # Flags as modified
+		self.Replace_Windowgram( serial, windowgram ) # Flags as modified
+		return serial
 
 
 
@@ -1020,15 +1067,28 @@ class SessionFile(object):
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
+def Windowgram_Purify(windowgram):
+	# Full cycle purification -- asserts consistency of form
+	return Windowgram_LinesToString( Windowgram_StringToLines( windowgram ) )
+
+def Windowgram_StringToLines(windowgram):
+	# No blank lines
+	return list(filter(None, (windowgram+"\n").split("\n")))
+
+def Windowgram_LinesToString(windowgram_lines):
+	# Each line has one \n
+	return "\n".join([ line for line in windowgram_lines ]) + "\n"
+
 def Windowgram_OrderedUniques(windowgram):
 	paneids = set(list("".join(windowgram.split("\n"))))
 	return "".join([ paneid for paneid in PANE_CHARACTERS if paneid in paneids ])
 
 def Windowgram_Dimensions_Int(windowgram):
 	w = h = 0
-	for h, l in enumerate(windowgram.split("\n")):
-		l = l.strip()
-		if len(l) > w: w = len(l)
+	lines = Windowgram_StringToLines(windowgram)
+	for l in lines:
+		if len(l.strip()) > w: w = len(l.strip())
+		h += 1
 	return [ w, h ]
 
 def Windowgram_Dimensions_Float(windowgram):
@@ -1037,6 +1097,10 @@ def Windowgram_Dimensions_Float(windowgram):
 def Windowgram_LostPanes(windowgram1, windowgram2):
 	return Windowgram_OrderedUniques( # Additionally useful in this context
 		"".join( list( set(Windowgram_OrderedUniques(windowgram1)) - set(Windowgram_OrderedUniques(windowgram2)) ) ) )
+
+def Windowgram_IsBlank(windowgram):
+	dimensions = Windowgram_Dimensions_Int(windowgram)
+	return True if not dimensions[0] or not dimensions[1] else False
 
 
 
@@ -1077,7 +1141,6 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 	panes_h = 0
 	focus_window_name = None # Use window name rather than window index (supports tmux option: base-index)
 	line = "" # Loaded line stored here
-	scale___existing_window_table = []
 
 	#
 	# Error reporting
@@ -1137,7 +1200,6 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 		panes_w = 0
 		panes_h = 0
 		panes_y = 0
-		if ARGS.scale: scale___existing_window_table.append("  " + str(window_serial) + ": " + window_name)
 		if ARGS.verbose >= 2: print("")
 
 		#
@@ -1225,94 +1287,6 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 					# Overlap detection
 					if p1x1 < p2x2 and p1x2 > p2x1 and p1y1 < p2y2 and p1y2 > p2y1:
 						synerr(errpkg, "Overlapping panes: " + pane1['n'] + " and " + pane2['n'])
-
-		#
-		# 3.3) Scale window if user requested
-		#
-		if ARGS.scale and int(ARGS.scale[0]) == window_serial:
-			def scale_one( element, multiplier ):
-				# Scale element using integer rounding, multiplier must be float
-				q, r = math.modf( float(element - 1) * multiplier )
-				if q >= .5: r += 1
-				return int(r) + 1
-			def scale_windowgram( list_panes, sx, sy ):
-				# Scales the windowgram
-				# Because text is low resolution, fractional scaling may produce unsatisfactory results
-				ax, ay = float(sx), float(sy)
-				lost = 0
-				for pane in list_panes:
-					if ax: pane['w'] = scale_one( pane['x'] + pane['w'], sx )
-					if ay: pane['h'] = scale_one( pane['y'] + pane['h'], sy )
-					if ax: pane['x'] = scale_one( pane['x'], sx )
-					if ay: pane['y'] = scale_one( pane['y'], sy )
-					if ax: pane['w'] -= pane['x']
-					if ay: pane['h'] -= pane['y']
-					if not pane['x'] or not pane['y'] or not pane['w'] or not pane['h']: lost += 1
-				return lost
-			def render_windowgram( list_panes ):
-				# Prints the windowgram
-				windowgram = []
-				for pane in list_panes:
-					for y in range( pane['y'], pane['y'] + pane['h'] ):
-						for x in range( pane['x'], pane['x'] + pane['w'] ):
-							ix = int(x) - 1
-							iy = int(y) - 1
-							while len(windowgram) <= iy: windowgram.append([])
-							while len(windowgram[iy]) <= ix: windowgram[iy].append([])
-							windowgram[iy][ix] = pane['n']
-				windowgram_str = ""
-				for line in windowgram:
-					windowgram_str += "".join(line) + "\n"
-				return windowgram_str
-			def get_multiplier( param, other ):
-				# Extracts multiplier from command line argument
-				# Returns (float_multiplier, bool_duplicate)
-				if param == "." or param == "dup": return (other if other else None), True
-				elif param == "-" or param == "none": return float(1), False
-				elif 'x' in param: return float(param[:len(param)-1]), False
-				elif '%' in param: return float(param[:len(param)-1]) / 100.0, False
-				return None, False
-			# Extract the multiplier
-			ax, dx = get_multiplier(ARGS.scale[1], None)
-			ay, dy = get_multiplier(ARGS.scale[2], ax)
-			ax, _  = get_multiplier(ARGS.scale[1], ay) if not ax else (ax, dx) # Extra step to support duplication
-			# Handle errors if any
-			if not ax or not ay:
-				if dx and dy:
-					print("Cannot use \"dup\"/\".\" for both XSCALE and YSCALE.")
-				else:
-					if not ax and not dx: print("XSCALE unrecognized: \"" + ARGS.scale[1] + "\"")
-					if not ay and not dy: print("YSCALE unrecognized: \"" + ARGS.scale[2] + "\"")
-					print("Use percentage (200%) or a multiplier (2x).  Fractions are also valid (2.5x)")
-				exit(0)
-			# Perform the scale
-			list_panes_scaled = copy.deepcopy( list_panes )
-			lost = scale_windowgram( list_panes_scaled, ax, ay )
-			wincfg_scaled = render_windowgram( list_panes_scaled ) # Used either way
-			# Set the window header
-			scaled = "x=" + str(ax) + ", y=" + str(ay)
-			header = "window " + window_name + " # User scaled: " + scaled
-			# Windowgram title
-			windowgram_title = "(" + str(window_serial) + ") \"" + window_name + "\""
-			# Either write to file or write to stdout
-			if ARGS.scale_replace:
-				# FILE ... Save session modified with the scaled windowgram
-				print("Scaled windowgram " + windowgram_title + "...")
-				session.Replace_Windowgram( window_serial-1, wincfg_scaled )
-				session.Save()
-				print("Replaced it in session file \"" + ARGS.filename + "\"...")
-			else:
-				# STDOUT ... Print scaled window for the user to review
-				print("")
-				print("# Your windowgram " + windowgram_title + " has been scaled: " + scaled)
-				print("# If satisfactory, run again with --scale-replace and the session file will be updated")
-				if lost > 0: print("# WARNING: This scale has resulted in " + str(lost) + " lost panes !!!")
-				print("")
-				print( header ) # Window name + blank line + windowgram
-				print("")
-				print( wincfg_scaled )
-			# Always exit after scaling
-			exit(0)
 
 		#
 		# 4) Directions parser
@@ -1574,17 +1548,6 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 				synerr(errpkg, msg )
 
 	#
-	# A valid scale should not have made it this far
-	#
-	if ARGS.scale:
-		print("Window " + ARGS.scale[0] + " is out of range in session file \"" + ARGS.filename + "\"")
-		if not scale___existing_window_table: print("No windows found")
-		else:
-			print("Found these windows:")
-			for item in scale___existing_window_table: print(item)
-		exit(0)
-
-	#
 	# Attach to the newly created session
 	#
 	tmux_run( EXE_TMUX + " attach-session -t " + session_name )
@@ -1597,34 +1560,32 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Planned Commands:
+## Planned:
 ##
-##		help
-##		list
-##		use <name_or_serial>
-##		new <name>
-##		scale <xy_how>							how == 10, 5x5 (characters); .5x, 2x (multiplier); 500% (percentage)
-##		scale <x_how> <y_how>					how == 10, 5x5 (characters); .5x, 2x (multiplier); 500% (percentage)
-##		break <pane> <shapes>					shapes == 2x2; x 2x2 3x1; y 1 3x3 1
-##		move <pane_or_intersection> <direction>	pane == A, ab ... direction == up 2, u2, 50%, l 100%, +2, -50%
-##		split <pane> <how>						pane == A, ab ... how == v, h
-##		join <pane1> <pane2>					must have fully shared edge
-##		rename <pane1> <pane2>					rename pane, target must be unused
-##		swap <pane1> <pane2>					swap two panes (mutual rename), both panes must exist
-##		mv <pane1> <pane2>						move: swap if both panes are defined, otherwise rename
-##		rotate <how>							how = cw, ccw, 180
-##		mirror									reverse horizontally (left/right)
-##		flip									reverse vertically (top/bottom)
-##		undo									undo
-##		redo									redo
-##		print									show windowgram (automatically called after every modification)
-##		clear									destroy the windowgram modification history (cannot undo)
-##		oops									restore the original session and exit without execution
-##		done / run								save modified session, then execute
-##		exit									save modified session, but do not execute
+##		break <pane> <shapes>						shapes == 2x2; x 2x2 3x1; y 1 3x3 1
+##		drag <pane_or_intersection> <direction>		pane == A, ab ... direction == up 2, u2, 50%, l 100%, +2, -50%
+##		split <panes> <how>							pane == A, ab ... how == v, h
+##		join <panes>								must have fully shared edges (merge)
+##		rename <panes1> <panes2>					rename pane, target must be unused
+##		swap <panes1> <panes2>						swap two panes (mutual rename), both panes must exist
+##		move <panes1> <panes2>						swap if both panes are defined, otherwise rename (mv)
+##		rotate <how>								how = cw, ccw, 180
+##		undo										undo
+##		redo										redo
+##		wipe										destroy the windowgram modification history (cannot undo)
+##		add <edge> <size> [pane]					append pane to edge of window of the specified size (1, 50%, etc)
+##		del <pane>									remove pane from edge of window (delete, clip, remove, drop, rm)
+##
+## Possible:
+##
+##		links										show list of directions
+##		link [data...]								add line to directions
+##		unlink <line>								remove from directions by line number
+##		mvlink <line_from> <line_to>				move line in directions
+##
+## Behaviors:
 ##
 ##		Any modification of the windowgram outside of flex will result in an automatic clear on the next use in flex
-##		Add aliases, resize->scale, etc
 ##
 ## Stack Sketch:
 ##
@@ -1671,6 +1632,7 @@ usage_triplets = lambda cmd_dict: [ cmd_dict['usage'][ix:ix+3] for ix in range( 
 flexmenu = []						# List of all commands and aliases (recognition)
 flexmenu_aliases = []				# List of all aliases (recognized not displayed)
 flexmenu_list = []					# List of primary commands (displayed at prompt)
+flexmenu_grouped = {}				# List of grouped commands (for the short menus)
 
 ##
 ## Other globals
@@ -1678,15 +1640,16 @@ flexmenu_list = []					# List of primary commands (displayed at prompt)
 
 flexmenu_session = None				# Session object in global scope for modification by commands
 flexmenu_index = [ 0 ]				# Selected window, list is for reference purposes only
-flexsense = {						# Sense information in dictionary for convenience
-	'finished': False,
-	'restore': False,
-	'execute': False,
-	'noshowcmds': False,
-	'printer': False,
-	'warning': None,
+flexsense = {
+	'finished': False,				# User exit
+	'restore': False,				# User exit: Restore original
+	'execute': False,				# User exit: Run session
+	'printer': False,				# Display windowgram
+	'warnings': [],					# Command warnings: Print and continue
+	'errors': [],					# Command errors: Print and exit
 }
-flexsense_reset = copy.deepcopy( flexsense )
+flexsense_reset = copy.copy( flexsense )
+flexgroup = ""
 
 ##
 ## Decorator
@@ -1714,7 +1677,13 @@ class flex(object):
 			enclosed = "<>" if default is NoDefault else "[]"
 			self.usage += " " + enclosed[0] + arg + enclosed[1]
 		if spec.varargs:
-			self.usage += " [" + spec.varargs + "...]"
+			marker = "_REQUIRED"
+			varargs = spec.varargs
+			required = True if varargs.endswith(marker) else False
+			enclosed = "<>" if required else "[]"
+			if varargs.endswith(marker): varargs = varargs[:-len(marker)] # Clip marker before printing
+			self.usage += " " + enclosed[0] + varargs + "..." + enclosed[1]
+			if required: self.arglens[0] += 1 # If required then varargs is [REQ+1, -1] instead of [REQ, -1]
 			self.arglens[1] = -1 # Represents use of *args
 		# Adds new menu item, or appends usage and examples if it already exists
 		# Description is only used on first occurrence of the command, successive commands append without description
@@ -1740,6 +1709,10 @@ class flex(object):
 				print("Flux command indexing error: " + self.command_only + " alias #" + str(1+ix) + " is not a pair")
 				exit()
 			flexmenu_aliases.append( alias_tup )
+		# Grouped commands
+		if not flexgroup in flexmenu_grouped: flexmenu_grouped[flexgroup] = []
+		if not self.command_only in flexmenu_grouped[flexgroup]:
+			flexmenu_grouped[flexgroup].append(self.command_only)
 		# Function wrapper
 		def wrapper(*args):
 			return function(*args)
@@ -1748,6 +1721,8 @@ class flex(object):
 ##
 ## Commands: Helpers
 ##
+
+flexgroup = "helpers"
 
 @flex(
 	command = "help",
@@ -1827,15 +1802,44 @@ def cmd_help_N(*commands):
 ## Commands: Selectors
 ##
 
+flexgroup = "selectors"
+
 @flex(
 	command = "list",
 	aliases = [["l", "list "]],
 	description = "List all available windows in this tmuxomatic session",
 )
 def cmd_list():
-	flexout("Available windows in this session file (use serial or name):\n")
+	flexout("Available windows in this session file (use serial number or name):\n")
 	for serial in range(1, flexmenu_session.Count_Windows()+1):
-		flexout( "    #" + str(serial) + ": " + flexmenu_session.Get_Name(serial) )
+		number = str(serial)
+		name = flexmenu_session.Get_Name(serial)
+		dimensions_int = flexmenu_session.Get_WindowgramDimensions_Int(serial) # Use this to avoid reinitialization
+		dimensions_str = str(dimensions_int[0]) + "x" + str(dimensions_int[1])
+		flexout( "    Window " + number + " (" + dimensions_str + ") : " + name )
+	flexout("")
+
+@flex(
+	command = "use",
+	aliases = [["u", "use "]],
+	examples = [ "use my example", "use 1" ],
+	description = "Select the window you would like to modify",
+)
+def cmd_use(*name_or_serial_REQUIRED):
+	name_or_serial = " ".join(name_or_serial_REQUIRED)
+	def using(serial):
+		flexsense['printer'] = True
+		flexmenu_index[0] = serial
+		windowgram, warning = flexmenu_session.Get_Windowgram(serial, warning=True)
+		if warning: flexsense['warnings'].append( warning )
+	if name_or_serial.isdigit():
+		serial = int(name_or_serial)
+		if flexmenu_session.Serial_Is_Valid(serial): return using(serial)						# Serial match
+	for serial in range(1, flexmenu_session.Count_Windows()+1):
+		if name_or_serial == flexmenu_session.Get_Name(serial): return using(serial)			# Exact string match
+	for serial in range(1, flexmenu_session.Count_Windows()+1):
+		if flexmenu_session.Get_Name(serial).startswith(name_or_serial): return using(serial)	# Starting string match
+	flexout( "The name or serial you specified is invalid: " + name_or_serial )					# No match
 	flexout("")
 
 @flex(
@@ -1844,22 +1848,14 @@ def cmd_list():
 	examples = [ "new some feeds" ],
 	description = "Create a new window, initialized to '1'",
 )
-def cmd_new(name):
-	flexout("TODO")
-
-@flex(
-	command = "use",
-	aliases = [["u", "use "]],
-	examples = [ "use my example", "use 1" ],
-	description = "Select the window you would like to modify",
-)
-def cmd_use(name_or_serial):
-	def using(serial): flexsense['printer'] = True ; flexmenu_index[0] = serial
-	for serial in range(1, flexmenu_session.Count_Windows()+1):
-		if name_or_serial == flexmenu_session.Get_Name(serial): return using(serial)	# Matched name
-	if name_or_serial.isdigit():
-		if flexmenu_session.Serial_Is_Valid(serial): return using(int(name_or_serial))	# Matched number
-	flexout( "The name or serial you specified is invalid: " + name_or_serial + "\n" )	# No match
+def cmd_new(*window_name_REQUIRED):
+	# Create window
+	name = " ".join(window_name_REQUIRED)
+	comments = "#\n# Added by tmuxomatic flex " + VERSION + "\n#\n"
+	windowgram = "1"
+	serial = flexmenu_session.Add_Windowgram( comments, name, windowgram )
+	# Use it
+	cmd_use(*[str(serial)])
 
 @flex(
 	command = "print",
@@ -1869,26 +1865,29 @@ def cmd_use(name_or_serial):
 def cmd_print():
 	serial = flexmenu_index[0]
 	if flexmenu_session.Serial_Is_Valid(serial):
-		flexout("Windowgram for window #" + str(serial) + ": " + flexmenu_session.Get_Name(serial) + "\n")
+		flexout("Windowgram for window #" + str(serial) + " (" + flexmenu_session.Get_Name(serial) + ") ...\n")
 		flexout( "\n".join([ "    " + l for l in flexmenu_session.Get_Windowgram(serial).split("\n") ]) )
 
 ##
 ## Commands: Modifiers
 ##
 
+flexgroup = "modifiers"
+
 @flex(
 	command = "scale",
 	examples = [ "scale 25", "scale 500%", "scale 2x", "scale 64:36" ],
 	description = "Scale by multipliers (x), or percentages (%), or to specific dimensions",
-	aliases = [["s", "scale "], ["half", "scale 50%"], ["double", "scale 2x"]],
+	aliases = [["s", "scale "], ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"]],
 )
 def cmd_scale_1(xy_how):
 	# Split directives like "64:36" and "64x36" into "64 36", also works using percentages "200%:50%", or using
 	# multipliers "2x:2x" as long as ":" is used instead of "x" as there would be a conflict with the multiplier
 	# TODO: This could be more flexible to cover cases like "2xx2" and "2x2x" by using regex
-	if xy_how[-1:] != "x":
-		xy_spl = xy_how.split("x") if xy_how.count("x") <= 1 else xy_how.split(":")
-		if len(xy_spl) == 2: return cmd_scale_2( *xy_spl )
+	xy_spl = None
+	if xy_how.count("x") == 1 and xy_how[-1:] != "x": xy_spl = xy_how.split("x")
+	if xy_how.count(":") == 1: xy_spl = xy_how.split(":")
+	if xy_spl and len(xy_spl) == 2: return cmd_scale_2( *xy_spl )
 	# Others are simply cloned like "2x" into "2x 2x"
 	return cmd_scale_2( xy_how, xy_how )
 
@@ -1912,7 +1911,11 @@ def cmd_scale_2(x_how, y_how):
 				else: args[ix] = float(arg) / float(dim_before[ix])
 			except ValueError: pass
 		x_how, y_how = args
-		dim_after = [ x_how * dim_before[0], y_how * dim_before[1] ]
+		dim_after = [ int(x_how * dim_before[0]), int(y_how * dim_before[1]) ]
+		# Verify new dimensions are valid (non-zero)
+		if dim_after[0] < 1 or dim_after[1] < 1:
+			flexsense['warnings'].append( "*** Ignored *** Scale would have resulted in a blank windowgram" )
+			return
 		# Scale the windowgram
 		windowgram_after = []
 		windowgram_work = windowgram_before.split("\n")[:-1]
@@ -1921,15 +1924,103 @@ def cmd_scale_2(x_how, y_how):
 			windowgram_after.append( [ windowgram_work[ int(y/y_how) ][ int(x/x_how) ] \
 				for x in range(0, int( dim_after[0] )) ] )
 		windowgram_after = "\n".join( [ "".join(line) for line in windowgram_after ] )
+		# Verify new windowgram (in case of scale error)
+		dim_result = Windowgram_Dimensions_Int(windowgram_after)
+		if dim_result[0] < 1 or dim_result[1] < 1:
+			flexsense['warnings'].append( "*** Ignored *** Scale produced a blank windowgram" )
+			return
 		# Alert user to any panes lost
 		lost_panes = Windowgram_LostPanes( windowgram_before, windowgram_after )
-		if len(lost_panes): flexsense['warning'] = "Lost " + str( len(lost_panes) ) + " panes: " + lost_panes
-		# Update
+		if len(lost_panes):
+			flexsense['warnings'].append( "Lost " + str( len(lost_panes) ) + " panes: " + lost_panes )
+		# Update the windowgram
 		flexmenu_session.Replace_Windowgram( serial, windowgram_after )
+
+## Saving this for possible use in scale command
+## The original scale produces superior results in certain situations
+## It may be worth filtering through the pane loader just to reuse this code
+
+"""
+		#
+		# 3.3) Scale window if user requested
+		#
+		if ARGS.scale and int(ARGS.scale[0]) == window_serial:
+			def scale_one( element, multiplier ):
+				# Scale element using integer rounding, multiplier must be float
+				q, r = math.modf( float(element - 1) * multiplier )
+				if q >= .5: r += 1
+				return int(r) + 1
+			def scale_windowgram( list_panes, sx, sy ):
+				# Scales the windowgram
+				# Because text is low resolution, fractional scaling may produce unsatisfactory results
+				ax, ay = float(sx), float(sy)
+				lost = 0
+				for pane in list_panes:
+					if ax: pane['w'] = scale_one( pane['x'] + pane['w'], sx )
+					if ay: pane['h'] = scale_one( pane['y'] + pane['h'], sy )
+					if ax: pane['x'] = scale_one( pane['x'], sx )
+					if ay: pane['y'] = scale_one( pane['y'], sy )
+					if ax: pane['w'] -= pane['x']
+					if ay: pane['h'] -= pane['y']
+					if not pane['x'] or not pane['y'] or not pane['w'] or not pane['h']: lost += 1
+				return lost
+			def render_windowgram( list_panes ):
+				# Prints the windowgram
+				windowgram = []
+				for pane in list_panes:
+					for y in range( pane['y'], pane['y'] + pane['h'] ):
+						for x in range( pane['x'], pane['x'] + pane['w'] ):
+							ix = int(x) - 1
+							iy = int(y) - 1
+							while len(windowgram) <= iy: windowgram.append([])
+							while len(windowgram[iy]) <= ix: windowgram[iy].append([])
+							windowgram[iy][ix] = pane['n']
+				windowgram_str = ""
+				for line in windowgram:
+					windowgram_str += "".join(line) + "\n"
+				return windowgram_str
+			def get_multiplier( param, other ):
+				# Extracts multiplier from command line argument
+				# Returns (float_multiplier, bool_duplicate)
+				if param == "." or param == "dup": return (other if other else None), True
+				elif param == "-" or param == "none": return float(1), False
+				elif 'x' in param: return float(param[:len(param)-1]), False
+				elif '%' in param: return float(param[:len(param)-1]) / 100.0, False
+				return None, False
+			# Extract the multiplier
+			ax, dx = [ 1.0, 1.0 ] # Set this
+			# Perform the scale
+			list_panes_scaled = copy.deepcopy( list_panes )
+			lost = scale_windowgram( list_panes_scaled, ax, ay )
+			wincfg_scaled = render_windowgram( list_panes_scaled ) # Used either way
+"""
+
+@flex(
+	command = "mirror",
+	description = "Reverse horizontally (left/right)",
+)
+def cmd_mirror():
+	serial = flexmenu_index[0]
+	if flexmenu_session.Serial_Is_Valid(serial):
+		windowgram_lines = Windowgram_StringToLines(flexmenu_session.Get_Windowgram(serial))
+		flexmenu_session.Replace_Windowgram( serial, Windowgram_LinesToString( \
+			[ "".join( [ ch for ch in reversed(list(line)) ] ) for line in windowgram_lines ] ) )
+
+@flex(
+	command = "flip",
+	description = "Reverse vertically (top/bottom)",
+)
+def cmd_flip():
+	serial = flexmenu_index[0]
+	if flexmenu_session.Serial_Is_Valid(serial):
+		windowgram_lines = Windowgram_StringToLines(flexmenu_session.Get_Windowgram(serial))
+		flexmenu_session.Replace_Windowgram( serial, Windowgram_LinesToString(reversed(windowgram_lines)) )
 
 ##
 ## Commands: Terminators
 ##
+
+flexgroup = "terminators"
 
 @flex(
 	command = "oops",
@@ -1958,29 +2049,31 @@ def cmd_exit():
 ## Flex Console
 ##
 
-def cls(rows=None):
-	flexout("\n" * 100)
-
 def flex(rows, session, select=None):
+	def clearscreen(): flexout("\n" * rows)
 	global flexmenu_session
 	flexmenu_session = session
-	session_original = session
+	session_original = copy.deepcopy(session) # Original copy
 	##
 	## Welcome message
 	##
-	cls(rows)
-	flexout("\nFlex for tmuxomatic\nModify your windowgrams using simple, visually expressive commands\n")
+	clearscreen()
+	flexout("")
+	flexout("___ _   ___ _ _")
+	flexout("__  _   __   _     Flex for tmuxomatic " + VERSION)
+	flexout("_   ___ ___ _ _    Modify windowgrams with visually expressive commands")
+	flexout("")
 	##
 	## Show list of windows (if select is None) or the selected windowgram
 	##
 	if select is None:
 		cmd_list()
 	else:
-		flexout("TODO: Select window")
+		flexout("TODO: Select window from shell")
 	##
 	## Input loop
 	##
-	modified = showcmds = True
+	modified = True
 	printer = True if flexmenu_index[0] else False
 	while True:
 		# Macros
@@ -1988,35 +2081,37 @@ def flex(rows, session, select=None):
 		filter_input = lambda string: ( string_to_list( string ), " ".join( string_to_list( string ) ) )
 		# Prepare for new command
 		global flexsense
-		warning = flexsense['warning']
+		warnings = flexsense['warnings'] # Retain
 		flexsense = copy.deepcopy(flexsense_reset)
 		modified = False
 		# Show windowgram if printing
 		if not flexmenu_session.Serial_Is_Valid(flexmenu_index[0]):
-			flexmenu_index[0] = 0 # If it's invalid, clear it; useful for session file indexing without redundant check
+			# If serial is invalid, clear it, to avoid having redundant checks elsewhere
+			flexmenu_index[0] = 0
 		if printer:
 			cmd_print()
-		# Show warning
-		if warning:
-			flexout("WARNING: " + warning)
-		# Show command list
-		if showcmds:
-			flexout("Short Menu ... " + ", ".join(flexmenu_list) + "\n")
+		# Show warnings
+		if warnings:
+			flexout( "\n".join( [ "WARNING    : " + line for line in warnings ] ) )
+		# Show short command list in the context of a selection
+		commands = flexmenu_grouped['helpers'] + flexmenu_grouped['selectors']
+		if flexmenu_index[0]: commands += flexmenu_grouped['modifiers']
+		flexout("Quick Menu : " + ", ".join(commands))
 		# User input
-		try: thisinput_str = input("<<< tmuxomatic flex >>> ")
+		try: thisinput_str = input("\n<<< tmuxomatic flex >>> ")
 		except EOFError as e: thisinput_str = "exit" ; flexout("")
 		flexout("")
 		thisinput_lst, thisinput_str = filter_input( thisinput_str )
 		# Clear screen
-		cls(rows)
+		clearscreen()
 		# Command specified
 		if len(thisinput_lst):
-			# Alias handler (repackages input) ... Note that trailing space means duplicate parameters
+			# Alias handler (repackages input)
+			# Note that trailing space means duplicate parameters: ["?", "help "] forwards "? use new" to "help use new"
 			for alias_tup in flexmenu_aliases:
 				if alias_tup[0] == thisinput_lst[0]:
 					newinput = alias_tup[1]
-					# Duplicate arguments if target ends with a space, permits things like ["h", "help "]
-					if newinput[-1:] == ' ': newinput += " ".join(thisinput_lst[1:])
+					if newinput[-1:] == ' ': newinput += " ".join(thisinput_lst[1:]) # End space == duplicate arguments
 					thisinput_lst, thisinput_str = filter_input( newinput )
 					break
 			# Command handler (based on provided arguments and first matching function)
@@ -2043,6 +2138,7 @@ def flex(rows, session, select=None):
 				flexout("ERROR: Invalid command \"" + thisinput_lst[0] + "\"...\n")
 			# Save if session modified and print next pass
 			if session.Modified():
+				# TODO: Add to stack if command resulted in a modification
 				session.Save()
 				flexsense['printer'] = True
 			# Finish handler
@@ -2054,7 +2150,6 @@ def flex(rows, session, select=None):
 					return session # Return object in case of restore
 				exit()
 		# Sense handler
-		showcmds = False if flexsense['noshowcmds'] else True # Not used?
 		printer = flexsense['printer']
 	# Not reached
 
@@ -2091,20 +2186,10 @@ def main():
 	ancillary = False # Used with printonly and scale, to skip over the main tmuxomatic functionality
 	ARGS.verbose = int(ARGS.verbose or 0)
 	if ARGS.verbose > VERBOSE_MAX: ARGS.verbose = VERBOSE_MAX
-	if ARGS.scale and ARGS.printonly:
-		print("The options --printonly and --scale are mutually exclusive.")
-		exit(0)
-	elif ARGS.scale:							# Overrides for --scale
-		ancillary = True
-		ARGS.noexecute = True
-		ARGS.verbose = 0
 	elif ARGS.printonly: 						# Overrides for --printonly
 		ancillary = True
 		ARGS.noexecute = False
 		ARGS.verbose = 0
-	if ARGS.scale_replace and not ARGS.scale:
-		print("The option --scale-replace is only valid with --scale.")
-		exit(0)
 
 	# Check for presence of specified session filename
 	if not os.path.exists(ARGS.filename):
@@ -2129,6 +2214,8 @@ def main():
 	# Flex console entry
 	if ARGS.flex:
 		session = flex( user_wh[1], session )
+		# Force reload of session file in order to get accurate line counts in the event of changes by user in flex
+		session.Load()
 
 	# Optional kill session on disconnect
 	def destroy():
@@ -2189,8 +2276,8 @@ if __name__ == "__main__":
 		dep = [ [ "Argument " + arg + " removed in version " + version + ": " + reason ] \
 			for version, reason, commands in [
 			[ "1.0.20", "Absolute positioning enabled by default", [ "-a", "--absolute" ] ],
-#			[ "1.1.0",  "Use --flex to scale your windowgrams",    [ "-s", "--scale" ] ],
-#			[ "1.1.0",  "Use --flex for windowgram modification",  [ "-w", "--scale-replace" ] ],
+			[ "1.1.0",  "Use --flex to scale your windowgrams",    [ "-s", "--scale" ] ],
+			[ "1.1.0",  "Use --flex for windowgram modification",  [ "-w", "--scale-replace" ] ],
 			] if arg in commands ]
 		if dep:
 			print("!!! " + dep[0][0])
@@ -2222,22 +2309,8 @@ if __name__ == "__main__":
 		"resources when you're not 'plugged in'." )
 	PARSER.add_argument( "-f", "--flex", action="store_true", help=\
 		"Windowgram modification console.  Flex gives you the ability " + \
-		"to bend your windowgrams to perfection using various fully " + \
-		"automated techniques (scale, break, etc)." )
-# TODO: Move scale to Flex
-	PARSER.add_argument( "-s", "--scale", nargs=3, metavar=('SEQ', 'XSCALE', 'YSCALE'), help=\
-		"Loads window SEQ, scales it by XSCALE and YSCALE, then " + \
-		"prints the resulting windowgram, then exits.  " + \
-		"SCALE is a multiplier (1.5x), or a percentage (150%%).  " + \
-		"to skip scaling an axis, specify either \"-\" or \"none\".  " + \
-		"To duplicate the scaling from other axis, specify \".\" or " + \
-		"\"dup\".  Example: " + PROGRAM_THIS + " FILENAME -s 1 3x 2x" )
-	PARSER.add_argument( "-w", "--scale-replace", action="store_true", help=\
-		"Instead of printing, replace the windowgram in the " + \
-		"session file.  This is only valid when used with window " + \
-		"scale (-s).  Use with caution since this overwrites the " + \
-		"specified session file." )
-# TODO: Move scale to Flex
+		"to bend your windowgrams to perfection using visually " + \
+		"oriented commands (scale, break, etc)." )
 	PARSER.add_argument( "filename", help=\
 		"The tmuxomatic session filename (required)" )
 	ARGS = PARSER.parse_args()
