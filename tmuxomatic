@@ -61,99 +61,99 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##     Revisions     |
 ##-------------------+
 ##
-HOMEPAGE = "https://github.com/oxidane/tmuxomatic"	# NOTE: Variables HOMEPAGE and VERSION are used by setup.py
-VERSION = "1.1.0"									# x.y.z: x = Rewrite, y = Major Feature, z = Minor Feature / Fix
+HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
+VERSION = "1.1.0"                                   # x.y.z: x = Rewrite, y = Major Feature, z = Minor Feature / Fix
 ## TODO 1.1.x: Flex Console, Windowgram Library, Pypi Readme
 ##
-##	1.1.0	2014-08-28	Began tmuxomatic --flex, commands will be added over the next few releases
-##						Fixed the readme to fit the recent github style changes
-##						Fixed issue #8: Uses window name for focus to support tmux base-index
-##						Moved scale feature into flex, added flex section to readme
-##						Source indentation now uses spaces, for github readability
+##  1.1.0   2014-08-28  Began tmuxomatic --flex, commands will be added over the next few releases
+##                      Fixed the readme to fit the recent github style changes
+##                      Fixed issue #8: Uses window name for focus to support tmux base-index
+##                      Moved scale feature into flex, added flex section to readme
+##                      Source indentation now uses spaces, for github readability
 ##
-##	------	----------	------------------------------------------------------------------------------------
+##  ------  ----------  ------------------------------------------------------------------------------------
 ##
-##	1.0.20	2014-07-31	Fixed session file bugs: No header before window, and missing default directory
-##						The option "--absolute" is now the default, this fixes issue #5
+##  1.0.20  2014-07-31  Fixed session file bugs: No header before window, and missing default directory
+##                      The option "--absolute" is now the default, this fixes issue #5
 ##
-##	1.0.19	2014-07-30	Installation with pip should now be fully functional
-##						If the user is not using YAML, installation of PyYAML is optional
+##  1.0.19  2014-07-30  Installation with pip should now be fully functional
+##                      If the user is not using YAML, installation of PyYAML is optional
 ##
-##	1.0.18	2014-07-29	Added support for multiple panes per command, this is an undocumented feature
-##						Fixed issue #6: Installation with pip now installs to the bin directory
+##  1.0.18  2014-07-29  Added support for multiple panes per command, this is an undocumented feature
+##                      Fixed issue #6: Installation with pip now installs to the bin directory
 ##
-##	1.0.17	2014-07-29	Added save to YAML session file, this allows scale to be used with YAML sessions
-##						Shorthand session file loader was broken in 1.0.16, this has been fixed
-##						The pypi setup.py file now extracts the version and homepage from the source
-##						Added error reporting of YAML line numbers (limited to a range)
+##  1.0.17  2014-07-29  Added save to YAML session file, this allows scale to be used with YAML sessions
+##                      Shorthand session file loader was broken in 1.0.16, this has been fixed
+##                      The pypi setup.py file now extracts the version and homepage from the source
+##                      Added error reporting of YAML line numbers (limited to a range)
 ##
-##	1.0.16	2014-07-27	Session file management moved from session parser into its own class
-##						Simplified the session parser now that load and save are separate
-##						Finished YAML support, note that scale is not yet supported
-##						Added new session file that demonstrates how to use YAML
+##  1.0.16  2014-07-27  Session file management moved from session parser into its own class
+##                      Simplified the session parser now that load and save are separate
+##                      Finished YAML support, note that scale is not yet supported
+##                      Added new session file that demonstrates how to use YAML
 ##
-##	1.0.15	2014-07-25	Began working on YAML support, this will not be enabled until it's ready
-##						Fixed issue #4: Support for Solaris and other hosts without "stty size"
-##						Added option to destroy the session on disconnect, disabled by default
-##						Added pypi support, now installable using "pip install tmuxomatic".
+##  1.0.15  2014-07-25  Began working on YAML support, this will not be enabled until it's ready
+##                      Fixed issue #4: Support for Solaris and other hosts without "stty size"
+##                      Added option to destroy the session on disconnect, disabled by default
+##                      Added pypi support, now installable using "pip install tmuxomatic".
 ##
-##	1.0.14	2014-07-22	The previously unnamed central concept in tmuxomatic is now called a windowgram
-##						For readability, blank lines between window name and windowgram are allowed
-##						Added undocumented command synonyms to avoid user documentation lookups
-##						Rewrote examples since they were mostly just early development tests
-##						Rewrote the introduction in the readme file and added links to tmuxomatic
+##  1.0.14  2014-07-22  The previously unnamed central concept in tmuxomatic is now called a windowgram
+##                      For readability, blank lines between window name and windowgram are allowed
+##                      Added undocumented command synonyms to avoid user documentation lookups
+##                      Rewrote examples since they were mostly just early development tests
+##                      Rewrote the introduction in the readme file and added links to tmuxomatic
 ##
-##	1.0.13	2014-07-21	Added example screenshot, shortened the readme example to one window
-##						Fixed issues #1, #2: Supports non-numeric tmux versions (e.g., "1.9a")
-##						Fixed issue #3: Relative loading of the python3 interpreter for portability
+##  1.0.13  2014-07-21  Added example screenshot, shortened the readme example to one window
+##                      Fixed issues #1, #2: Supports non-numeric tmux versions (e.g., "1.9a")
+##                      Fixed issue #3: Relative loading of the python3 interpreter for portability
 ##
-##	1.0.12	2014-07-21	Public release
-##						Fixed session filename
-##						Redesigned scale feature to allow differing axial scales in a single pass
-##						Fixed changing the default directory
+##  1.0.12  2014-07-21  Public release
+##                      Fixed session filename
+##                      Redesigned scale feature to allow differing axial scales in a single pass
+##                      Fixed changing the default directory
 ##
-##	1.0.11	2013-11-07	Fixed all non-stylistic pylint warnings
-##						Various updates including using the absolute location of tmux
+##  1.0.11  2013-11-07  Fixed all non-stylistic pylint warnings
+##                      Various updates including using the absolute location of tmux
 ##
-##	1.0.10	2013-11-05	Added the readme file
-##						Added write option for scaling, that updates session file
+##  1.0.10  2013-11-05  Added the readme file
+##                      Added write option for scaling, that updates session file
 ##
-##	1.0.9	2013-11-04	Window renaming is now disabled by default, added option to turn it on
-##						Various changes to the source, documentation, and session files
+##  1.0.9   2013-11-04  Window renaming is now disabled by default, added option to turn it on
+##                      Various changes to the source, documentation, and session files
 ##
-##	1.0.8	2013-11-03	Added optional scaling of the window configuration
-##						Fixed some more pylint problems
+##  1.0.8   2013-11-03  Added optional scaling of the window configuration
+##                      Fixed some more pylint problems
 ##
-##	1.0.7	2013-11-02	It now checks the tmux version before proceeding
-##						Session files have been expanded and cleaned up
+##  1.0.7   2013-11-02  It now checks the tmux version before proceeding
+##                      Session files have been expanded and cleaned up
 ##
-##	1.0.6	2013-11-01	Fixed many problems reported by pylint
-##						Added support for relative pane sizing and made it the default
+##  1.0.6   2013-11-01  Fixed many problems reported by pylint
+##                      Added support for relative pane sizing and made it the default
 ##
-##	1.0.5	2013-10-21	Uses Python 3.x
-##						Refined sample files and cleaned up source code comments
-##						Removed space preservation option, it's now the default
+##  1.0.5   2013-10-21  Uses Python 3.x
+##                      Refined sample files and cleaned up source code comments
+##                      Removed space preservation option, it's now the default
 ##
-##	1.0.4	2013-10-16	Session definition file is now in its most minimal form
-##						Extended support to 62 panes by adding characters A-Z, updated introduction
+##  1.0.4   2013-10-16  Session definition file is now in its most minimal form
+##                      Extended support to 62 panes by adding characters A-Z, updated introduction
 ##
-##	1.0.3	2013-10-11	Made squeeze 1.0.2 the default
-##						Removed options that are no longer needed
-##						Miscellaneous clean up
+##  1.0.3   2013-10-11  Made squeeze 1.0.2 the default
+##                      Removed options that are no longer needed
+##                      Miscellaneous clean up
 ##
-##	1.0.2	2013-10-11	Running in fast mode is now the default and slow mode is the option
-##						Added optional support for setting a default directory
-##						The tmux errors related to squeeze have been replaced by custom messages
-##						Spaces in window name are now changed to '_' or '\ ' depending on user option
-##						Fixed complex layouts with squeeze 1.0.2, which is an early version that was fixed
+##  1.0.2   2013-10-11  Running in fast mode is now the default and slow mode is the option
+##                      Added optional support for setting a default directory
+##                      The tmux errors related to squeeze have been replaced by custom messages
+##                      Spaces in window name are now changed to '_' or '\ ' depending on user option
+##                      Fixed complex layouts with squeeze 1.0.2, which is an early version that was fixed
 ##
-##	1.0.1	2013-10-09	Added "print tmux command list" for generating static layouts
-##						Added window focus option, add "foc" anywhere in the pane definitions
-##						Extended support to 36 panes by adding characters a-z, updated introduction
-##						Improved the splitting algorithm, resolving an edge case from version 1.0
-##						Limited support for complex layouts, full support requires tmux upgrades
+##  1.0.1   2013-10-09  Added "print tmux command list" for generating static layouts
+##                      Added window focus option, add "foc" anywhere in the pane definitions
+##                      Extended support to 36 panes by adding characters a-z, updated introduction
+##                      Improved the splitting algorithm, resolving an edge case from version 1.0
+##                      Limited support for complex layouts, full support requires tmux upgrades
 ##
-##	1.0.0	2013-10-04	First version, development began in late September 2013
+##  1.0.0   2013-10-04  First version, development began in late September 2013
 ##
 ##--------------------+-------------------------------------------------------------------------------------------------
 ##     Expansions     |
@@ -161,72 +161,72 @@ VERSION = "1.1.0"									# x.y.z: x = Rewrite, y = Major Feature, z = Minor Fea
 ##
 ## Minor:
 ##
-##		Video demonstration of tmuxomatic, including the "--scale" feature and how it's used for rapid development
-##		and modification of windowgrams ("12\n34" -> 4x -> add small windows).  Keep it short, fast paced,
-##		demonstrating at least one small and one large example.
+##      Video demonstration of tmuxomatic, including the "--scale" feature and how it's used for rapid development
+##      and modification of windowgrams ("12\n34" -> 4x -> add small windows).  Keep it short, fast paced,
+##      demonstrating at least one small and one large example.
 ##
-##		Manual page.  Include command line examples.
+##      Manual page.  Include command line examples.
 ##
-##		Possibly embed the examples in the program, allowing the user to run, extract, or view the session files.
+##      Possibly embed the examples in the program, allowing the user to run, extract, or view the session files.
 ##
-##		Would be great to add a file format template that adds color to the tmuxomatic session file in text editors.
-##		If it could give an even unique color (e.g., evenly spaced over color wheel) to each pane in the windowgram,
-##		then I think it would make the custom format much more appealing.  Detection abilities may be limited in some
-##		IDEs though, so an extension may be necessary.  Anyway, a dimension of color will allow the windowgram to be
-##		more rapidly assessed at-a-glance.
+##      Would be great to add a file format template that adds color to the tmuxomatic session file in text editors.
+##      If it could give an even unique color (e.g., evenly spaced over color wheel) to each pane in the windowgram,
+##      then I think it would make the custom format much more appealing.  Detection abilities may be limited in some
+##      IDEs though, so an extension may be necessary.  Anyway, a dimension of color will allow the windowgram to be
+##      more rapidly assessed at-a-glance.
 ##
-##		Support other multiplexers like screen, if they have similar capabilities (vertical splits, shell driven, etc).
-##		Screen currently does not have the ability to modify panes from the command line, this is required for support.
+##      Support other multiplexers like screen, if they have similar capabilities (vertical splits, shell driven, etc).
+##      Screen currently does not have the ability to modify panes from the command line, this is required for support.
 ##
-##		If filename is not specified, show running tmuxomatic sessions, and allow reconnect without file being present.
+##      If filename is not specified, show running tmuxomatic sessions, and allow reconnect without file being present.
 ##
-##		Port the readme to a format compatible with pypi.  Add readme and sample sessions to the distribution.
+##      Port the readme to a format compatible with pypi.  Add readme and sample sessions to the distribution.
 ##
-##		Command line auto-completion support for zsh, etc.
+##      Command line auto-completion support for zsh, etc.
 ##
-##		Reversing function.  This takes a split-centric configuration and produces a windowgram.  Has size or accuracy
-##		parameter that defines the size of the windowgram.  Utility is dubious, as it has not been requested, but it
-##		would be easy to code.  Add conversions from popular managers.
+##      Reversing function.  This takes a split-centric configuration and produces a windowgram.  Has size or accuracy
+##      parameter that defines the size of the windowgram.  Utility is dubious, as it has not been requested, but it
+##      would be easy to code.  Add conversions from popular managers.
 ##
-##		Runnable session files.  Basically the session file invokes tmuxomatic with fixed and/or forwarded arguments.
-##		It copies itself via stdin or a /tmp file.  For easy application to any session file, constrain code to only a
-##		few short lines at the top of the session file that are easily cut and pasted into another.  A prototype of this
-##		concept was done in early development, though it had a slightly different design, so it's best rewritten.
+##      Runnable session files.  Basically the session file invokes tmuxomatic with fixed and/or forwarded arguments.
+##      It copies itself via stdin or a /tmp file.  For easy application to any session file, constrain code to only a
+##      few short lines at the top of the session file that are easily cut and pasted into another.  A prototype of this
+##      concept was done in early development, though it had a slightly different design, so it's best rewritten.
 ##
 ## Major:
 ##
-##		Add tmuxomatic flex.  A windowgram modification console.  Allows users to perform multiple actions on their
-##		windowgrams, including: scale, rotate, mirror, flip, break <pane>, rename <pane1> <pane2>, swap <pane1> <pane2>.
-##		Session is specified from command line, console is entered with "--flex" argument.  Windows from session are
-##		listed and chosen with the flex command "window <number>".  Maintain changes as an action chain, and modifiable
-##		with the commands: undo, redo.  Store serialized action chain in the session file as a base64 block between the
-##		window header and the windowgram.  User may exit or run the session when they're done.  This should be in the
-##		major section.  Reconsider using the urwid library as a dependency, or make it optional.
+##      Add tmuxomatic flex.  A windowgram modification console.  Allows users to perform multiple actions on their
+##      windowgrams, including: scale, rotate, mirror, flip, break <pane>, rename <pane1> <pane2>, swap <pane1> <pane2>.
+##      Session is specified from command line, console is entered with "--flex" argument.  Windows from session are
+##      listed and chosen with the flex command "window <number>".  Maintain changes as an action chain, and modifiable
+##      with the commands: undo, redo.  Store serialized action chain in the session file as a base64 block between the
+##      window header and the windowgram.  User may exit or run the session when they're done.  This should be in the
+##      major section.  Reconsider using the urwid library as a dependency, or make it optional.
 ##
-##		Possible console-driven option that allows individual window adjustments on a specified session.  It would also
-##		automatically save the session file on every change, and with it a compressed and encoded undo list in case the
-##		user needs to revert.  Some example commands: "v+", "v-", "h+", "h-" (for window adjustments), "2bd1" (pane 2
-##		bottom down 1), "3sh" (pane 3 split horizontally).  The command list could become too lengthy.  If this feature
-##		is added, it has to be kept simple, and then a user could describe how they want a window laid out in a very
-##		responsive manner that is guaranteed to be read by the loader properly.  Could probably put this in flex.
+##      Possible console-driven option that allows individual window adjustments on a specified session.  It would also
+##      automatically save the session file on every change, and with it a compressed and encoded undo list in case the
+##      user needs to revert.  Some example commands: "v+", "v-", "h+", "h-" (for window adjustments), "2bd1" (pane 2
+##      bottom down 1), "3sh" (pane 3 split horizontally).  The command list could become too lengthy.  If this feature
+##      is added, it has to be kept simple, and then a user could describe how they want a window laid out in a very
+##      responsive manner that is guaranteed to be read by the loader properly.  Could probably put this in flex.
 ##
-##		Session Binding: A mode that keeps the session file and its running session synchronized.  Some things won't be
-##		easy to do.  Changing the name of a window is easy, but changing windowgram may not be (without unique
-## 		identifiers in tmux).  Use threading to keep them in sync.  Error handling could be shown in a created error
-##		window, which would be destroyed on next session load if there was no error.
+##      Session Binding: A mode that keeps the session file and its running session synchronized.  Some things won't be
+##      easy to do.  Changing the name of a window is easy, but changing windowgram may not be (without unique
+##      identifiers in tmux).  Use threading to keep them in sync.  Error handling could be shown in a created error
+##      window, which would be destroyed on next session load if there was no error.
 ##
 ## Possible:
 ##
-##		Multiple commands in a single call to tmux for faster execution (requires tmux "stdin").
+##      Multiple commands in a single call to tmux for faster execution (requires tmux "stdin").
 ##
-##		Creating two differently-named tmuxomatic sessions at the same time may conflict.  If all the tmux commands
-##		could be sent at once then this won't be a problem (requires tmux "stdin").
+##      Creating two differently-named tmuxomatic sessions at the same time may conflict.  If all the tmux commands
+##      could be sent at once then this won't be a problem (requires tmux "stdin").
 ##
-##		The tmuxomatic pane numbers could be made equal to tmux pane numbers (0=0, a=10, A=36), but only if tmux will
-##		support pane renumbering, which is presently not supported (requires tmux "renumber-pane").
+##      The tmuxomatic pane numbers could be made equal to tmux pane numbers (0=0, a=10, A=36), but only if tmux will
+##      support pane renumbering, which is presently not supported (requires tmux "renumber-pane").
 ##
-##		If tmux ever supports some kind of aggregate window pane arrangements then the tmux edge case represented by the
-##		example "session_unsupported" could be fixed (requires tmux "add-pane").
+##      If tmux ever supports some kind of aggregate window pane arrangements then the tmux edge case represented by the
+##      example "session_unsupported" could be fixed (requires tmux "add-pane").
 ##
 ##------------------+---------------------------------------------------------------------------------------------------
 ##     Requests     |
@@ -235,36 +235,36 @@ VERSION = "1.1.0"									# x.y.z: x = Rewrite, y = Major Feature, z = Minor Fea
 ## These are some features I would like to see in tmux that would improve tmuxomatic.  If anyone adds these features to
 ## tmux, notify me and I'll upgrade tmuxomatic accordingly.
 ##
-##		1) tmux --stdin					Run multiple line-delimited commands in one tmux call (with error reporting).
-##										Upgrades: Faster tmuxomatic run time, no concurrent session conflicts.
+##      1) tmux --stdin                 Run multiple line-delimited commands in one tmux call (with error reporting).
+##                                      Upgrades: Faster tmuxomatic run time, no concurrent session conflicts.
 ##
-##		2) tmux renumber-pane old new	Changes the pane number, once set it doesn't change, except from this command.
-##										Upgrades: The tmux pane numbers will reflect those in the session file.
+##      2) tmux renumber-pane old new   Changes the pane number, once set it doesn't change, except from this command.
+##                                      Upgrades: The tmux pane numbers will reflect those in the session file.
 ##
-##		3) tmux add-pane x y w h		Explicit pane creation (exact placement and dimensions).  This automatically
-##										pushes neighbors, subdivides, or re-appropriates, the affected unassigned panes.
-##										Upgrades: Fast, precise arbitrary windowgram algorithm; resolves the edge case.
+##      3) tmux add-pane x y w h        Explicit pane creation (exact placement and dimensions).  This automatically
+##                                      pushes neighbors, subdivides, or re-appropriates, the affected unassigned panes.
+##                                      Upgrades: Fast, precise arbitrary windowgram algorithm; resolves the edge case.
 ##
-##		4) tmux preserve-proportions	If tmux preserves proportional pane sizes, when xterm is resized, the panes will
-##										be proportionally adjusted.  This feature would save from having to restart
-##										tmuxomatic when the xterm size at session creation differed from what they
-##										intend to use.  See relative pane sizing notes for more information.
+##      4) tmux preserve-proportions    If tmux preserves proportional pane sizes, when xterm is resized, the panes will
+##                                      be proportionally adjusted.  This feature would save from having to restart
+##                                      tmuxomatic when the xterm size at session creation differed from what they
+##                                      intend to use.  See relative pane sizing notes for more information.
 ##
 ##---------------+------------------------------------------------------------------------------------------------------
 ##     Terms     |
 ##---------------+
 ##
-##		windowgram		A rectangle comprised of unique alphanumeric rectangles representing panes in a window.
+##      windowgram      A rectangle comprised of unique alphanumeric rectangles representing panes in a window.
 ##
-##		xterm			Represents the user's terminal window, may be xterm, PuTTY, SecureCRT, iTerm, or similar.
+##      xterm           Represents the user's terminal window, may be xterm, PuTTY, SecureCRT, iTerm, or similar.
 ##
-##		tmux			The terminal multiplexer program, currently tmuxomatic only supports tmux.
+##      tmux            The terminal multiplexer program, currently tmuxomatic only supports tmux.
 ##
-##		session			A single tmux attachment, containing one or more windows.
+##      session         A single tmux attachment, containing one or more windows.
 ##
-##		window			One window within a session that contains one or more panes.
+##      window          One window within a session that contains one or more panes.
 ##
-##		pane			Any subdivision of a window with its own shell.
+##      pane            Any subdivision of a window with its own shell.
 ##
 ##---------------+------------------------------------------------------------------------------------------------------
 ##     Notes     |
@@ -294,11 +294,11 @@ VERSION = "1.1.0"									# x.y.z: x = Rewrite, y = Major Feature, z = Minor Fea
 ##
 ## The windowgram parser and splitting code could be used for some other purposes:
 ##
-##		* HTML table generation
+##      * HTML table generation
 ##
-##		* Layouts for other user interfaces
+##      * Layouts for other user interfaces
 ##
-##		* Level design for simple tiled games (requires allowing overlapped panes and performing depth ordering)
+##      * Level design for simple tiled games (requires allowing overlapped panes and performing depth ordering)
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
@@ -316,29 +316,29 @@ except ImportError as e: pass
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-ARGS 			= None
+ARGS            = None
 
 # Flexible Settings (may be safely changed)
 
-PROGRAM_THIS	= "tmuxomatic"			# Name of this executable, alternatively: sys.argv[0][sys.argv[0].rfind('/')+1:]
-EXE_TMUX		= "tmux"				# Short variable name for short line lengths, also changes to an absolute path
-MAXIMUM_WINDOWS	= 16					# Maximum windows (not panes), easily raised by changing this value alone
-VERBOSE_WAIT	= 1.5					# Wait time prior to running commands, time is seconds, only in verbose mode
-DEBUG_SCANLINE	= False					# Shows the clean break scanline in action if set to True and run with -vvv
+PROGRAM_THIS    = "tmuxomatic"          # Name of this executable, alternatively: sys.argv[0][sys.argv[0].rfind('/')+1:]
+EXE_TMUX        = "tmux"                # Short variable name for short line lengths, also changes to an absolute path
+MAXIMUM_WINDOWS = 16                    # Maximum windows (not panes), easily raised by changing this value alone
+VERBOSE_WAIT    = 1.5                   # Wait time prior to running commands, time is seconds, only in verbose mode
+DEBUG_SCANLINE  = False                 # Shows the clean break scanline in action if set to True and run with -vvv
 
 # Fixed Settings (requires source update)
 
-PANE_CHARACTERS	= "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" # Official order "[0-9a-zA-Z]"
-MINIMUM_TMUX	= "1.8"					# Minimum supported tmux version (1.8 is required for absolute sizing)
-VERBOSE_MAX		= 4						# 0 = quiet, 1 = summary, 2 = inputs, 3 = fitting, 4 = commands
-MAXIMUM_PANES	= len(PANE_CHARACTERS)	# 62 maximum panes (not windows)
+PANE_CHARACTERS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" # Official order "[0-9a-zA-Z]"
+MINIMUM_TMUX    = "1.8"                 # Minimum supported tmux version (1.8 is required for absolute sizing)
+VERBOSE_MAX     = 4                     # 0 = quiet, 1 = summary, 2 = inputs, 3 = fitting, 4 = commands
+MAXIMUM_PANES   = len(PANE_CHARACTERS)  # 62 maximum panes (not windows)
 
 # Aliases for directions block, this is intended to leverage intuitiveness for the broadest possible audience
 
 ALIASES = {
-	'foc': "focus key keys cur cursor", # Use "use user" or reserve them for other use?
-	'dir': "directory path cd pwd cwd home",
-	'run': "exe exec execute",
+    'foc': "focus key keys cur cursor", # Use "use user" or reserve them for other use?
+    'dir': "directory path cd pwd cwd home",
+    'run': "exe exec execute",
 }
 
 
@@ -350,77 +350,77 @@ ALIASES = {
 ##----------------------------------------------------------------------------------------------------------------------
 
 def get_xterm_dimensions_wh(): # cols (x), rows (y)
-	"""
-	Returns the dimensions of the user's xterm
-	Based on: https://stackoverflow.com/a/566752
-	"""
-	rows = cols = None
-	#
-	# Linux
-	#
-	stty_exec = os.popen("stty size", "r").read()
-	if stty_exec:
-		stty_exec = stty_exec.split()
-		if len(stty_exec) >= 2:
-			rows = stty_exec[0]
-			cols = stty_exec[1]
-	if rows and cols:
-		return int(cols), int(rows) # cols, rows
-	#
-	# Solaris
-	#
-	rows = os.popen("tput lines", "r").read() # Issue #4: Use tput instead of stty on some systems
-	cols = os.popen("tput cols", "r").read()
-	if rows and cols:
-		return int(cols), int(rows) # cols, rows
-	#
-	# Unix
-	#
-	def ioctl_gwinsz(fd):
-		# Get xterm size via ioctl
-		try:
-			import fcntl, termios, struct
-			cr = struct.unpack("hh", fcntl.ioctl(fd, termios.TIOCGWINSZ, "1234"))
-		except (IOError, RuntimeError, TypeError, NameError):
-			return
-		return cr
-	cr = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
-	if not cr:
-		try:
-			fd = os.open(os.ctermid(), os.O_RDONLY)
-			cr = ioctl_gwinsz(fd)
-			os.close(fd)
-		except (IOError, RuntimeError, TypeError, NameError):
-			pass
-	if not cr:
-		env = os.environ
-		cr = (env.get("LINES", 25), env.get("COLUMNS", 80))
-	if cr and len(cr) == 2 and int(cr[0]) > 0 and int(cr[1]) > 0:
-		return int(cr[1]), int(cr[0]) # cols, rows
-	#
-	# Unsupported ... Other platforms not needed since tmux doesn't run there
-	#
-	return 0, 0 # cols, rows
+    """
+    Returns the dimensions of the user's xterm
+    Based on: https://stackoverflow.com/a/566752
+    """
+    rows = cols = None
+    #
+    # Linux
+    #
+    stty_exec = os.popen("stty size", "r").read()
+    if stty_exec:
+        stty_exec = stty_exec.split()
+        if len(stty_exec) >= 2:
+            rows = stty_exec[0]
+            cols = stty_exec[1]
+    if rows and cols:
+        return int(cols), int(rows) # cols, rows
+    #
+    # Solaris
+    #
+    rows = os.popen("tput lines", "r").read() # Issue #4: Use tput instead of stty on some systems
+    cols = os.popen("tput cols", "r").read()
+    if rows and cols:
+        return int(cols), int(rows) # cols, rows
+    #
+    # Unix
+    #
+    def ioctl_gwinsz(fd):
+        # Get xterm size via ioctl
+        try:
+            import fcntl, termios, struct
+            cr = struct.unpack("hh", fcntl.ioctl(fd, termios.TIOCGWINSZ, "1234"))
+        except (IOError, RuntimeError, TypeError, NameError):
+            return
+        return cr
+    cr = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
+    if not cr:
+        try:
+            fd = os.open(os.ctermid(), os.O_RDONLY)
+            cr = ioctl_gwinsz(fd)
+            os.close(fd)
+        except (IOError, RuntimeError, TypeError, NameError):
+            pass
+    if not cr:
+        env = os.environ
+        cr = (env.get("LINES", 25), env.get("COLUMNS", 80))
+    if cr and len(cr) == 2 and int(cr[0]) > 0 and int(cr[1]) > 0:
+        return int(cr[1]), int(cr[0]) # cols, rows
+    #
+    # Unsupported ... Other platforms not needed since tmux doesn't run there
+    #
+    return 0, 0 # cols, rows
 
 def which(program):
-	"""
-	Returns the absolute path of specified executable
-	Source: https://stackoverflow.com/a/377028
-	"""
-	def is_exe(fpath):
-		# Return true if file exists and is executable
-		return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-	fpath, _ = os.path.split(program)
-	if fpath:
-		if is_exe(program):
-			return program
-	else:
-		for path in os.environ["PATH"].split(os.pathsep):
-			path = path.strip('"')
-			exe_file = os.path.join(path, program)
-			if is_exe(exe_file):
-				return exe_file
-	return None
+    """
+    Returns the absolute path of specified executable
+    Source: https://stackoverflow.com/a/377028
+    """
+    def is_exe(fpath):
+        # Return true if file exists and is executable
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+    fpath, _ = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+    return None
 
 
 
@@ -431,94 +431,94 @@ def which(program):
 ##----------------------------------------------------------------------------------------------------------------------
 
 def synerr( errpkg, errmsg ):
-	"""
-	Syntax error: Display error and exit
-	"""
-	if 'quiet' in errpkg:
-		print("Error: " + errmsg)
-	elif errpkg['format'] == "shorthand":
-		# Shorthand has exact line numbers
-		print("Error on line " + str(errpkg['line']) + ": " + errmsg)
-	else:
-		# The exact line number in YAML is not easily known with pyyaml
-		print("Error on or after line " + str(errpkg['line']) + ": " + errmsg)
-	exit(0)
+    """
+    Syntax error: Display error and exit
+    """
+    if 'quiet' in errpkg:
+        print("Error: " + errmsg)
+    elif errpkg['format'] == "shorthand":
+        # Shorthand has exact line numbers
+        print("Error on line " + str(errpkg['line']) + ": " + errmsg)
+    else:
+        # The exact line number in YAML is not easily known with pyyaml
+        print("Error on or after line " + str(errpkg['line']) + ": " + errmsg)
+    exit(0)
 
 def tmux_run( command, nopipe=False, force=False, real=False ):
-	"""
-	Executes the specified shell command (i.e., tmux)
-		nopipe ... Do not return stdout or stderr
-		force .... Force the command to execute even if ARGS.noexecute is set
-	 	real ..... Command should be issued regardless, required for checking version, session exists, etc
-	"""
-	noexecute = ARGS.noexecute if ARGS and ARGS.noexecute else False
-	printonly = ARGS.printonly if ARGS and ARGS.printonly else False
-	verbose   = ARGS.verbose   if ARGS and ARGS.verbose   else 0
-	if not noexecute or force:
-		if printonly and not real:
-			# Print only, do not run
-			print(str(command)) # Use "print(str(command), end=';')" to display all commands on one line
-			return
-		if verbose >= 4 and not real:
-			print("(4) " + str(command))
-		if nopipe:
-			os.system(command)
-		else:
-			proc = subprocess.Popen( command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
-			stdout, stderr = proc.communicate()
-			# Return stderr or stdout
-			if stderr: return str(stderr, "ascii")
-			return str(stdout, "ascii")
+    """
+    Executes the specified shell command (i.e., tmux)
+        nopipe ... Do not return stdout or stderr
+        force .... Force the command to execute even if ARGS.noexecute is set
+        real ..... Command should be issued regardless, required for checking version, session exists, etc
+    """
+    noexecute = ARGS.noexecute if ARGS and ARGS.noexecute else False
+    printonly = ARGS.printonly if ARGS and ARGS.printonly else False
+    verbose   = ARGS.verbose   if ARGS and ARGS.verbose   else 0
+    if not noexecute or force:
+        if printonly and not real:
+            # Print only, do not run
+            print(str(command)) # Use "print(str(command), end=';')" to display all commands on one line
+            return
+        if verbose >= 4 and not real:
+            print("(4) " + str(command))
+        if nopipe:
+            os.system(command)
+        else:
+            proc = subprocess.Popen( command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+            stdout, stderr = proc.communicate()
+            # Return stderr or stdout
+            if stderr: return str(stderr, "ascii")
+            return str(stdout, "ascii")
 
 def tmux_version(): # -> name, version
-	"""
-	Queries tmux for the version
-	"""
-	result = tmux_run( EXE_TMUX + " -V", nopipe=False, force=True, real=True )
-	result = [ line.strip() for line in result.split("\n") if line.strip() ]
-	name = result[0].split(" ", 1)[0] # Name that was reported by tmux (should be "tmux")
-	version = result[0].split(" ", 1)[1] # Only the version is needed
-	return name, version
+    """
+    Queries tmux for the version
+    """
+    result = tmux_run( EXE_TMUX + " -V", nopipe=False, force=True, real=True )
+    result = [ line.strip() for line in result.split("\n") if line.strip() ]
+    name = result[0].split(" ", 1)[0] # Name that was reported by tmux (should be "tmux")
+    version = result[0].split(" ", 1)[1] # Only the version is needed
+    return name, version
 
 def signal_handler_break( signal_number, frame ):
-	"""
-	On break, displays interruption message and exits.
-	"""
-	_ = repr(signal_number) + repr(frame) # Satisfies pylint
-	print("User interrupted...")
-	exit(0)
+    """
+    On break, displays interruption message and exits.
+    """
+    _ = repr(signal_number) + repr(frame) # Satisfies pylint
+    print("User interrupted...")
+    exit(0)
 
 def signal_handler_hup( signal_number, frame ):
-	"""
-	Use the KeyboardInterrupt exception to communicate user disconnection
-	"""
-	_ = repr(signal_number) + repr(frame) # Satisfies pylint
-	raise KeyboardInterrupt
+    """
+    Use the KeyboardInterrupt exception to communicate user disconnection
+    """
+    _ = repr(signal_number) + repr(frame) # Satisfies pylint
+    raise KeyboardInterrupt
 
 def satisfies_minimum_version(minimum, version):
-	"""
-	Asserts compliance by tmux version.  I've since seen a similar version check somewhere that may come with Python
-	and could probably replace this code, but this works fine for now.
-	"""
-	qn = len(minimum.split("."))
-	pn = len(version.split("."))
-	if qn < pn: minimum += ".0" * (pn-qn) # Equalize the element counts
-	if pn < qn: version += ".0" * (qn-pn) # Equalize the element counts
-	ver_intlist = lambda ver_str: [int(re.sub(r'\D', r'', x)) for x in ver_str.split(".")] # Issues: #1, #2
-	for p, q in zip( ver_intlist(version), ver_intlist(minimum) ):
-		if int(p) == int(q): continue # Qualifies so far
-		if int(p) > int(q): break # Qualifies
-		return False
-	return True
+    """
+    Asserts compliance by tmux version.  I've since seen a similar version check somewhere that may come with Python
+    and could probably replace this code, but this works fine for now.
+    """
+    qn = len(minimum.split("."))
+    pn = len(version.split("."))
+    if qn < pn: minimum += ".0" * (pn-qn) # Equalize the element counts
+    if pn < qn: version += ".0" * (qn-pn) # Equalize the element counts
+    ver_intlist = lambda ver_str: [int(re.sub(r'\D', r'', x)) for x in ver_str.split(".")] # Issues: #1, #2
+    for p, q in zip( ver_intlist(version), ver_intlist(minimum) ):
+        if int(p) == int(q): continue # Qualifies so far
+        if int(p) > int(q): break # Qualifies
+        return False
+    return True
 
 def command_matches(command, primary):
-	"""
-	Matches the command (from file) with the primary (for branch)
-	Returns True if command is primary or a supported alias
-	"""
-	if command == primary: return True
-	if primary in ALIASES and command in ALIASES[primary].split(" "): return True
-	return False
+    """
+    Matches the command (from file) with the primary (for branch)
+    Returns True if command is primary or a supported alias
+    """
+    if command == primary: return True
+    if primary in ALIASES and command in ALIASES[primary].split(" "): return True
+    return False
 
 
 
@@ -529,221 +529,221 @@ def command_matches(command, primary):
 ##----------------------------------------------------------------------------------------------------------------------
 
 def tmuxomatic_split( dim, at_linkid, linkid, list_split, list_links, how, of_this ):
-	"""
+    """
 
-	Splits the window 'at_linkid' along axis 'how'
+    Splits the window 'at_linkid' along axis 'how'
 
-	Variable 'how': 'v' = Vertical (new = below), 'h' = Horizontal (new = right)
+    Variable 'how': 'v' = Vertical (new = below), 'h' = Horizontal (new = right)
 
-	"""
+    """
 
-	def translate( pane, window, screen ):
-		# Returns scaled pane according to windowgram and screen dimensions
-		return int( float(pane) / float(window) * float(screen) )
+    def translate( pane, window, screen ):
+        # Returns scaled pane according to windowgram and screen dimensions
+        return int( float(pane) / float(window) * float(screen) )
 
-	# Initialize
-	at_tmux = ""
-	for llit in list_links:
-		if llit[0] == at_linkid:
-			at_tmux = llit[1]
-			break
-	if at_tmux == "": return
-	for llx, llit in enumerate(list_links):
-		if llit[1] > at_tmux:
-			list_links[llx] = ( llit[0], llit[1]+1 ) # Shift the index to accommodate new pane
-	linkid[0] += 1
-	this_ent = {}
+    # Initialize
+    at_tmux = ""
+    for llit in list_links:
+        if llit[0] == at_linkid:
+            at_tmux = llit[1]
+            break
+    if at_tmux == "": return
+    for llx, llit in enumerate(list_links):
+        if llit[1] > at_tmux:
+            list_links[llx] = ( llit[0], llit[1]+1 ) # Shift the index to accommodate new pane
+    linkid[0] += 1
+    this_ent = {}
 
-	# The dimensions for the newly created window are based on the parent (accounts for the one character divider)
-	for ent in list_split:
-		if ent['linkid'] == at_linkid:
-			this_ent = ent
-			break
-	if this_ent:
-		if how == 'v':
-			of_this = translate( of_this, dim['win'][1], dim['scr'][1] ) # From size-in-definition to size-on-screen
-			w = this_ent['inst_w']
-			h = of_this - 1
-			per = str( float(of_this) / float(this_ent['inst_h']) * 100.0 )
-			if ARGS.relative:
-				this_ent['inst_h'] = int(this_ent['inst_h']) - of_this # Subtract split from root pane
-		else: # elif how == 'h':
-			of_this = translate( of_this, dim['win'][0], dim['scr'][0] ) # From size-in-definition to size-on-screen
-			w = of_this - 1
-			h = this_ent['inst_h']
-			per = str( float(of_this) / float(this_ent['inst_w']) * 100.0 )
-			if ARGS.relative:
-				this_ent['inst_w'] = int(this_ent['inst_w']) - of_this # Subtract split from root pane
+    # The dimensions for the newly created window are based on the parent (accounts for the one character divider)
+    for ent in list_split:
+        if ent['linkid'] == at_linkid:
+            this_ent = ent
+            break
+    if this_ent:
+        if how == 'v':
+            of_this = translate( of_this, dim['win'][1], dim['scr'][1] ) # From size-in-definition to size-on-screen
+            w = this_ent['inst_w']
+            h = of_this - 1
+            per = str( float(of_this) / float(this_ent['inst_h']) * 100.0 )
+            if ARGS.relative:
+                this_ent['inst_h'] = int(this_ent['inst_h']) - of_this # Subtract split from root pane
+        else: # elif how == 'h':
+            of_this = translate( of_this, dim['win'][0], dim['scr'][0] ) # From size-in-definition to size-on-screen
+            w = of_this - 1
+            h = this_ent['inst_h']
+            per = str( float(of_this) / float(this_ent['inst_w']) * 100.0 )
+            if ARGS.relative:
+                this_ent['inst_w'] = int(this_ent['inst_w']) - of_this # Subtract split from root pane
 
-	# Split list tracks tmux pane number at the time of split (for building the split commands)
-	list_split.append( { 'linkid':linkid[0], 'tmux':at_tmux, 'split':how, 'inst_w':w, 'inst_h':h, 'per':per } )
+    # Split list tracks tmux pane number at the time of split (for building the split commands)
+    list_split.append( { 'linkid':linkid[0], 'tmux':at_tmux, 'split':how, 'inst_w':w, 'inst_h':h, 'per':per } )
 
-	# Now the new window's pane id, this is shifted up as insertions below it occur (see above)
-	at_tmux += 1
-	list_links.append( (linkid[0], at_tmux) )
+    # Now the new window's pane id, this is shifted up as insertions below it occur (see above)
+    at_tmux += 1
+    list_links.append( (linkid[0], at_tmux) )
 
 def find_clean_break( vertical, pos, list_panes, bx, by, bw, bh ):
-	"""
+    """
 
-	Finds a split on an axis within the specified bounds, if found returns True, otherwise False.
+    Finds a split on an axis within the specified bounds, if found returns True, otherwise False.
 
-	This shares an edge case with tmux that is an inherent limitation in the way that tmux works.
-	For more information on this edge case, look over the example file "session_unsupported".
+    This shares an edge case with tmux that is an inherent limitation in the way that tmux works.
+    For more information on this edge case, look over the example file "session_unsupported".
 
-	Important note about the clean break algorithm used.  The caller scans all qualifying panes,
-	then it uses each qualifying side as a base from which it calls this function.  Here we scan
-	all qualifying panes to complete a match (see scanline).  If the result is a clean break,
-	this function returns True, and the caller has the location of the break.  While there's room
-	for optimization (probably best ported to C++, where the scanline technique will be really
-	fast), it probably isn't needed since it's likely to be adequate even on embedded systems.
+    Important note about the clean break algorithm used.  The caller scans all qualifying panes,
+    then it uses each qualifying side as a base from which it calls this function.  Here we scan
+    all qualifying panes to complete a match (see scanline).  If the result is a clean break,
+    this function returns True, and the caller has the location of the break.  While there's room
+    for optimization (probably best ported to C++, where the scanline technique will be really
+    fast), it probably isn't needed since it's likely to be adequate even on embedded systems.
 
-	"""
+    """
 
-	#-----------------------------------------------------------------------------------------------
-	#
-	# Outline: Clean Break Algorithm (1.0.1)
-	# ~ Establish pointers
-	# ~ Initialize scanline, used for detecting a clean break spanning multiple panes
-	# ~ For each qualifying pane that has a shared edge
-	#   ~ If shared edge overlaps, add it to the scanline
-	#   ~ If scanline has no spaces, then a clean break has been found, return True
-	# ~ Nothing found, return False
-	#
-	#-----------------------------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------------------------
+    #
+    # Outline: Clean Break Algorithm (1.0.1)
+    # ~ Establish pointers
+    # ~ Initialize scanline, used for detecting a clean break spanning multiple panes
+    # ~ For each qualifying pane that has a shared edge
+    #   ~ If shared edge overlaps, add it to the scanline
+    #   ~ If scanline has no spaces, then a clean break has been found, return True
+    # ~ Nothing found, return False
+    #
+    #-----------------------------------------------------------------------------------------------
 
-	# Notify user
-	if DEBUG_SCANLINE and ARGS.verbose >= 3:
-		print("(3) Scanline: Find clean " + [ "horizontal", "vertical" ][vertical] + " break at position " + str(pos))
+    # Notify user
+    if DEBUG_SCANLINE and ARGS.verbose >= 3:
+        print("(3) Scanline: Find clean " + [ "horizontal", "vertical" ][vertical] + " break at position " + str(pos))
 
-	# ~ Establish pointers
-	if vertical: sl_bgn, sl_siz = bx, bw # Vertical split is a horizontal line
-	else:        sl_bgn, sl_siz = by, bh # Horizontal split is a vertical line
+    # ~ Establish pointers
+    if vertical: sl_bgn, sl_siz = bx, bw # Vertical split is a horizontal line
+    else:        sl_bgn, sl_siz = by, bh # Horizontal split is a vertical line
 
-	# ~ Initialize scanline, used for detecting a clean break spanning multiple panes
-	scanline = list(' ' * sl_siz) # Sets the scanline to spaces (used as a disqualifier)
+    # ~ Initialize scanline, used for detecting a clean break spanning multiple panes
+    scanline = list(' ' * sl_siz) # Sets the scanline to spaces (used as a disqualifier)
 
-	# ~ For each qualifying pane that has a shared edge
-	for pane in list_panes:
-		# Disqualifiers
-		if 's' in pane: continue # Processed panes are out of bounds, all its edges are taken
-		if pane['y'] >= by+bh or pane['y']+pane['h'] <= by: continue # Fully out of bounds
-		if pane['x'] >= bx+bw or pane['x']+pane['w'] <= bx: continue # Fully out of bounds
-		if     vertical and pane['y'] != pos and pane['y']+pane['h'] != pos: continue # No alignment
-		if not vertical and pane['x'] != pos and pane['x']+pane['w'] != pos: continue # No alignment
-		#   ~ If shared edge found, add it to the scanline
-		if vertical: sl_pos, sl_len = pane['x'], pane['w'] # Vertical split is a horizontal line
-		else:        sl_pos, sl_len = pane['y'], pane['h'] # Horizontal split is a vertical line
-		if sl_pos < sl_bgn: sl_len -= sl_bgn - sl_pos ; sl_pos = sl_bgn # Clip before
-		if sl_pos + sl_len > sl_bgn + sl_siz: sl_len = sl_bgn + sl_siz - sl_pos # Clip after
-		for n in range( sl_pos - sl_bgn, sl_pos - sl_bgn + sl_len ): scanline[n] = 'X'
-		# Show the scanline in action
-		if DEBUG_SCANLINE and ARGS.verbose >= 3:
-			print("(3) Scanline: [" + "".join(scanline) + "]: modified by pane " + pane['n'])
-		#   ~ If scanline has no spaces, then a clean break has been found, return True
-		if not ' ' in scanline: return True
+    # ~ For each qualifying pane that has a shared edge
+    for pane in list_panes:
+        # Disqualifiers
+        if 's' in pane: continue # Processed panes are out of bounds, all its edges are taken
+        if pane['y'] >= by+bh or pane['y']+pane['h'] <= by: continue # Fully out of bounds
+        if pane['x'] >= bx+bw or pane['x']+pane['w'] <= bx: continue # Fully out of bounds
+        if     vertical and pane['y'] != pos and pane['y']+pane['h'] != pos: continue # No alignment
+        if not vertical and pane['x'] != pos and pane['x']+pane['w'] != pos: continue # No alignment
+        #   ~ If shared edge found, add it to the scanline
+        if vertical: sl_pos, sl_len = pane['x'], pane['w'] # Vertical split is a horizontal line
+        else:        sl_pos, sl_len = pane['y'], pane['h'] # Horizontal split is a vertical line
+        if sl_pos < sl_bgn: sl_len -= sl_bgn - sl_pos ; sl_pos = sl_bgn # Clip before
+        if sl_pos + sl_len > sl_bgn + sl_siz: sl_len = sl_bgn + sl_siz - sl_pos # Clip after
+        for n in range( sl_pos - sl_bgn, sl_pos - sl_bgn + sl_len ): scanline[n] = 'X'
+        # Show the scanline in action
+        if DEBUG_SCANLINE and ARGS.verbose >= 3:
+            print("(3) Scanline: [" + "".join(scanline) + "]: modified by pane " + pane['n'])
+        #   ~ If scanline has no spaces, then a clean break has been found, return True
+        if not ' ' in scanline: return True
 
-	# ~ Nothing found, return False
-	return False
+    # ~ Nothing found, return False
+    return False
 
 def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_linkid, bx, by, bw, bh ):
-	"""
+    """
 
-	Once the panes have been loaded, this recursive function begins with the xterm dimensions.
-	Note that at this point, all sizes are still in characters, as they will be scaled later.
+    Once the panes have been loaded, this recursive function begins with the xterm dimensions.
+    Note that at this point, all sizes are still in characters, as they will be scaled later.
 
-		linkid[]		Single entry list with last assigned linkid number (basically a reference)
-		l_split[{}]		List of splits and from which pane at the time of split for recreation
-		l_links[()]		List of linkid:tmux_pane associations, updated when split occurs
-		l_panes[{}]		List of fully parsed user-defined panes as one dict per pane
-		this_linkid		The linkid of the current window
-		bx, by, bw, bh	The bounds of the current window
+        linkid[]        Single entry list with last assigned linkid number (basically a reference)
+        l_split[{}]     List of splits and from which pane at the time of split for recreation
+        l_links[()]     List of linkid:tmux_pane associations, updated when split occurs
+        l_panes[{}]     List of fully parsed user-defined panes as one dict per pane
+        this_linkid     The linkid of the current window
+        bx, by, bw, bh  The bounds of the current window
 
-	This algorithm supports all layouts supported by tmux.
+    This algorithm supports all layouts supported by tmux.
 
-	Possible improvement for more accurate positioning: Scan for the best possible split, as
-	defined by its closest proximity to the top or left edges (alternatively: bottom or right).
-	This has yet to be checked for the intended effect of producing more consistent sizing.
+    Possible improvement for more accurate positioning: Scan for the best possible split, as
+    defined by its closest proximity to the top or left edges (alternatively: bottom or right).
+    This has yet to be checked for the intended effect of producing more consistent sizing.
 
-	"""
+    """
 
-	#-----------------------------------------------------------------------------------------------
-	#
-	# Outline: Filler Algorithm (1.0.1)
-	# ~ If any available pane is a perfect fit, link to linkid, mark as processed, return
-	# ~ Search panes for clean break, if found then split, reenter 1, reenter 2, return
-	# ~ If reached, user specified an unsupported layout that will be detected by caller, return
-	#
-	#-----------------------------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------------------------
+    #
+    # Outline: Filler Algorithm (1.0.1)
+    # ~ If any available pane is a perfect fit, link to linkid, mark as processed, return
+    # ~ Search panes for clean break, if found then split, reenter 1, reenter 2, return
+    # ~ If reached, user specified an unsupported layout that will be detected by caller, return
+    #
+    #-----------------------------------------------------------------------------------------------
 
-	def idstr( bx, by, bw, bh ):
-		# Print the rectangle for debugging purposes.  Maybe change to use a rectangle class.
-		return "Rectangle( x=" + str(bx) + ", y=" + str(by) + ", w=" + str(bw) + ", h=" + str(bh) + " )"
+    def idstr( bx, by, bw, bh ):
+        # Print the rectangle for debugging purposes.  Maybe change to use a rectangle class.
+        return "Rectangle( x=" + str(bx) + ", y=" + str(by) + ", w=" + str(bw) + ", h=" + str(bh) + " )"
 
-	v = True if ARGS.verbose >= 3 else False
-	if v: print("(3) " + idstr(bx, by, bw, bh) + ": Enter")
+    v = True if ARGS.verbose >= 3 else False
+    if v: print("(3) " + idstr(bx, by, bw, bh) + ": Enter")
 
-	# ~ If any available pane is a perfect fit, link to linkid, mark as processed, return
-	for pane in l_panes:
-		# Disqualifiers
-		if 's' in pane: continue 							# Skip processed panes
-		# Perfect fit?
-		if pane['x'] == bx and pane['y'] == by and pane['w'] == bw and pane['h'] == bh:
-			if v: print("(3) " + idstr(bx, by, bw, bh) + ": Linking pane " + str(pane['n']) + " to " + str(this_linkid))
-			pane['l'] = this_linkid
-			pane['s'] = True # Linked to tmux[] / Disqualified from further consideration
-			if v: print("(3) " + idstr(bx, by, bw, bh) + ": Exit")
-			return
+    # ~ If any available pane is a perfect fit, link to linkid, mark as processed, return
+    for pane in l_panes:
+        # Disqualifiers
+        if 's' in pane: continue                            # Skip processed panes
+        # Perfect fit?
+        if pane['x'] == bx and pane['y'] == by and pane['w'] == bw and pane['h'] == bh:
+            if v: print("(3) " + idstr(bx, by, bw, bh) + ": Linking pane " + str(pane['n']) + " to " + str(this_linkid))
+            pane['l'] = this_linkid
+            pane['s'] = True # Linked to tmux[] / Disqualified from further consideration
+            if v: print("(3) " + idstr(bx, by, bw, bh) + ": Exit")
+            return
 
-	# ~ Search panes for clean break, if found then split, reenter 1, reenter 2, return
-	# This could be optimized (e.g., skip find_clean_break if axis line has already been checked)
-	for pane in l_panes:
-		# Disqualifiers
-		if 's' in pane: continue # Processed panes are going to be out of bounds
-		if pane['y'] >= by+bh or pane['y']+pane['h'] <= by: continue # Fully out of bounds
-		if pane['x'] >= bx+bw or pane['x']+pane['w'] <= bx: continue # Fully out of bounds
-		at = ""
-		# Split at top edge?
-		if pane['y'] > by:
-			if find_clean_break( True, pane['y'], l_panes, bx, by, bw, bh ):
-				if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split vert at top of pane " + str(pane['n']))
-				at = pane['y']
-		# Split at bottom edge?
-		if pane['y']+pane['h'] < by+bh:
-			if find_clean_break( True, pane['y']+pane['h'], l_panes, bx, by, bw, bh ):
-				if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split vert at bottom of pane " + str(pane['n']))
-				at = pane['y']+pane['h']
-		# Perform vertical split
-		if at:
-			linkid_1 = this_linkid
-			tmuxomatic_split( dim, this_linkid, linkid, l_split, l_links, 'v', bh-(at-by) )
-			linkid_2 = linkid[0]
-			tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_1, bx, by, bw, at-by )
-			tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_2, bx, at, bw, bh-(at-by) )
-			if v: print("(3) " + idstr(bx, by, bw, bh) + ": Exit")
-			return
-		# Split at left edge?
-		if pane['x'] < bx:
-			if find_clean_break( False, pane['x'], l_panes, bx, by, bw, bh ):
-				if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split horz at left of pane " + str(pane['n']))
-				at = pane['x']
-		# Split at right edge?
-		if pane['x']+pane['w'] < bx+bw:
-			if find_clean_break( False, pane['x']+pane['w'], l_panes, bx, by, bw, bh ):
-				if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split horz at right of pane " + str(pane['n']))
-				at = pane['x']+pane['w']
-		# Perform horizontal split
-		if at:
-			linkid_1 = this_linkid
-			tmuxomatic_split( dim, this_linkid, linkid, l_split, l_links, 'h', bw-(at-bx) )
-			linkid_2 = linkid[0]
-			tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_1, bx, by, at-bx, bh )
-			tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_2, at, by, bw-(at-bx), bh )
-			if v: print("(3) " + idstr(bx, by, bw, bh) + ": Exit")
-			return
+    # ~ Search panes for clean break, if found then split, reenter 1, reenter 2, return
+    # This could be optimized (e.g., skip find_clean_break if axis line has already been checked)
+    for pane in l_panes:
+        # Disqualifiers
+        if 's' in pane: continue # Processed panes are going to be out of bounds
+        if pane['y'] >= by+bh or pane['y']+pane['h'] <= by: continue # Fully out of bounds
+        if pane['x'] >= bx+bw or pane['x']+pane['w'] <= bx: continue # Fully out of bounds
+        at = ""
+        # Split at top edge?
+        if pane['y'] > by:
+            if find_clean_break( True, pane['y'], l_panes, bx, by, bw, bh ):
+                if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split vert at top of pane " + str(pane['n']))
+                at = pane['y']
+        # Split at bottom edge?
+        if pane['y']+pane['h'] < by+bh:
+            if find_clean_break( True, pane['y']+pane['h'], l_panes, bx, by, bw, bh ):
+                if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split vert at bottom of pane " + str(pane['n']))
+                at = pane['y']+pane['h']
+        # Perform vertical split
+        if at:
+            linkid_1 = this_linkid
+            tmuxomatic_split( dim, this_linkid, linkid, l_split, l_links, 'v', bh-(at-by) )
+            linkid_2 = linkid[0]
+            tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_1, bx, by, bw, at-by )
+            tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_2, bx, at, bw, bh-(at-by) )
+            if v: print("(3) " + idstr(bx, by, bw, bh) + ": Exit")
+            return
+        # Split at left edge?
+        if pane['x'] < bx:
+            if find_clean_break( False, pane['x'], l_panes, bx, by, bw, bh ):
+                if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split horz at left of pane " + str(pane['n']))
+                at = pane['x']
+        # Split at right edge?
+        if pane['x']+pane['w'] < bx+bw:
+            if find_clean_break( False, pane['x']+pane['w'], l_panes, bx, by, bw, bh ):
+                if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split horz at right of pane " + str(pane['n']))
+                at = pane['x']+pane['w']
+        # Perform horizontal split
+        if at:
+            linkid_1 = this_linkid
+            tmuxomatic_split( dim, this_linkid, linkid, l_split, l_links, 'h', bw-(at-bx) )
+            linkid_2 = linkid[0]
+            tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_1, bx, by, at-bx, bh )
+            tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_2, at, by, bw-(at-bx), bh )
+            if v: print("(3) " + idstr(bx, by, bw, bh) + ": Exit")
+            return
 
-	# ~ If reached, user specified an unsupported layout that will be detected by caller, return
-	if v: print("(3) " + idstr(bx, by, bw, bh) + ": No match found, unsupported layout")
-	return
+    # ~ If reached, user specified an unsupported layout that will be detected by caller, return
+    if v: print("(3) " + idstr(bx, by, bw, bh) + ": No match found, unsupported layout")
+    return
 
 
 
@@ -766,319 +766,319 @@ windowdeclaration_name = lambda line: " ".join(re.split(r"[ \t]+", line)[1:]) if
 ##
 
 class BatchOfLines(object): # A batch of lines (delimited string) with the corresponding line numbers (int list)
-	def __init__(self):
-		self.lines = ""				# Lines delimited by \n, expects this on the last line in each batch of lines
-		self.counts = []			# For each line in lines, an integer representing the corresponding line number
-	def __repr__(self): # Debugging
-		return "lines = \"" + self.lines.replace("\n", "\\n") + "\", counts = " + repr(self.counts)
-	def AppendBatch(self, lines, start, increment=True):
-		linecount = len(lines.split("\n")[:-1]) # Account for extra line
-		self.lines += lines
-		self.counts += [line for line in range(1, linecount+1)] if increment else ([start] * linecount)
+    def __init__(self):
+        self.lines = ""             # Lines delimited by \n, expects this on the last line in each batch of lines
+        self.counts = []            # For each line in lines, an integer representing the corresponding line number
+    def __repr__(self): # Debugging
+        return "lines = \"" + self.lines.replace("\n", "\\n") + "\", counts = " + repr(self.counts)
+    def AppendBatch(self, lines, start, increment=True):
+        linecount = len(lines.split("\n")[:-1]) # Account for extra line
+        self.lines += lines
+        self.counts += [line for line in range(1, linecount+1)] if increment else ([start] * linecount)
 
 class Window(object): # Common container of window data, divided into sections identified by the keys below
-	def __init__(self):
-		self.__dict__['data'] = {} # { 'title_comments': string_of_lines, 'title': string_of_lines, ... }
-		self.__dict__['line'] = {} # { 'title_comments': first_line_number, 'title': first_line_number, ... }
-		for key in self.ValidKeys(): self.ClearKey(key) # Clear all keys
-	def __getitem__(self, key): # Invalid keys always return ""
-		return self.__dict__['data'][key] if key in self.ValidKeys() else ""
-	def __setitem__(self, key, value): # Invalid keys quietly dropped
-		if key in self.ValidKeys(): self.__dict__['data'][key] = value
-	def __repr__(self): # Debugging
-		return "\n__repr__ = [\n" + \
-			", ".join(
-				[ "'" + key + "': [ data = \"" + self.__dict__['data'][key].replace("\n", "\\n") + \
-				"\", starting_line_number = " + str(self.__dict__['line'][key]) + " ]\n" \
-				for key in self.ValidKeys() if self[key] is not "" ] \
-			) + \
-		" ]\n"
-	def ClearKey(self, key):
-		if key in self.ValidKeys():
-			self.__dict__['data'][key] = ""
-			self.__dict__['line'][key] = 0
-	def ValidKeys(self): # Ordered by appearance
-		return "title_comments title windowgram_comments windowgram directions_comments directions".split(" ")
-	def Serialize(self): # Serialized by appearance
-		return "".join( [ self[key] for key in self.ValidKeys() ] )
-	def WorkingKeys(self):
-		return [ key for key in self.ValidKeys() if self[key] is not "" ]
-	def IsFooter(self):
-		summary = " ".join( self.WorkingKeys() )
-		return True if summary == "title_comments" or summary == "" else False
-	def FirstLine(self, key):
-		return True if key in self.ValidKeys() and self.__dict__['line'][key] == 0 else False
-	def SetLine(self, key, line):
-		if key in self.ValidKeys(): self.__dict__['line'][key] = line
-	def GetLine(self, key):
-		return self.__dict__['line'][key] if key in self.ValidKeys() else 0
-	def SetIfNotSet(self, key, line):
-		if self.FirstLine(key): self.SetLine(key, line)
-	def GetLines(self, key):
-		return self.__dict__['line'][key]
-	def SplitCleanByKey(self, key):
-		return [ line[:line.index('#')].strip() if '#' in line else line.strip() for line in self[key].split("\n") ]
+    def __init__(self):
+        self.__dict__['data'] = {} # { 'title_comments': string_of_lines, 'title': string_of_lines, ... }
+        self.__dict__['line'] = {} # { 'title_comments': first_line_number, 'title': first_line_number, ... }
+        for key in self.ValidKeys(): self.ClearKey(key) # Clear all keys
+    def __getitem__(self, key): # Invalid keys always return ""
+        return self.__dict__['data'][key] if key in self.ValidKeys() else ""
+    def __setitem__(self, key, value): # Invalid keys quietly dropped
+        if key in self.ValidKeys(): self.__dict__['data'][key] = value
+    def __repr__(self): # Debugging
+        return "\n__repr__ = [\n" + \
+            ", ".join(
+                [ "'" + key + "': [ data = \"" + self.__dict__['data'][key].replace("\n", "\\n") + \
+                "\", starting_line_number = " + str(self.__dict__['line'][key]) + " ]\n" \
+                for key in self.ValidKeys() if self[key] is not "" ] \
+            ) + \
+        " ]\n"
+    def ClearKey(self, key):
+        if key in self.ValidKeys():
+            self.__dict__['data'][key] = ""
+            self.__dict__['line'][key] = 0
+    def ValidKeys(self): # Ordered by appearance
+        return "title_comments title windowgram_comments windowgram directions_comments directions".split(" ")
+    def Serialize(self): # Serialized by appearance
+        return "".join( [ self[key] for key in self.ValidKeys() ] )
+    def WorkingKeys(self):
+        return [ key for key in self.ValidKeys() if self[key] is not "" ]
+    def IsFooter(self):
+        summary = " ".join( self.WorkingKeys() )
+        return True if summary == "title_comments" or summary == "" else False
+    def FirstLine(self, key):
+        return True if key in self.ValidKeys() and self.__dict__['line'][key] == 0 else False
+    def SetLine(self, key, line):
+        if key in self.ValidKeys(): self.__dict__['line'][key] = line
+    def GetLine(self, key):
+        return self.__dict__['line'][key] if key in self.ValidKeys() else 0
+    def SetIfNotSet(self, key, line):
+        if self.FirstLine(key): self.SetLine(key, line)
+    def GetLines(self, key):
+        return self.__dict__['line'][key]
+    def SplitCleanByKey(self, key):
+        return [ line[:line.index('#')].strip() if '#' in line else line.strip() for line in self[key].split("\n") ]
 
 class SessionFile(object):
-	def __init__(self, filename):
-		self.filename = filename
-		self.Clear()
-		self.modified = False	# Explicit modification
-	def Clear(self):
-		self.format = None		# "shorthand" or "yaml"
-		self.footer = ""		# footer comments
-		self.windows = []		# [ window, window, ... ]
-	def Load_Shorthand_SharedCore(self, bol):
-		# Actually locals
-		self.state = 0
-		self.window = None
-		self.line = [ None, None ]		# line without cr, line number
-		self.comments = [ "", None ]	# lines with cr, first line number
-		# Switchboard
-		switchboard = [
-			"title_comments",		# state == 0 <- loop to / file footer saved here in its own window
-			"title",				# state == 1
-			"windowgram_comments",	# state == 2
-			"windowgram",			# state == 3
-			"directions_comments",	# state == 4
-			"directions",			# state == 5
-			"UNUSED_comments",		# state == 6 <- loop from / always appends this to "title_comments"
-		]
-		# Iterate lines and append onto respective window keys
-		lines = bol.lines.split("\n")[:-1] # Account for extra line
-		lines_index = 0
-		while True:
-			def transfercomments(): # Transfer comments (if any) to the current window block
-				if self.comments[0] is not None:
-					self.window[ switchboard[self.state] ] += self.comments[0]
-					self.window.SetIfNotSet( switchboard[self.state], self.comments[1] )
-				self.comments[0] = self.comments[1] = None
-			def nextwindow(): # This is called in two cases: 1) window declaration found, 2) end of file reached
-				if self.window: self.windows.append( self.window )
-				self.window = Window() ; self.state = 0 ; transfercomments() ; self.state = 1
-			def addline(): # Adds current line to current block or comments
-				if switchboard[self.state].endswith("_comments"): # Add to comments
-					if self.comments[0] is None: self.comments[0] = self.line[0] + "\n"
-					else: self.comments[0] += self.line[0] + "\n"
-					self.comments[1] = self.line[1] if self.comments[1] is None else self.comments[1]
-				else: # Add to block
-					self.window[ switchboard[self.state] ] += self.line[0] + "\n"
-					self.window.SetIfNotSet( switchboard[self.state], self.line[1] )
-				self.line[0] = self.line[1] = None # Ready to load next line
-			# Load line with corresponding line number
-			if self.line[0] is None and lines_index < len(lines): # Line
-				self.line[0] = lines[lines_index] ; self.line[1] = bol.counts[lines_index]
-				lines_index += 1
-			if self.line[0] is None: # EOF
-				# Hold comments so the footer doesn't get lost to the non-existent state 6 block
-				hold = [ None, None ]
-				hold[0], hold[1] = self.comments[0], self.comments[1]
-				self.comments[0], self.comments[1] = None, None
-				nextwindow()
-				# Restore comments so they are assimilated as a proper footer
-				self.comments[0], self.comments[1] = hold[0], hold[1]
-				if self.comments[0] is not None:
-					self.state = 0
-					transfercomments()
-					nextwindow()
-				# Done parsing
-				break
-			# Line used for analysis is stripped of all comments and whitespace
-			lineused = self.line[0].strip()
-			if lineused.find("#") >= 0: lineused = lineused[:lineused.find("#")].strip()
-			# Append this line to section or comments
-			if is_windowdeclaration(lineused): nextwindow() ; addline() ; self.state = 2 # New window declaration
-			elif ( self.state == 2 or self.state == 4 ) and lineused: transfercomments() ; self.state += 1 ; addline()
-			elif ( self.state == 3 or self.state == 5 ) and not lineused: self.state += 1 ; addline()
-			elif self.state == 6 and lineused: addline() ; self.state = 5 ; transfercomments() # Back up and add to 5
-			else: addline() # Everything else adds the line / Until first window declaration is found add to comments
-		# Any comments at end of file should be extracted into the footer string
-		if len(self.windows) and self.windows[len(self.windows)-1].IsFooter():
-			window = self.windows.pop(len(self.windows)-1)
-			self.footer = window.Serialize()
-	def Load_Shorthand(self, rawfile):
-		self.Clear()
-		self.format = "shorthand"
-		bol = BatchOfLines()
-		bol.AppendBatch( rawfile, 1 )
-		self.Load_Shorthand_SharedCore( bol )
-	def Load_Yaml(self, rawfile):
-		self.Clear()
-		self.format = "yaml"
-		# Yaml -> Dict
-		try:
-			# Line numbers (per window) with pyyaml from: https://stackoverflow.com/a/13319530
-			loader = yaml.SafeLoader(rawfile)
-			def compose_node(parent, index):
-				line = loader.line # The line number where the previous token has ended (plus empty lines)
-				node = yaml.SafeLoader.compose_node(loader, parent, index)
-				node.__line__ = line + 1
-				return node
-			def construct_mapping(node, deep=False):
-				mapping = yaml.SafeLoader.construct_mapping(loader, node, deep=deep)
-				mapping['__line__'] = node.__line__
-				return mapping
-			loader.compose_node = compose_node
-			loader.construct_mapping = construct_mapping
-			# Load into dict, now with line numbers for location of window in YAML
-			filedict = loader.get_single_data() # filedict = yaml.safe_load( rawfile ) # Without line numbers
-		except:
-			filedict = {}
-		# Dict -> Shorthand
-		bol = BatchOfLines()
-		bol.AppendBatch( "\n", 0, False ) # Translated YAML -> Shorthand, no need for header
-		if type(filedict) is list:
-			for entry in filedict:
-				if type(entry) is dict and 'name' in entry:
-					# Windows are identified by 'name' key
-					# Should contain 'windowgram' and 'directions' as block literals
-					name = entry['name']
-					windowgram = entry['windowgram'] if 'windowgram' in entry else ""
-					directions = entry['directions'] if 'directions' in entry else ""
-					linenumber = entry['__line__'] if '__line__' in entry else 0
-					rawfile_shorthand = "window " + name + "\n\n" + windowgram + "\n" + directions + "\n\n\n"
-					# Append lines
-					bol.AppendBatch( rawfile_shorthand, linenumber, False )
-		# Shorthand -> Core
-		self.Load_Shorthand_SharedCore( bol )
-	def Load(self):
-		# Load raw data
-		rawfile = ""
-		f = open(self.filename, "rU")
-		while True:
-			line = f.readline()
-			if not line: break # EOF
-			rawfile += line
-		# Detect file format
-		format_yaml = False
-		for line in rawfile.split("\n"):
-			if line.find("#") >= 0: line = line[:line.find("#")]
-			line = line.strip()
-			if line:
-				if line[0] == "-":
-					format_yaml = True
-				break
-		# Parse the file
-		if format_yaml:
-			if not INSTALLED_PYYAML:
-				print("You have specified a session file in YAML format, yet you do not have pyyaml installed.")
-				print("Install pyyaml first, usually with a command like: `sudo pip-python3 install pyyaml`")
-				exit(0)
-			self.Load_Yaml( rawfile )
-		else:
-			self.Load_Shorthand( rawfile )
-	def Save(self):
-		self.modified = False
-		if self.filename and self.format:
-			if self.format == "shorthand":
-				# Shorthand
-				f = open(self.filename, 'w')
-				for window in self.windows: f.write( window.Serialize() )
-				f.write( self.footer )
-			if self.format == "yaml":
-				# YAML
-				unformatted = []
-				# Required for writing block literals, source: https://stackoverflow.com/a/6432605
-				def change_style(style, representer):
-					def new_representer(dumper, data):
-						scalar = representer(dumper, data)
-						scalar.style = style
-						return scalar
-					return new_representer
-				class literal_str(str): pass
-				represent_literal_str = change_style('|', yaml.representer.SafeRepresenter.represent_str)
-				yaml.add_representer(literal_str, represent_literal_str)
-				# Now add all windows to a dictionary for saving
-				for ix, window in enumerate(self.windows):
-					serial = 1+ix
-					# Extract name: "window panel 1\n" -> "panel 1"
-					name = windowdeclaration_name( self.Get_WindowDecarationLine( serial ) )
-					# Append window definition
-					# TODO: Sort as "name", "windowgram", "directions".  Maybe use: http://pyyaml.org/ticket/29
-					window_dict = {
-						'name': name,
-						'windowgram': literal_str(window['windowgram']),
-						'directions': literal_str(window['directions']),
-					}
-					unformatted.append( window_dict )
-				# Format as YAML
-				formatted = yaml.dump( unformatted, indent=2, default_flow_style=False, explicit_start=True )
-				# Write file
-				f = open(self.filename, 'w')
-				f.write( formatted )
-	def Ascertain_Trailing_Padding(self, string):
-		count = 0
-		for ix in range( len(string)-1, -1, -1 ):
-			if string[ix] == "\n": count += 1
-			else: break
-		return count
-	def Duplicate_Trailing_Padding(self, string, minimum):
-		count = self.Ascertain_Trailing_Padding(string)
-		if count < minimum: count = minimum
-		return "\n" * count
-	def Replace_TitleComments(self, serial, comments):
-		if serial < 1 or serial > self.Count_Windows(): return
-		padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["title_comments"], 1)
-		self.windows[serial-1]["title_comments"] = comments + padding
-		self.modified = True
-	def Replace_Title(self, serial, name):
-		if serial < 1 or serial > self.Count_Windows(): return
-		padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["title"], 1)
-		self.windows[serial-1]["title"] = "window " + name + padding
-		self.modified = True
-	def Replace_Windowgram(self, serial, windowgram):
-		if serial < 1 or serial > self.Count_Windows(): return
-		windowgram = Windowgram_Purify( windowgram ) # Force consistency
-		self.windows[serial-1]["windowgram"] = windowgram
-		self.modified = True
-	def Modified(self): # See flag use for limitations
-		return self.modified
-	def Count_Windows(self):
-		return len(self.windows)
-	def Serial_Is_Valid(self, serial):
-		return serial >= 1 and serial <= len(self.windows)
-	def Get_WindowDecarationLine(self, serial):
-		if serial < 1 or serial > self.Count_Windows(): return "???" # Out of range
-		return self.windows[serial-1]['title'].split("\n")[0].strip() # Assumes the window declaration is on first line
-	def Get_Name(self, serial):
-		if serial < 1 or serial > self.Count_Windows(): return "???" # Out of range
-		return windowdeclaration_name( self.Get_WindowDecarationLine( serial ) )
-	def Get_WindowgramDimensions_Int(self, serial):
-		windowgram = self.windows[serial-1]['windowgram']
-		return Windowgram_Dimensions_Int(windowgram)
-	def Get_Windowgram(self, serial, warning=None): # windowgram, warning
-		if serial < 1 or serial > self.Count_Windows():
-			if warning is None: return None
-			return None, "Out of range"
-		windowgram = None
-		message = None
-		while True:
-			windowgram = Windowgram_Purify(self.windows[serial-1]['windowgram'])
-			if Windowgram_IsBlank(windowgram):
-				flexmenu_session.Replace_Windowgram(serial, "1")
-				message = "The windowgram was blank and had to be reinitialized"
-			else:
-				break
-		if warning is None:
-			return windowgram
-		return windowgram, message
-	def Add_Windowgram(self, comments, name, windowgram):
-		self.windows.append( Window() )
-		serial = len(self.windows)
-		# Transfer footer to title comments for new window
-		while len(self.footer) > 1 and not self.footer.endswith("\n\n"): self.footer += "\n"
-		if not self.footer: self.footer = "\n"
-		self.windows[serial-1]["title_comments"] = self.footer
-		self.footer = ""
-		# Build window
-		self.windows[serial-1]["title_comments"] += comments if comments[-1:] == "\n" else comments + "\n"
-		name = "window " + name # Make a declaration
-		self.windows[serial-1]["title"] = name if name[-1:] == "\n" else name + "\n"
-		self.windows[serial-1]["windowgram_comments"] = "\n"
-		self.windows[serial-1]["windowgram"] = windowgram if windowgram[-1:] == "\n" else windowgram + "\n"
-		# Modified
-		self.modified = True
-		return serial
+    def __init__(self, filename):
+        self.filename = filename
+        self.Clear()
+        self.modified = False   # Explicit modification
+    def Clear(self):
+        self.format = None      # "shorthand" or "yaml"
+        self.footer = ""        # footer comments
+        self.windows = []       # [ window, window, ... ]
+    def Load_Shorthand_SharedCore(self, bol):
+        # Actually locals
+        self.state = 0
+        self.window = None
+        self.line = [ None, None ]      # line without cr, line number
+        self.comments = [ "", None ]    # lines with cr, first line number
+        # Switchboard
+        switchboard = [
+            "title_comments",       # state == 0 <- loop to / file footer saved here in its own window
+            "title",                # state == 1
+            "windowgram_comments",  # state == 2
+            "windowgram",           # state == 3
+            "directions_comments",  # state == 4
+            "directions",           # state == 5
+            "UNUSED_comments",      # state == 6 <- loop from / always appends this to "title_comments"
+        ]
+        # Iterate lines and append onto respective window keys
+        lines = bol.lines.split("\n")[:-1] # Account for extra line
+        lines_index = 0
+        while True:
+            def transfercomments(): # Transfer comments (if any) to the current window block
+                if self.comments[0] is not None:
+                    self.window[ switchboard[self.state] ] += self.comments[0]
+                    self.window.SetIfNotSet( switchboard[self.state], self.comments[1] )
+                self.comments[0] = self.comments[1] = None
+            def nextwindow(): # This is called in two cases: 1) window declaration found, 2) end of file reached
+                if self.window: self.windows.append( self.window )
+                self.window = Window() ; self.state = 0 ; transfercomments() ; self.state = 1
+            def addline(): # Adds current line to current block or comments
+                if switchboard[self.state].endswith("_comments"): # Add to comments
+                    if self.comments[0] is None: self.comments[0] = self.line[0] + "\n"
+                    else: self.comments[0] += self.line[0] + "\n"
+                    self.comments[1] = self.line[1] if self.comments[1] is None else self.comments[1]
+                else: # Add to block
+                    self.window[ switchboard[self.state] ] += self.line[0] + "\n"
+                    self.window.SetIfNotSet( switchboard[self.state], self.line[1] )
+                self.line[0] = self.line[1] = None # Ready to load next line
+            # Load line with corresponding line number
+            if self.line[0] is None and lines_index < len(lines): # Line
+                self.line[0] = lines[lines_index] ; self.line[1] = bol.counts[lines_index]
+                lines_index += 1
+            if self.line[0] is None: # EOF
+                # Hold comments so the footer doesn't get lost to the non-existent state 6 block
+                hold = [ None, None ]
+                hold[0], hold[1] = self.comments[0], self.comments[1]
+                self.comments[0], self.comments[1] = None, None
+                nextwindow()
+                # Restore comments so they are assimilated as a proper footer
+                self.comments[0], self.comments[1] = hold[0], hold[1]
+                if self.comments[0] is not None:
+                    self.state = 0
+                    transfercomments()
+                    nextwindow()
+                # Done parsing
+                break
+            # Line used for analysis is stripped of all comments and whitespace
+            lineused = self.line[0].strip()
+            if lineused.find("#") >= 0: lineused = lineused[:lineused.find("#")].strip()
+            # Append this line to section or comments
+            if is_windowdeclaration(lineused): nextwindow() ; addline() ; self.state = 2 # New window declaration
+            elif ( self.state == 2 or self.state == 4 ) and lineused: transfercomments() ; self.state += 1 ; addline()
+            elif ( self.state == 3 or self.state == 5 ) and not lineused: self.state += 1 ; addline()
+            elif self.state == 6 and lineused: addline() ; self.state = 5 ; transfercomments() # Back up and add to 5
+            else: addline() # Everything else adds the line / Until first window declaration is found add to comments
+        # Any comments at end of file should be extracted into the footer string
+        if len(self.windows) and self.windows[len(self.windows)-1].IsFooter():
+            window = self.windows.pop(len(self.windows)-1)
+            self.footer = window.Serialize()
+    def Load_Shorthand(self, rawfile):
+        self.Clear()
+        self.format = "shorthand"
+        bol = BatchOfLines()
+        bol.AppendBatch( rawfile, 1 )
+        self.Load_Shorthand_SharedCore( bol )
+    def Load_Yaml(self, rawfile):
+        self.Clear()
+        self.format = "yaml"
+        # Yaml -> Dict
+        try:
+            # Line numbers (per window) with pyyaml from: https://stackoverflow.com/a/13319530
+            loader = yaml.SafeLoader(rawfile)
+            def compose_node(parent, index):
+                line = loader.line # The line number where the previous token has ended (plus empty lines)
+                node = yaml.SafeLoader.compose_node(loader, parent, index)
+                node.__line__ = line + 1
+                return node
+            def construct_mapping(node, deep=False):
+                mapping = yaml.SafeLoader.construct_mapping(loader, node, deep=deep)
+                mapping['__line__'] = node.__line__
+                return mapping
+            loader.compose_node = compose_node
+            loader.construct_mapping = construct_mapping
+            # Load into dict, now with line numbers for location of window in YAML
+            filedict = loader.get_single_data() # filedict = yaml.safe_load( rawfile ) # Without line numbers
+        except:
+            filedict = {}
+        # Dict -> Shorthand
+        bol = BatchOfLines()
+        bol.AppendBatch( "\n", 0, False ) # Translated YAML -> Shorthand, no need for header
+        if type(filedict) is list:
+            for entry in filedict:
+                if type(entry) is dict and 'name' in entry:
+                    # Windows are identified by 'name' key
+                    # Should contain 'windowgram' and 'directions' as block literals
+                    name = entry['name']
+                    windowgram = entry['windowgram'] if 'windowgram' in entry else ""
+                    directions = entry['directions'] if 'directions' in entry else ""
+                    linenumber = entry['__line__'] if '__line__' in entry else 0
+                    rawfile_shorthand = "window " + name + "\n\n" + windowgram + "\n" + directions + "\n\n\n"
+                    # Append lines
+                    bol.AppendBatch( rawfile_shorthand, linenumber, False )
+        # Shorthand -> Core
+        self.Load_Shorthand_SharedCore( bol )
+    def Load(self):
+        # Load raw data
+        rawfile = ""
+        f = open(self.filename, "rU")
+        while True:
+            line = f.readline()
+            if not line: break # EOF
+            rawfile += line
+        # Detect file format
+        format_yaml = False
+        for line in rawfile.split("\n"):
+            if line.find("#") >= 0: line = line[:line.find("#")]
+            line = line.strip()
+            if line:
+                if line[0] == "-":
+                    format_yaml = True
+                break
+        # Parse the file
+        if format_yaml:
+            if not INSTALLED_PYYAML:
+                print("You have specified a session file in YAML format, yet you do not have pyyaml installed.")
+                print("Install pyyaml first, usually with a command like: `sudo pip-python3 install pyyaml`")
+                exit(0)
+            self.Load_Yaml( rawfile )
+        else:
+            self.Load_Shorthand( rawfile )
+    def Save(self):
+        self.modified = False
+        if self.filename and self.format:
+            if self.format == "shorthand":
+                # Shorthand
+                f = open(self.filename, 'w')
+                for window in self.windows: f.write( window.Serialize() )
+                f.write( self.footer )
+            if self.format == "yaml":
+                # YAML
+                unformatted = []
+                # Required for writing block literals, source: https://stackoverflow.com/a/6432605
+                def change_style(style, representer):
+                    def new_representer(dumper, data):
+                        scalar = representer(dumper, data)
+                        scalar.style = style
+                        return scalar
+                    return new_representer
+                class literal_str(str): pass
+                represent_literal_str = change_style('|', yaml.representer.SafeRepresenter.represent_str)
+                yaml.add_representer(literal_str, represent_literal_str)
+                # Now add all windows to a dictionary for saving
+                for ix, window in enumerate(self.windows):
+                    serial = 1+ix
+                    # Extract name: "window panel 1\n" -> "panel 1"
+                    name = windowdeclaration_name( self.Get_WindowDecarationLine( serial ) )
+                    # Append window definition
+                    # TODO: Sort as "name", "windowgram", "directions".  Maybe use: http://pyyaml.org/ticket/29
+                    window_dict = {
+                        'name': name,
+                        'windowgram': literal_str(window['windowgram']),
+                        'directions': literal_str(window['directions']),
+                    }
+                    unformatted.append( window_dict )
+                # Format as YAML
+                formatted = yaml.dump( unformatted, indent=2, default_flow_style=False, explicit_start=True )
+                # Write file
+                f = open(self.filename, 'w')
+                f.write( formatted )
+    def Ascertain_Trailing_Padding(self, string):
+        count = 0
+        for ix in range( len(string)-1, -1, -1 ):
+            if string[ix] == "\n": count += 1
+            else: break
+        return count
+    def Duplicate_Trailing_Padding(self, string, minimum):
+        count = self.Ascertain_Trailing_Padding(string)
+        if count < minimum: count = minimum
+        return "\n" * count
+    def Replace_TitleComments(self, serial, comments):
+        if serial < 1 or serial > self.Count_Windows(): return
+        padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["title_comments"], 1)
+        self.windows[serial-1]["title_comments"] = comments + padding
+        self.modified = True
+    def Replace_Title(self, serial, name):
+        if serial < 1 or serial > self.Count_Windows(): return
+        padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["title"], 1)
+        self.windows[serial-1]["title"] = "window " + name + padding
+        self.modified = True
+    def Replace_Windowgram(self, serial, windowgram):
+        if serial < 1 or serial > self.Count_Windows(): return
+        windowgram = Windowgram_Purify( windowgram ) # Force consistency
+        self.windows[serial-1]["windowgram"] = windowgram
+        self.modified = True
+    def Modified(self): # See flag use for limitations
+        return self.modified
+    def Count_Windows(self):
+        return len(self.windows)
+    def Serial_Is_Valid(self, serial):
+        return serial >= 1 and serial <= len(self.windows)
+    def Get_WindowDecarationLine(self, serial):
+        if serial < 1 or serial > self.Count_Windows(): return "???" # Out of range
+        return self.windows[serial-1]['title'].split("\n")[0].strip() # Assumes the window declaration is on first line
+    def Get_Name(self, serial):
+        if serial < 1 or serial > self.Count_Windows(): return "???" # Out of range
+        return windowdeclaration_name( self.Get_WindowDecarationLine( serial ) )
+    def Get_WindowgramDimensions_Int(self, serial):
+        windowgram = self.windows[serial-1]['windowgram']
+        return Windowgram_Dimensions_Int(windowgram)
+    def Get_Windowgram(self, serial, warning=None): # windowgram, warning
+        if serial < 1 or serial > self.Count_Windows():
+            if warning is None: return None
+            return None, "Out of range"
+        windowgram = None
+        message = None
+        while True:
+            windowgram = Windowgram_Purify(self.windows[serial-1]['windowgram'])
+            if Windowgram_IsBlank(windowgram):
+                flexmenu_session.Replace_Windowgram(serial, "1")
+                message = "The windowgram was blank and had to be reinitialized"
+            else:
+                break
+        if warning is None:
+            return windowgram
+        return windowgram, message
+    def Add_Windowgram(self, comments, name, windowgram):
+        self.windows.append( Window() )
+        serial = len(self.windows)
+        # Transfer footer to title comments for new window
+        while len(self.footer) > 1 and not self.footer.endswith("\n\n"): self.footer += "\n"
+        if not self.footer: self.footer = "\n"
+        self.windows[serial-1]["title_comments"] = self.footer
+        self.footer = ""
+        # Build window
+        self.windows[serial-1]["title_comments"] += comments if comments[-1:] == "\n" else comments + "\n"
+        name = "window " + name # Make a declaration
+        self.windows[serial-1]["title"] = name if name[-1:] == "\n" else name + "\n"
+        self.windows[serial-1]["windowgram_comments"] = "\n"
+        self.windows[serial-1]["windowgram"] = windowgram if windowgram[-1:] == "\n" else windowgram + "\n"
+        # Modified
+        self.modified = True
+        return serial
 
 
 
@@ -1089,39 +1089,39 @@ class SessionFile(object):
 ##----------------------------------------------------------------------------------------------------------------------
 
 def Windowgram_Purify(windowgram):
-	# Full cycle purification -- asserts consistency of form
-	return Windowgram_LinesToString( Windowgram_StringToLines( windowgram ) )
+    # Full cycle purification -- asserts consistency of form
+    return Windowgram_LinesToString( Windowgram_StringToLines( windowgram ) )
 
 def Windowgram_StringToLines(windowgram):
-	# No blank lines
-	return list(filter(None, (windowgram+"\n").split("\n")))
+    # No blank lines
+    return list(filter(None, (windowgram+"\n").split("\n")))
 
 def Windowgram_LinesToString(windowgram_lines):
-	# Each line has one \n
-	return "\n".join([ line for line in windowgram_lines ]) + "\n"
+    # Each line has one \n
+    return "\n".join([ line for line in windowgram_lines ]) + "\n"
 
 def Windowgram_OrderedUniques(windowgram):
-	paneids = set(list("".join(windowgram.split("\n"))))
-	return "".join([ paneid for paneid in PANE_CHARACTERS if paneid in paneids ])
+    paneids = set(list("".join(windowgram.split("\n"))))
+    return "".join([ paneid for paneid in PANE_CHARACTERS if paneid in paneids ])
 
 def Windowgram_Dimensions_Int(windowgram):
-	w = h = 0
-	lines = Windowgram_StringToLines(windowgram)
-	for l in lines:
-		if len(l.strip()) > w: w = len(l.strip())
-		h += 1
-	return [ w, h ]
+    w = h = 0
+    lines = Windowgram_StringToLines(windowgram)
+    for l in lines:
+        if len(l.strip()) > w: w = len(l.strip())
+        h += 1
+    return [ w, h ]
 
 def Windowgram_Dimensions_Float(windowgram):
-	return [ float(elem) for elem in Windowgram_Dimensions_Int(windowgram) ]
+    return [ float(elem) for elem in Windowgram_Dimensions_Int(windowgram) ]
 
 def Windowgram_LostPanes(windowgram1, windowgram2):
-	return Windowgram_OrderedUniques( # Additionally useful in this context
-		"".join( list( set(Windowgram_OrderedUniques(windowgram1)) - set(Windowgram_OrderedUniques(windowgram2)) ) ) )
+    return Windowgram_OrderedUniques( # Additionally useful in this context
+        "".join( list( set(Windowgram_OrderedUniques(windowgram1)) - set(Windowgram_OrderedUniques(windowgram2)) ) ) )
 
 def Windowgram_IsBlank(windowgram):
-	dimensions = Windowgram_Dimensions_Int(windowgram)
-	return True if not dimensions[0] or not dimensions[1] else False
+    dimensions = Windowgram_Dimensions_Int(windowgram)
+    return True if not dimensions[0] or not dimensions[1] else False
 
 
 
@@ -1132,446 +1132,446 @@ def Windowgram_IsBlank(windowgram):
 ##----------------------------------------------------------------------------------------------------------------------
 
 def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
-	"""
+    """
 
-	Parse session file, build commands, execute.
+    Parse session file, build commands, execute.
 
-	"""
+    """
 
-	# Show configuration
-	if ARGS.verbose >= 1:
-		print( "" )
-		print( "(1) Session   : " + session_name )
-		print( "(1) Running   : " + full_cli )
-		print( "(1) Xterm     : " + str(user_wh[0]) + "x" + str(user_wh[1]) + " (WxH)" )
-		print( "(1) Filename  : " + ARGS.filename )
-		print( "(1) Verbose   : " + str(ARGS.verbose) + \
-			" (" + ", ".join([ 'summary', 'inputs', 'fitting', 'commands' ][:ARGS.verbose]) + ")" )
-		print( "(1) Recreate  : " + str(ARGS.recreate) )
-		print( "(1) Noexecute : " + str(ARGS.noexecute) )
-		print( "(1) Sizing    : " + [ "Absolute (characters)", "Relative (percentages)" ][ARGS.relative] )
+    # Show configuration
+    if ARGS.verbose >= 1:
+        print( "" )
+        print( "(1) Session   : " + session_name )
+        print( "(1) Running   : " + full_cli )
+        print( "(1) Xterm     : " + str(user_wh[0]) + "x" + str(user_wh[1]) + " (WxH)" )
+        print( "(1) Filename  : " + ARGS.filename )
+        print( "(1) Verbose   : " + str(ARGS.verbose) + \
+            " (" + ", ".join([ 'summary', 'inputs', 'fitting', 'commands' ][:ARGS.verbose]) + ")" )
+        print( "(1) Recreate  : " + str(ARGS.recreate) )
+        print( "(1) Noexecute : " + str(ARGS.noexecute) )
+        print( "(1) Sizing    : " + [ "Absolute (characters)", "Relative (percentages)" ][ARGS.relative] )
 
-	# Initialize
-	list_execution = [] # List of tmux command lists for a session, only executed on successful parsing
-	list_build = [] # Separate list per window
-	window_serial = 0 # 1+
-	window_name = ""
-	window_names_seen = [] # Assert unique window names (related to issue #8)
-	layout = {} # Indexed by line
-	panes_w = 0
-	panes_h = 0
-	focus_window_name = None # Use window name rather than window index (supports tmux option: base-index)
-	line = "" # Loaded line stored here
+    # Initialize
+    list_execution = [] # List of tmux command lists for a session, only executed on successful parsing
+    list_build = [] # Separate list per window
+    window_serial = 0 # 1+
+    window_name = ""
+    window_names_seen = [] # Assert unique window names (related to issue #8)
+    layout = {} # Indexed by line
+    panes_w = 0
+    panes_h = 0
+    focus_window_name = None # Use window name rather than window index (supports tmux option: base-index)
+    line = "" # Loaded line stored here
 
-	#
-	# Error reporting
-	#
-	errpkg = {}
-	errpkg['command'] = program_cli
-	errpkg['format'] = session.format
-	errpkg['line'] = 0
+    #
+    # Error reporting
+    #
+    errpkg = {}
+    errpkg['command'] = program_cli
+    errpkg['format'] = session.format
+    errpkg['line'] = 0
 
-	#
-	# Reporting line numbers
-	#
-	def SetLineNumber(linebase, lineoffset):
-		if errpkg['format'] == "shorthand":
-			errpkg['line'] = linebase + lineoffset # Exact line (shorthand)
-		else:
-			errpkg['line'] = linebase # Approximate line (yaml)
+    #
+    # Reporting line numbers
+    #
+    def SetLineNumber(linebase, lineoffset):
+        if errpkg['format'] == "shorthand":
+            errpkg['line'] = linebase + lineoffset # Exact line (shorthand)
+        else:
+            errpkg['line'] = linebase # Approximate line (yaml)
 
-	#
-	# Parse session file
-	#
-	#	Each window:
-	#
-	# 		1 = Initialize window
-	#		2 = Windowgram parser
-	#		3 = Build list_panes
-	#		4 = Directions parser
-	#		5 = Generate tmux commands
-	#
-	eof = False
-	window = 0
-	line = 0
-	for window in session.windows:
+    #
+    # Parse session file
+    #
+    #   Each window:
+    #
+    #       1 = Initialize window
+    #       2 = Windowgram parser
+    #       3 = Build list_panes
+    #       4 = Directions parser
+    #       5 = Generate tmux commands
+    #
+    eof = False
+    window = 0
+    line = 0
+    for window in session.windows:
 
-		#
-		# 1) Initialize window
-		#
-		title_lines = window.SplitCleanByKey('title')
-		line = title_lines[0] if len(title_lines) else ""
-		SetLineNumber( window.GetLines('title'), 0 )
-		if not line or not is_windowdeclaration(line):
-			synerr(errpkg, "Expecting a window section, found nothing")
-		window_serial += 1 # 1+
-		if window_serial > MAXIMUM_WINDOWS:
-			synerr(errpkg, "There's a maximum of " + str(MAXIMUM_WINDOWS) + " windows in this version")
-		window_process = line[6:].strip()
-		window_name = "" # Window name enclosed in double-quotes
-		window_name = "".join( [ ch if ch != '\"' else '\\"' for ch in window_process ] ) # Escape double-quotes
-		if not window_name:
-			synerr(errpkg, "Window serial " + str(window_serial) + " does not have a name")
-		for ix, seen_name in enumerate(window_names_seen):
-			if window_name == seen_name:
-				synerr(errpkg, "As of version 1.1.0, all window names must be unique.  The duplicate name, \"" + \
-					window_name + "\", for window serial " + str(window_serial) + ", already used by " + str(1+ix))
-		window_names_seen.append( window_name )
-		layout = {}
-		panes_w = 0
-		panes_h = 0
-		panes_y = 0
-		if ARGS.verbose >= 2: print("")
+        #
+        # 1) Initialize window
+        #
+        title_lines = window.SplitCleanByKey('title')
+        line = title_lines[0] if len(title_lines) else ""
+        SetLineNumber( window.GetLines('title'), 0 )
+        if not line or not is_windowdeclaration(line):
+            synerr(errpkg, "Expecting a window section, found nothing")
+        window_serial += 1 # 1+
+        if window_serial > MAXIMUM_WINDOWS:
+            synerr(errpkg, "There's a maximum of " + str(MAXIMUM_WINDOWS) + " windows in this version")
+        window_process = line[6:].strip()
+        window_name = "" # Window name enclosed in double-quotes
+        window_name = "".join( [ ch if ch != '\"' else '\\"' for ch in window_process ] ) # Escape double-quotes
+        if not window_name:
+            synerr(errpkg, "Window serial " + str(window_serial) + " does not have a name")
+        for ix, seen_name in enumerate(window_names_seen):
+            if window_name == seen_name:
+                synerr(errpkg, "As of version 1.1.0, all window names must be unique.  The duplicate name, \"" + \
+                    window_name + "\", for window serial " + str(window_serial) + ", already used by " + str(1+ix))
+        window_names_seen.append( window_name )
+        layout = {}
+        panes_w = 0
+        panes_h = 0
+        panes_y = 0
+        if ARGS.verbose >= 2: print("")
 
-		#
-		# 2) Windowgram parser
-		#
-		found = False
-		for ix, line in enumerate(window.SplitCleanByKey('windowgram')):
-			SetLineNumber( window.GetLines('windowgram'), ix )
-			if not line: continue
-			found = True
-			panes_h += 1 # 1.0.17: Should be here to detect Nx2 windowgram width mismatch
-			panes_y += 1
-			panes_x = 0
-			for ch in line:
-				if ch not in PANE_CHARACTERS:
-					synerr(errpkg, "Windowgram must contain valid identifiers: [0-9a-zA-Z]")
-			if panes_h > 1 and len(line) != panes_w:
-				synerr(errpkg, "Windowgram width does not match previous lines")
-			else:
-				if ARGS.verbose >= 2: print("(2) Windowgram: " + line)
-				if panes_w == 0:
-					panes_w = len(line)
-				for ch in line:
-					panes_x += 1
-					if ch not in PANE_CHARACTERS:
-						# Outside of valid pane identifier range
-						synerr(errpkg, "Windowgram must contain valid identifiers: [0-9a-zA-Z]")
-					# Builds "bounding box" around pane for easy error detection through overlap algorithm
-					if not ch in layout:
-						# New pane
-						layout[ch] = {
-							'n': ch,
-							'x': panes_x, 'y': panes_y, 'w': 1, 'h': 1,
-							'l': 0 # init link to 0
-						}
-					else:
-						# Expand width
-						x2 = panes_x - layout[ch]['x'] + 1
-						if x2 > layout[ch]['w']:
-							layout[ch]['w'] = x2
-						# Expand height
-						y2 = panes_y - layout[ch]['y'] + 1
-						if y2 > layout[ch]['h']:
-							layout[ch]['h'] = y2
-						# Update x
-						if layout[ch]['x'] > panes_x:
-							layout[ch]['x'] = panes_x
-		if not found:
-			synerr(errpkg, "Windowgram not specified for window serial " + str(window_serial))
+        #
+        # 2) Windowgram parser
+        #
+        found = False
+        for ix, line in enumerate(window.SplitCleanByKey('windowgram')):
+            SetLineNumber( window.GetLines('windowgram'), ix )
+            if not line: continue
+            found = True
+            panes_h += 1 # 1.0.17: Should be here to detect Nx2 windowgram width mismatch
+            panes_y += 1
+            panes_x = 0
+            for ch in line:
+                if ch not in PANE_CHARACTERS:
+                    synerr(errpkg, "Windowgram must contain valid identifiers: [0-9a-zA-Z]")
+            if panes_h > 1 and len(line) != panes_w:
+                synerr(errpkg, "Windowgram width does not match previous lines")
+            else:
+                if ARGS.verbose >= 2: print("(2) Windowgram: " + line)
+                if panes_w == 0:
+                    panes_w = len(line)
+                for ch in line:
+                    panes_x += 1
+                    if ch not in PANE_CHARACTERS:
+                        # Outside of valid pane identifier range
+                        synerr(errpkg, "Windowgram must contain valid identifiers: [0-9a-zA-Z]")
+                    # Builds "bounding box" around pane for easy error detection through overlap algorithm
+                    if not ch in layout:
+                        # New pane
+                        layout[ch] = {
+                            'n': ch,
+                            'x': panes_x, 'y': panes_y, 'w': 1, 'h': 1,
+                            'l': 0 # init link to 0
+                        }
+                    else:
+                        # Expand width
+                        x2 = panes_x - layout[ch]['x'] + 1
+                        if x2 > layout[ch]['w']:
+                            layout[ch]['w'] = x2
+                        # Expand height
+                        y2 = panes_y - layout[ch]['y'] + 1
+                        if y2 > layout[ch]['h']:
+                            layout[ch]['h'] = y2
+                        # Update x
+                        if layout[ch]['x'] > panes_x:
+                            layout[ch]['x'] = panes_x
+        if not found:
+            synerr(errpkg, "Windowgram not specified for window serial " + str(window_serial))
 
-		#
-		# 3) Build list_panes
-		#
+        #
+        # 3) Build list_panes
+        #
 
-		#
-		# 3.1) Sort top to bottom, left to right, move into list (layout[] -> list_panes[])
-		#
-		panes_x = 1
-		panes_y = 1
-		list_panes = [] # List of user defined panes (derived from windowgram)
-		while len(layout):
-			pane = ""
-			for it in layout:
-				if not pane: pane = it
-				elif layout[it]['y'] < layout[pane]['y']: pane = it
-				elif layout[it]['y'] == layout[pane]['y'] and layout[it]['x'] < layout[pane]['x']: pane = it
-			list_panes.append(layout[pane].copy()) 	# Add to list
-			del layout[pane] 						# Remove from dict
+        #
+        # 3.1) Sort top to bottom, left to right, move into list (layout[] -> list_panes[])
+        #
+        panes_x = 1
+        panes_y = 1
+        list_panes = [] # List of user defined panes (derived from windowgram)
+        while len(layout):
+            pane = ""
+            for it in layout:
+                if not pane: pane = it
+                elif layout[it]['y'] < layout[pane]['y']: pane = it
+                elif layout[it]['y'] == layout[pane]['y'] and layout[it]['x'] < layout[pane]['x']: pane = it
+            list_panes.append(layout[pane].copy())  # Add to list
+            del layout[pane]                        # Remove from dict
 
-		#
-		# 3.2) Now check for overlaps
-		#
-		for pane1 in list_panes:
-			for pane2 in list_panes:
-				if pane1 != pane2:
-					# Readability
-					p1x1 = pane1['x']
-					p1x2 = p1x1 + pane1['w']
-					p1y1 = pane1['y']
-					p1y2 = p1y1 + pane1['h']
-					p2x1 = pane2['x']
-					p2x2 = p2x1 + pane2['w']
-					p2y1 = pane2['y']
-					p2y2 = p2y1 + pane2['h']
-					# Overlap detection
-					if p1x1 < p2x2 and p1x2 > p2x1 and p1y1 < p2y2 and p1y2 > p2y1:
-						synerr(errpkg, "Overlapping panes: " + pane1['n'] + " and " + pane2['n'])
+        #
+        # 3.2) Now check for overlaps
+        #
+        for pane1 in list_panes:
+            for pane2 in list_panes:
+                if pane1 != pane2:
+                    # Readability
+                    p1x1 = pane1['x']
+                    p1x2 = p1x1 + pane1['w']
+                    p1y1 = pane1['y']
+                    p1y2 = p1y1 + pane1['h']
+                    p2x1 = pane2['x']
+                    p2x2 = p2x1 + pane2['w']
+                    p2y1 = pane2['y']
+                    p2y2 = p2y1 + pane2['h']
+                    # Overlap detection
+                    if p1x1 < p2x2 and p1x2 > p2x1 and p1y1 < p2y2 and p1y2 > p2y1:
+                        synerr(errpkg, "Overlapping panes: " + pane1['n'] + " and " + pane2['n'])
 
-		#
-		# 4) Directions parser
-		#
-		default_directory = "" # Never set a default, assume the path that tmuxomatic was run from
-		first_pdl = False # Verbose only
-		for ix, line in enumerate(window.SplitCleanByKey('directions')):
-			SetLineNumber( window.GetLines('directions'), ix )
-			if not line: continue
-			if ARGS.verbose >= 2:
-				if not first_pdl: print("") ; first_pdl = True
-				print("(2) Pane definition: " + line)
-			if command_matches(line, "foc"):
-				# Window focus
-				focus_window_name = window_name
-				continue # Next line
-			if command_matches(line[:3], "dir"):
-				# Default directory
-				if ' ' in line or '\t' in line:
-					# Set or change the default directory.  Applies to successive panes until changed again.
-					values = line.split( None, 1 )
-					default_directory = values[1]
-				continue # Next line
-			# Splits the line into easier to handle strings, there's probably a better way to do this
-			if not ' ' in line and not '\t' in line:
-				synerr(errpkg, "Pane definition line syntax error")
-			panedef_paneids, panedef_cmdplusargs = line.split( None, 1 )
-			if not ' ' in panedef_cmdplusargs and not '\t' in panedef_cmdplusargs:
-				panedef_cmd = panedef_cmdplusargs
-				panedef_args = ''
-			else:
-				panedef_cmd, panedef_args = panedef_cmdplusargs.split( None, 1 )
-			#
-			# Make the list of targets from the specified panes
-			#
-			panelist = list(panedef_paneids)
-			for paneid in panelist:
-				if not paneid in PANE_CHARACTERS:
-					synerr(errpkg, "Pane definition id is outside of the supported range: [0-9a-zA-Z]")
-			def into(key, value, mode=0): # 0 = Set, 1 = Set or append if present, 2 = Set or skip if present
-				found = []
-				for pane in list_panes:
-					if pane['n'] in panelist:
-						if mode == 0:
-							pane[key] = value
-						if mode == 1:
-							if key in pane: pane[key].append( value )
-							else: pane[key] = [value]
-						if mode == 2:
-							if not key in pane or not pane[key]: pane[key] = value
-						found.append( pane['n'] )
-				delta = list(set(panelist) - set(found))
-				if delta:
-					synerr(errpkg, "Pane(s) '" + "".join(delta) + "' were not specified in the windowgram")
-			def all_panes_that_have_key(key):
-				found = []
-				for pane in list_panes:
-					if pane['n'] in panelist:
-						if key in pane:
-							found += [ pane['n'] ]
-				return "".join(found)
-			#
-			# Target pane specified ... Set default directory if not already set for this pane
-			#
-			into('dir', default_directory, 2)
-			#
-			# Command handlers
-			#
-			if command_matches(panedef_cmd, "run"):
-				if not panedef_args: synerr(errpkg, "Pane definition command 'run' must have arguments")
-				into('run', panedef_args, 1)
-			elif command_matches(panedef_cmd, "dir"):
-				if not panedef_args: synerr(errpkg, "Pane definition command 'dir' must have arguments")
-				into('dir', panedef_args)
-			elif command_matches(panedef_cmd, "foc"):
-				if panedef_args: synerr(errpkg, "Pane definition command 'foc' must have no arguments")
-				panes = all_panes_that_have_key('foc')
-				if panes: synerr(errpkg, "Pane definition command 'foc' already specified for panes: " + panes)
-				into('foc', True)
-			else:
-				synerr(errpkg, "Unknown command '" + panedef_cmd + "'")
+        #
+        # 4) Directions parser
+        #
+        default_directory = "" # Never set a default, assume the path that tmuxomatic was run from
+        first_pdl = False # Verbose only
+        for ix, line in enumerate(window.SplitCleanByKey('directions')):
+            SetLineNumber( window.GetLines('directions'), ix )
+            if not line: continue
+            if ARGS.verbose >= 2:
+                if not first_pdl: print("") ; first_pdl = True
+                print("(2) Pane definition: " + line)
+            if command_matches(line, "foc"):
+                # Window focus
+                focus_window_name = window_name
+                continue # Next line
+            if command_matches(line[:3], "dir"):
+                # Default directory
+                if ' ' in line or '\t' in line:
+                    # Set or change the default directory.  Applies to successive panes until changed again.
+                    values = line.split( None, 1 )
+                    default_directory = values[1]
+                continue # Next line
+            # Splits the line into easier to handle strings, there's probably a better way to do this
+            if not ' ' in line and not '\t' in line:
+                synerr(errpkg, "Pane definition line syntax error")
+            panedef_paneids, panedef_cmdplusargs = line.split( None, 1 )
+            if not ' ' in panedef_cmdplusargs and not '\t' in panedef_cmdplusargs:
+                panedef_cmd = panedef_cmdplusargs
+                panedef_args = ''
+            else:
+                panedef_cmd, panedef_args = panedef_cmdplusargs.split( None, 1 )
+            #
+            # Make the list of targets from the specified panes
+            #
+            panelist = list(panedef_paneids)
+            for paneid in panelist:
+                if not paneid in PANE_CHARACTERS:
+                    synerr(errpkg, "Pane definition id is outside of the supported range: [0-9a-zA-Z]")
+            def into(key, value, mode=0): # 0 = Set, 1 = Set or append if present, 2 = Set or skip if present
+                found = []
+                for pane in list_panes:
+                    if pane['n'] in panelist:
+                        if mode == 0:
+                            pane[key] = value
+                        if mode == 1:
+                            if key in pane: pane[key].append( value )
+                            else: pane[key] = [value]
+                        if mode == 2:
+                            if not key in pane or not pane[key]: pane[key] = value
+                        found.append( pane['n'] )
+                delta = list(set(panelist) - set(found))
+                if delta:
+                    synerr(errpkg, "Pane(s) '" + "".join(delta) + "' were not specified in the windowgram")
+            def all_panes_that_have_key(key):
+                found = []
+                for pane in list_panes:
+                    if pane['n'] in panelist:
+                        if key in pane:
+                            found += [ pane['n'] ]
+                return "".join(found)
+            #
+            # Target pane specified ... Set default directory if not already set for this pane
+            #
+            into('dir', default_directory, 2)
+            #
+            # Command handlers
+            #
+            if command_matches(panedef_cmd, "run"):
+                if not panedef_args: synerr(errpkg, "Pane definition command 'run' must have arguments")
+                into('run', panedef_args, 1)
+            elif command_matches(panedef_cmd, "dir"):
+                if not panedef_args: synerr(errpkg, "Pane definition command 'dir' must have arguments")
+                into('dir', panedef_args)
+            elif command_matches(panedef_cmd, "foc"):
+                if panedef_args: synerr(errpkg, "Pane definition command 'foc' must have no arguments")
+                panes = all_panes_that_have_key('foc')
+                if panes: synerr(errpkg, "Pane definition command 'foc' already specified for panes: " + panes)
+                into('foc', True)
+            else:
+                synerr(errpkg, "Unknown command '" + panedef_cmd + "'")
 
-		#
-		# 5) Generate tmux commands ... After splitting and cross-referencing
-		#
+        #
+        # 5) Generate tmux commands ... After splitting and cross-referencing
+        #
 
-		#
-		# 5.1) Refine list_panes so all expected variables are present for cleaner reference
-		#
-		for pane in list_panes:
-			if not 'dir' in pane: pane['dir'] = ""
-			if not 'run' in pane: pane['run'] = [ "" ]
-			if not 'foc' in pane: pane['foc'] = False
+        #
+        # 5.1) Refine list_panes so all expected variables are present for cleaner reference
+        #
+        for pane in list_panes:
+            if not 'dir' in pane: pane['dir'] = ""
+            if not 'run' in pane: pane['run'] = [ "" ]
+            if not 'foc' in pane: pane['foc'] = False
 
-		#
-		# 5.2) Split window into panes
-		#
-		linkid = [ 1001 ]	# Incrementing number for cross-referencing (0 is reserved)
-		# The linkid number is a unique identifier used to track the tmux panes and cross-reference them when the
-		# window is fully divided to get the final pane index for a particular pane.  This is an essential link
-		# because panes are renumbered as splits occur, and before they're assigned to tmuxomatic pane ids.
-		# Note: 'inst_w' and 'inst_h' are the dimensions when split, the first pane uses full dimensions.
-		# Note: The first pane does not use the entires 'split' or 'tmux'.
-		iw = user_wh[0]
-		ih = user_wh[1]
-		list_split = [ { 'linkid': linkid[0], 'split': "", 'tmux': 65536, 'inst_w': iw, 'inst_h': ih, 'per': "100.0" } ]
-		list_links = [ ( linkid[0], 0 ) ]	# List of cross-references (linkid, pane_tmux)
-		# Verbose
-		if ARGS.verbose >= 3:
-			print("")
-			print("(3) Fitting panes = {")
-		# Run the recursive splitter
-		dim = {}
-		dim['win'] = [ panes_w, panes_h ]
-		dim['scr'] = [ user_wh[0], user_wh[1] ]
-		tmuxomatic_filler_recursive( \
-			dim, linkid, list_split, list_links, list_panes, linkid[0], 1, 1, panes_w, panes_h )
-		# Verbose
-		if ARGS.verbose >= 3:
-			print("(3) }")
+        #
+        # 5.2) Split window into panes
+        #
+        linkid = [ 1001 ]   # Incrementing number for cross-referencing (0 is reserved)
+        # The linkid number is a unique identifier used to track the tmux panes and cross-reference them when the
+        # window is fully divided to get the final pane index for a particular pane.  This is an essential link
+        # because panes are renumbered as splits occur, and before they're assigned to tmuxomatic pane ids.
+        # Note: 'inst_w' and 'inst_h' are the dimensions when split, the first pane uses full dimensions.
+        # Note: The first pane does not use the entires 'split' or 'tmux'.
+        iw = user_wh[0]
+        ih = user_wh[1]
+        list_split = [ { 'linkid': linkid[0], 'split': "", 'tmux': 65536, 'inst_w': iw, 'inst_h': ih, 'per': "100.0" } ]
+        list_links = [ ( linkid[0], 0 ) ]   # List of cross-references (linkid, pane_tmux)
+        # Verbose
+        if ARGS.verbose >= 3:
+            print("")
+            print("(3) Fitting panes = {")
+        # Run the recursive splitter
+        dim = {}
+        dim['win'] = [ panes_w, panes_h ]
+        dim['scr'] = [ user_wh[0], user_wh[1] ]
+        tmuxomatic_filler_recursive( \
+            dim, linkid, list_split, list_links, list_panes, linkid[0], 1, 1, panes_w, panes_h )
+        # Verbose
+        if ARGS.verbose >= 3:
+            print("(3) }")
 
-		#
-		# 5.3) Build the execution list for: a) creating windows, b) sizing panes, c) running commands
-		#
-		list_build = [] # Window is independently assembled
+        #
+        # 5.3) Build the execution list for: a) creating windows, b) sizing panes, c) running commands
+        #
+        list_build = [] # Window is independently assembled
 
-		#
-		# 5.3a) Create window panes by splitting windows
-		#
-		first_pane = True
-		for split in list_split:
-			#
-			# Readability
-			#
-			list_split_linkid = split['linkid']		# 1234			This is for cross-referencing
-			list_split_orient = split['split']		# "v" / "h"		Successive: Split vertical or horizontal
-			list_split_paneid = split['tmux']		# 0 			Successive: Pane split at time of split
-			list_split_inst_w = split['inst_w']		# w 			Successive: Ensuing window size in chars
-			list_split_inst_h = split['inst_h']		# h 			Successive: Ensuing window size in chars
-			list_split_percnt = split['per']		# 50.0			Successive: Percentage at time of split
-			ent_panes = ''
-			for i in list_panes:
-				if 'l' in i and i['l'] == list_split_linkid:
-					ent_panes = i
-					break
-			if not ent_panes:
-				synerr(errpkg,
-					"Unable to fully cross-link, probably because of an unsupported window layout.  " + \
-					"Please see the included example file session_unsupported for more information...")
-			list_panes_dir = ent_panes['dir']		# "/tmp"		Directory of pane
-			if list_panes_dir: adddir = " -c " + list_panes_dir
-			else: adddir = ""
-			#
-			# Add the commands for this split
-			#
-			if first_pane: # First
-				first_pane = False
-				if window_serial == 1:
-					# First pane of first window
-					# The shell's cwd must be set, the only other way to do this is to discard the
-					# window that is automatically created when calling "new-session".
-					cwd = "cd " + list_panes_dir + " ; " if list_panes_dir else ""
-					list_build.append(
-						cwd + EXE_TMUX + " new-session -d -s " + session_name + " -n \"" + window_name + "\"" )
-					# Normally, tmux automatically renames windows based on whatever is running in the focused pane.
-					# There are two ways to fix this.  1) Add "set-option -g allow-rename off" to your ".tmux.conf".
-					# 2) Add "export DISABLE_AUTO_TITLE=true" to your shell's run commands file (e.g., ".bashrc").
-					# Here we automatically do method 1 for the user, unless the user requests otherwise.
-					list_build.append( EXE_TMUX + " set-option -t " + session_name + " quiet on" )
-					renaming = [ "off", "on" ][ARGS.renaming]
-					list_build.append( EXE_TMUX + " set-option -t " + session_name + " allow-rename " + renaming )
-					list_build.append( EXE_TMUX + " set-option -t " + session_name + " automatic-rename " + renaming )
-				else:
-					# First pane of successive window
-					list_build.append( EXE_TMUX + " new-window -n \"" + window_name + "\"" + adddir )
-			else: # Successive
-				# Perform the split on this pane
-				list_build.append( EXE_TMUX + " select-pane -t " + str(list_split_paneid) )
-				# Pane sizing
-				if ARGS.relative:
-					# Relative pane sizing (percentage)
-					percentage = str( int( float( list_split_percnt ) ) ) # Integers are required by tmux 1.8
-					list_build.append( EXE_TMUX + " split-window -" + list_split_orient + " -p " + percentage + adddir )
-				else:
-					# Absolute pane sizing (characters)
-					if list_split_orient == 'v': addaxis = " -y " + str( list_split_inst_h )
-					else: addaxis = " -x " + str( list_split_inst_w )
-					list_build.append( EXE_TMUX + " split-window -" + list_split_orient + adddir )
-					list_build.append( EXE_TMUX + " resize-pane -t " + str(list_split_paneid + 1) + addaxis )
+        #
+        # 5.3a) Create window panes by splitting windows
+        #
+        first_pane = True
+        for split in list_split:
+            #
+            # Readability
+            #
+            list_split_linkid = split['linkid']     # 1234          This is for cross-referencing
+            list_split_orient = split['split']      # "v" / "h"     Successive: Split vertical or horizontal
+            list_split_paneid = split['tmux']       # 0             Successive: Pane split at time of split
+            list_split_inst_w = split['inst_w']     # w             Successive: Ensuing window size in chars
+            list_split_inst_h = split['inst_h']     # h             Successive: Ensuing window size in chars
+            list_split_percnt = split['per']        # 50.0          Successive: Percentage at time of split
+            ent_panes = ''
+            for i in list_panes:
+                if 'l' in i and i['l'] == list_split_linkid:
+                    ent_panes = i
+                    break
+            if not ent_panes:
+                synerr(errpkg,
+                    "Unable to fully cross-link, probably because of an unsupported window layout.  " + \
+                    "Please see the included example file session_unsupported for more information...")
+            list_panes_dir = ent_panes['dir']       # "/tmp"        Directory of pane
+            if list_panes_dir: adddir = " -c " + list_panes_dir
+            else: adddir = ""
+            #
+            # Add the commands for this split
+            #
+            if first_pane: # First
+                first_pane = False
+                if window_serial == 1:
+                    # First pane of first window
+                    # The shell's cwd must be set, the only other way to do this is to discard the
+                    # window that is automatically created when calling "new-session".
+                    cwd = "cd " + list_panes_dir + " ; " if list_panes_dir else ""
+                    list_build.append(
+                        cwd + EXE_TMUX + " new-session -d -s " + session_name + " -n \"" + window_name + "\"" )
+                    # Normally, tmux automatically renames windows based on whatever is running in the focused pane.
+                    # There are two ways to fix this.  1) Add "set-option -g allow-rename off" to your ".tmux.conf".
+                    # 2) Add "export DISABLE_AUTO_TITLE=true" to your shell's run commands file (e.g., ".bashrc").
+                    # Here we automatically do method 1 for the user, unless the user requests otherwise.
+                    list_build.append( EXE_TMUX + " set-option -t " + session_name + " quiet on" )
+                    renaming = [ "off", "on" ][ARGS.renaming]
+                    list_build.append( EXE_TMUX + " set-option -t " + session_name + " allow-rename " + renaming )
+                    list_build.append( EXE_TMUX + " set-option -t " + session_name + " automatic-rename " + renaming )
+                else:
+                    # First pane of successive window
+                    list_build.append( EXE_TMUX + " new-window -n \"" + window_name + "\"" + adddir )
+            else: # Successive
+                # Perform the split on this pane
+                list_build.append( EXE_TMUX + " select-pane -t " + str(list_split_paneid) )
+                # Pane sizing
+                if ARGS.relative:
+                    # Relative pane sizing (percentage)
+                    percentage = str( int( float( list_split_percnt ) ) ) # Integers are required by tmux 1.8
+                    list_build.append( EXE_TMUX + " split-window -" + list_split_orient + " -p " + percentage + adddir )
+                else:
+                    # Absolute pane sizing (characters)
+                    if list_split_orient == 'v': addaxis = " -y " + str( list_split_inst_h )
+                    else: addaxis = " -x " + str( list_split_inst_w )
+                    list_build.append( EXE_TMUX + " split-window -" + list_split_orient + adddir )
+                    list_build.append( EXE_TMUX + " resize-pane -t " + str(list_split_paneid + 1) + addaxis )
 
-		#
-		# 5.3b) Prepare shell commands ... This is done separately after the pane size has been established
-		#
-		for ent_panes in list_panes:
-			# Now that the tmux pane index correlates, cross-reference for easier lookups
-			list_panes_l = ent_panes['l']			# 1234			This is for cross-referencing
-			ent_panes['tmux'] = str([tup[1] for tup in list_links if tup[0] == list_panes_l][0])
-		focus_actual_tmux_pane_index = "0" # Default pane_index
-		for ent_panes in list_panes:
-			#
-			# Readability
-			#
-			list_panes_l = ent_panes['l']			# 1234			This is for cross-referencing
-			list_panes_run = ent_panes['run']		# ["cd", "ls"]	Commands to run on pane
-			list_panes_foc = ent_panes['foc']		# True			Determines if pane is in focus
-			list_panes_index = ent_panes['tmux']
-			#
-			# Run
-			#
-			if list_panes_run:
-				for run in list_panes_run:
-					clean_run = re.sub(r'([\"])', r'\\\1', run) # Escape double-quotes
-					if clean_run:
-						list_build.append( EXE_TMUX + " select-pane -t " + list_panes_index )
-						list_build.append( EXE_TMUX + " send-keys \"" + clean_run + "\" C-m" )
-			if not focus_actual_tmux_pane_index or list_panes_foc:
-				focus_actual_tmux_pane_index = list_panes_index
-		if focus_actual_tmux_pane_index:
-			list_build.append( EXE_TMUX + " select-pane -t " + focus_actual_tmux_pane_index )
+        #
+        # 5.3b) Prepare shell commands ... This is done separately after the pane size has been established
+        #
+        for ent_panes in list_panes:
+            # Now that the tmux pane index correlates, cross-reference for easier lookups
+            list_panes_l = ent_panes['l']           # 1234          This is for cross-referencing
+            ent_panes['tmux'] = str([tup[1] for tup in list_links if tup[0] == list_panes_l][0])
+        focus_actual_tmux_pane_index = "0" # Default pane_index
+        for ent_panes in list_panes:
+            #
+            # Readability
+            #
+            list_panes_l = ent_panes['l']           # 1234          This is for cross-referencing
+            list_panes_run = ent_panes['run']       # ["cd", "ls"]  Commands to run on pane
+            list_panes_foc = ent_panes['foc']       # True          Determines if pane is in focus
+            list_panes_index = ent_panes['tmux']
+            #
+            # Run
+            #
+            if list_panes_run:
+                for run in list_panes_run:
+                    clean_run = re.sub(r'([\"])', r'\\\1', run) # Escape double-quotes
+                    if clean_run:
+                        list_build.append( EXE_TMUX + " select-pane -t " + list_panes_index )
+                        list_build.append( EXE_TMUX + " send-keys \"" + clean_run + "\" C-m" )
+            if not focus_actual_tmux_pane_index or list_panes_foc:
+                focus_actual_tmux_pane_index = list_panes_index
+        if focus_actual_tmux_pane_index:
+            list_build.append( EXE_TMUX + " select-pane -t " + focus_actual_tmux_pane_index )
 
-		#
-		# 5.4) Add this batch to the main execution list to be run later
-		#
-		list_execution.append( list_build )
+        #
+        # 5.4) Add this batch to the main execution list to be run later
+        #
+        list_execution.append( list_build )
 
-		#
-		# Done
-		#
+        #
+        # Done
+        #
 
-	#
-	# Set default window
-	#
-	if focus_window_name is not None:
-		list_build.append( EXE_TMUX + " select-window -t \"" + focus_window_name + "\"" )
+    #
+    # Set default window
+    #
+    if focus_window_name is not None:
+        list_build.append( EXE_TMUX + " select-window -t \"" + focus_window_name + "\"" )
 
-	#
-	# Notify user that tmux execution will begin and allow for time to break (ARGS.verbose >= 1)
-	#
-	if ARGS.verbose >= 1:
-		print("")
-		if VERBOSE_WAIT != 0:
-			print("(1) Waiting " + str(VERBOSE_WAIT) + " seconds before running tmux commands...")
-			time.sleep(VERBOSE_WAIT)
-		print("(1) Running tmux commands...")
-		print("")
+    #
+    # Notify user that tmux execution will begin and allow for time to break (ARGS.verbose >= 1)
+    #
+    if ARGS.verbose >= 1:
+        print("")
+        if VERBOSE_WAIT != 0:
+            print("(1) Waiting " + str(VERBOSE_WAIT) + " seconds before running tmux commands...")
+            time.sleep(VERBOSE_WAIT)
+        print("(1) Running tmux commands...")
+        print("")
 
-	#
-	# Run the tmux commands
-	#
-	for block in list_execution:
-		for command in block:
-			error = tmux_run(command)
-			if error:
-				if "pane too small" in error:
-					errpkg['quiet'] = True
-					msg = "Window splitting error (pane too small), make your window larger and try again"
-				else:
-					msg = "An error occurred in tmux: " + error
-				synerr(errpkg, msg )
+    #
+    # Run the tmux commands
+    #
+    for block in list_execution:
+        for command in block:
+            error = tmux_run(command)
+            if error:
+                if "pane too small" in error:
+                    errpkg['quiet'] = True
+                    msg = "Window splitting error (pane too small), make your window larger and try again"
+                else:
+                    msg = "An error occurred in tmux: " + error
+                synerr(errpkg, msg )
 
-	#
-	# Attach to the newly created session
-	#
-	tmux_run( EXE_TMUX + " attach-session -t " + session_name )
+    #
+    # Attach to the newly created session
+    #
+    tmux_run( EXE_TMUX + " attach-session -t " + session_name )
 
 
 
@@ -1583,57 +1583,57 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 ##
 ## Planned:
 ##
-##		break <pane> <shapes>						shapes == 2x2; x 2x2 3x1; y 1 3x3 1
-##		drag <pane_or_intersection> <direction>		pane == A, ab ... direction == up 2, u2, 50%, l 100%, +2, -50%
-##		split <panes> <how>							pane == A, ab ... how == v, h
-##		join <panes>								must have fully shared edges (merge)
-##		rename <panes1> <panes2>					rename pane, target must be unused
-##		swap <panes1> <panes2>						swap two panes (mutual rename), both panes must exist
-##		move <panes1> <panes2>						swap if both panes are defined, otherwise rename (mv)
-##		rotate <how>								how = cw, ccw, 180
-##		undo										undo
-##		redo										redo
-##		wipe										destroy the windowgram modification history (cannot undo)
-##		add <edge> <size> [pane]					append pane to edge of window of the specified size (1, 50%, etc)
-##		del <pane>									remove pane from edge of window (delete, clip, remove, drop, rm)
+##      break <pane> <shapes>                       shapes == 2x2; x 2x2 3x1; y 1 3x3 1
+##      drag <pane_or_intersection> <direction>     pane == A, ab ... direction == up 2, u2, 50%, l 100%, +2, -50%
+##      split <panes> <how>                         pane == A, ab ... how == v, h
+##      join <panes>                                must have fully shared edges (merge)
+##      rename <panes1> <panes2>                    rename pane, target must be unused
+##      swap <panes1> <panes2>                      swap two panes (mutual rename), both panes must exist
+##      move <panes1> <panes2>                      swap if both panes are defined, otherwise rename (mv)
+##      rotate <how>                                how = cw, ccw, 180
+##      undo                                        undo
+##      redo                                        redo
+##      wipe                                        destroy the windowgram modification history (cannot undo)
+##      add <edge> <size> [pane]                    append pane to edge of window of the specified size (1, 50%, etc)
+##      del <pane>                                  remove pane from edge of window (delete, clip, remove, drop, rm)
 ##
 ## Possible:
 ##
-##		links										show list of directions
-##		link [data...]								add line to directions
-##		unlink <line>								remove from directions by line number
-##		mvlink <line_from> <line_to>				move line in directions
+##      links                                       show list of directions
+##      link [data...]                              add line to directions
+##      unlink <line>                               remove from directions by line number
+##      mvlink <line_from> <line_to>                move line in directions
 ##
 ## Behaviors:
 ##
-##		Any modification of the windowgram outside of flex will result in an automatic clear on the next use in flex
+##      Any modification of the windowgram outside of flex will result in an automatic clear on the next use in flex
 ##
 ## Stack Sketch:
 ##
-## 		new					base
-## 		scale				base < scale
-## ...	mirror				base   scale   scale   break   scale < mirror
-## ...	undo				base   scale < scale > break   scale   mirror
-## 		redo				base   scale   scale < break > scale   mirror
-## ...	undo				base < scale > scale   break   scale   mirror
-## 		break				base   scale < break
-## ...	undo				base > scale   break
-##		clear				base
+##      new                 base
+##      scale               base < scale
+## ...  mirror              base   scale   scale   break   scale < mirror
+## ...  undo                base   scale < scale > break   scale   mirror
+##      redo                base   scale   scale < break > scale   mirror
+## ...  undo                base < scale > scale   break   scale   mirror
+##      break               base   scale < break
+## ...  undo                base > scale   break
+##      clear               base
 ##
-##		The current element on stack should include arguments, all others show only the command
+##      The current element on stack should include arguments, all others show only the command
 ##
 ## Stack Storage:
 ##
-##		@ FLEX HISTORY : Used by --flex console, use flex command "clear" to remove, or manually remove these lines
-##		@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-##		@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-##		@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-##		@ aaaaaaaaaaaaaaaaaaaaaaaaaa
+##      @ FLEX HISTORY : Used by --flex console, use flex command "clear" to remove, or manually remove these lines
+##      @ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+##      @ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+##      @ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+##      @ aaaaaaaaaaaaaaaaaaaaaaaaaa
 ##
-##		Data has initial windowgram, current stack pointer, easily allows any step to be reproduced on demand
-##		Data also has version, length, data checksum, current windowgram checksum for detecting manual edits
-##		Data is stored between window header and the windowgram as compressed JSON + utf-8 encoded in base64
-##		Overwrites entire session file with updated history block for every windowgram modification
+##      Data has initial windowgram, current stack pointer, easily allows any step to be reproduced on demand
+##      Data also has version, length, data checksum, current windowgram checksum for detecting manual edits
+##      Data is stored between window header and the windowgram as compressed JSON + utf-8 encoded in base64
+##      Overwrites entire session file with updated history block for every windowgram modification
 ##
 ## Console will be simple text, possibly use ncurses or urwid if it's present (installation is optional like yaml)
 ## Aliases for commands: "u" = undo.  Include control keys if possible: ^Z = undo, ^Y = redo, ^U = clear, ^D = exit
@@ -1650,24 +1650,24 @@ usage_triplets = lambda cmd_dict: [ cmd_dict['usage'][ix:ix+3] for ix in range( 
 ## Lists of commands are ordered by appearance
 ##
 
-flexmenu = []						# List of all commands and aliases (recognition)
-flexmenu_aliases = []				# List of all aliases (recognized not displayed)
-flexmenu_list = []					# List of primary commands (displayed at prompt)
-flexmenu_grouped = {}				# List of grouped commands (for the short menus)
+flexmenu = []                       # List of all commands and aliases (recognition)
+flexmenu_aliases = []               # List of all aliases (recognized not displayed)
+flexmenu_list = []                  # List of primary commands (displayed at prompt)
+flexmenu_grouped = {}               # List of grouped commands (for the short menus)
 
 ##
 ## Other globals
 ##
 
-flexmenu_session = None				# Session object in global scope for modification by commands
-flexmenu_index = [ 0 ]				# Selected window, list is for reference purposes only
+flexmenu_session = None             # Session object in global scope for modification by commands
+flexmenu_index = [ 0 ]              # Selected window, list is for reference purposes only
 flexsense = {
-	'finished': False,				# User exit
-	'restore': False,				# User exit: Restore original
-	'execute': False,				# User exit: Run session
-	'printer': False,				# Display windowgram
-	'warnings': [],					# Command warnings: Print and continue
-	'errors': [],					# Command errors: Print and exit
+    'finished': False,              # User exit
+    'restore': False,               # User exit: Restore original
+    'execute': False,               # User exit: Run session
+    'printer': False,               # Display windowgram
+    'warnings': [],                 # Command warnings: Print and continue
+    'errors': [],                   # Command errors: Print and exit
 }
 flexsense_reset = copy.copy( flexsense )
 flexgroup = ""
@@ -1677,67 +1677,67 @@ flexgroup = ""
 ##
 
 class flex(object):
-	def __init__(self, command="", examples=[], description=None, aliases=[]):
-		self.command_only = command
-		self.description = description
-		self.examples = examples
-		self.aliases = aliases
-	def __call__(self, function):
-		# From function build usage
-		self.usage = self.command_only
-		self.arglens = [ 0, 0 ] # [ Required, Total ]
-		spec = inspect.getargspec(function)
-		la = len(spec.args) if spec.args else 0
-		ld = len(spec.defaults) if spec.defaults else 0
-		class NoDefault: pass # Placeholder since None is a valid default argument
-		args_with_defaults = [ ( spec.args[ix], (NoDefault if ix < la-ld else spec.defaults[ix-(la-ld)]) ) \
-			for ix in range(0, len(spec.args)) ]
-		for arg, default in args_with_defaults:
-			self.arglens[1] += 1
-			if default is NoDefault: self.arglens[0] += 1
-			enclosed = "<>" if default is NoDefault else "[]"
-			self.usage += " " + enclosed[0] + arg + enclosed[1]
-		if spec.varargs:
-			marker = "_REQUIRED"
-			varargs = spec.varargs
-			required = True if varargs.endswith(marker) else False
-			enclosed = "<>" if required else "[]"
-			if varargs.endswith(marker): varargs = varargs[:-len(marker)] # Clip marker before printing
-			self.usage += " " + enclosed[0] + varargs + "..." + enclosed[1]
-			if required: self.arglens[0] += 1 # If required then varargs is [REQ+1, -1] instead of [REQ, -1]
-			self.arglens[1] = -1 # Represents use of *args
-		# Adds new menu item, or appends usage and examples if it already exists
-		# Description is only used on first occurrence of the command, successive commands append without description
-		append = False
-		for entdict in flexmenu:
-			if entdict['about'][0] == self.command_only:
-				entdict['funcs'] += [ function ]
-				entdict['usage'] += [ self.usage, self.examples, self.arglens ]
-				append = True
-		if not append:
-			flexmenu.append( {
-				'funcs': [ function ],
-				'about': [ self.command_only, self.description ],
-				'usage': [ self.usage, self.examples, self.arglens ],
-			} )
-			if not self.command_only in flexmenu_list: flexmenu_list.append( self.command_only )
-		# Add aliases if any
-		for ix, alias_tup in enumerate(self.aliases):
-			if type(alias_tup) is not list:
-				print("Flux command indexing error: " + self.command_only + " alias #" + str(1+ix) + " is not a list")
-				exit()
-			if len(alias_tup) != 2:
-				print("Flux command indexing error: " + self.command_only + " alias #" + str(1+ix) + " is not a pair")
-				exit()
-			flexmenu_aliases.append( alias_tup )
-		# Grouped commands
-		if not flexgroup in flexmenu_grouped: flexmenu_grouped[flexgroup] = []
-		if not self.command_only in flexmenu_grouped[flexgroup]:
-			flexmenu_grouped[flexgroup].append(self.command_only)
-		# Function wrapper
-		def wrapper(*args):
-			return function(*args)
-		return wrapper
+    def __init__(self, command="", examples=[], description=None, aliases=[]):
+        self.command_only = command
+        self.description = description
+        self.examples = examples
+        self.aliases = aliases
+    def __call__(self, function):
+        # From function build usage
+        self.usage = self.command_only
+        self.arglens = [ 0, 0 ] # [ Required, Total ]
+        spec = inspect.getargspec(function)
+        la = len(spec.args) if spec.args else 0
+        ld = len(spec.defaults) if spec.defaults else 0
+        class NoDefault: pass # Placeholder since None is a valid default argument
+        args_with_defaults = [ ( spec.args[ix], (NoDefault if ix < la-ld else spec.defaults[ix-(la-ld)]) ) \
+            for ix in range(0, len(spec.args)) ]
+        for arg, default in args_with_defaults:
+            self.arglens[1] += 1
+            if default is NoDefault: self.arglens[0] += 1
+            enclosed = "<>" if default is NoDefault else "[]"
+            self.usage += " " + enclosed[0] + arg + enclosed[1]
+        if spec.varargs:
+            marker = "_REQUIRED"
+            varargs = spec.varargs
+            required = True if varargs.endswith(marker) else False
+            enclosed = "<>" if required else "[]"
+            if varargs.endswith(marker): varargs = varargs[:-len(marker)] # Clip marker before printing
+            self.usage += " " + enclosed[0] + varargs + "..." + enclosed[1]
+            if required: self.arglens[0] += 1 # If required then varargs is [REQ+1, -1] instead of [REQ, -1]
+            self.arglens[1] = -1 # Represents use of *args
+        # Adds new menu item, or appends usage and examples if it already exists
+        # Description is only used on first occurrence of the command, successive commands append without description
+        append = False
+        for entdict in flexmenu:
+            if entdict['about'][0] == self.command_only:
+                entdict['funcs'] += [ function ]
+                entdict['usage'] += [ self.usage, self.examples, self.arglens ]
+                append = True
+        if not append:
+            flexmenu.append( {
+                'funcs': [ function ],
+                'about': [ self.command_only, self.description ],
+                'usage': [ self.usage, self.examples, self.arglens ],
+            } )
+            if not self.command_only in flexmenu_list: flexmenu_list.append( self.command_only )
+        # Add aliases if any
+        for ix, alias_tup in enumerate(self.aliases):
+            if type(alias_tup) is not list:
+                print("Flux command indexing error: " + self.command_only + " alias #" + str(1+ix) + " is not a list")
+                exit()
+            if len(alias_tup) != 2:
+                print("Flux command indexing error: " + self.command_only + " alias #" + str(1+ix) + " is not a pair")
+                exit()
+            flexmenu_aliases.append( alias_tup )
+        # Grouped commands
+        if not flexgroup in flexmenu_grouped: flexmenu_grouped[flexgroup] = []
+        if not self.command_only in flexmenu_grouped[flexgroup]:
+            flexmenu_grouped[flexgroup].append(self.command_only)
+        # Function wrapper
+        def wrapper(*args):
+            return function(*args)
+        return wrapper
 
 ##
 ## Commands: Helpers
@@ -1746,78 +1746,78 @@ class flex(object):
 flexgroup = "helpers"
 
 @flex(
-	command = "help",
-	description = "Show information for one or more commands (this list)",
+    command = "help",
+    description = "Show information for one or more commands (this list)",
 )
 def cmd_help_0():
-	return cmd_help_N() # Wrapper
+    return cmd_help_N() # Wrapper
 
 @flex(
-	command = "help",
-	aliases = [["h", "help "], ["?", "help "], ["/", "help "]],
-	examples = [ "help new scale" ],
+    command = "help",
+    aliases = [["h", "help "], ["?", "help "], ["/", "help "]],
+    examples = [ "help new scale" ],
 )
 def cmd_help_N(*commands):
-	# Filter specified commands into a list of unique commands, sorted by the official command order
-	args = commands
-	commands = []
-	for arg in args:
-		if arg not in commands:
-			commands.append(arg)
-	commands = [ cmd_dict['about'][0] for cmd_dict in flexmenu if cmd_dict['about'][0] in commands ]
-	# Macros
-	lengths = lambda name, about, usage, example: [ len(name), len(about), len(usage), len(example) ]
-	# All menus are four columns representing: name, about, usage, example
-	menu_title = [ "Command", "Description", "Usage", "Examples" ]
-	menu_lines = [] # Printed columns, padded before display
-	# Build menu print list from all known commands
-	add = lambda name="", about="", usage="", example="": menu_lines.append( [ name, about, usage, example ] )
-	for cmd_dict in flexmenu:
-		if commands and cmd_dict['about'][0] not in commands: continue
-		fnew = True
-		name, about = cmd_dict['about']
-		for usage, examples, arglens in usage_triplets(cmd_dict):
-			fuse = True
-			if not examples: examples = [ None ] # Allow usage without a corresponding example
-			for example in examples:
-				if fnew: add()
-				add( name if fnew else "", about if fnew else "", usage if fuse else "", example if example else "" )
-				fnew = fuse = False
-		if fnew:
-			add()
-			add( name, about )
-	add()
-	# Maximum width of each column, taking into account title and all lines
-	widths = [ len(title) for title in menu_title ]
-	for line in menu_lines: widths = [ l if l > n else n for l, n in zip( widths, [ len(n) for n in line ] ) ]
-	# Pad all lines
-	lines = menu_lines
-	menu_lines = []
-	for line in lines:
-		menu_lines.append( [ l + ((((w - len(l)) if len(l) < w else 0)) * " ") for w, l in zip( widths, line ) ] )
-	# Print introduction
-	flexout("Flex menu" + ((" (" + ", ".join(commands) + ")") if len(commands) else "") + ":" )
-	flexout("")
-	# Print menu table
-	def flexout_menu(a1, a2, a3, a4, mode=0):
-		if mode:
-			flexout( "+-" + len(a1)*"-" + "-+-" + len(a2)*"-" + "-+-" + len(a3)*"-" + "-+-" + len(a4)*"-" + "-+" )
-			if mode >= 2:
-				t1, t2, t3, t4 = [ t + (len(a) - len(t))*" " for t, a in zip(menu_title, [a1, a2, a3, a4]) ]
-				flexout( "| " + t1 + " | " + t2 + " | " + t3 + " | " + t4 + " |" )
-				flexout( "+-" + len(a1)*"-" + "-+-" + len(a2)*"-" + "-+-" + len(a3)*"-" + "-+-" + len(a4)*"-" + "-+" )
-		else:
-			flexout( "| " + a1 + " | " + a2 + " | " + a3 + " | " + a4 + " |" )
-	first = True
-	name = about = usage = example = ""
-	for name, about, usage, example in menu_lines:
-		if first:
-			flexout_menu( name, about, usage, example, mode=2 )
-		flexout_menu( name, about, usage, example )
-		first = False
-	if not first:
-		flexout_menu( name, about, usage, example, mode=1 )
-	flexout("")
+    # Filter specified commands into a list of unique commands, sorted by the official command order
+    args = commands
+    commands = []
+    for arg in args:
+        if arg not in commands:
+            commands.append(arg)
+    commands = [ cmd_dict['about'][0] for cmd_dict in flexmenu if cmd_dict['about'][0] in commands ]
+    # Macros
+    lengths = lambda name, about, usage, example: [ len(name), len(about), len(usage), len(example) ]
+    # All menus are four columns representing: name, about, usage, example
+    menu_title = [ "Command", "Description", "Usage", "Examples" ]
+    menu_lines = [] # Printed columns, padded before display
+    # Build menu print list from all known commands
+    add = lambda name="", about="", usage="", example="": menu_lines.append( [ name, about, usage, example ] )
+    for cmd_dict in flexmenu:
+        if commands and cmd_dict['about'][0] not in commands: continue
+        fnew = True
+        name, about = cmd_dict['about']
+        for usage, examples, arglens in usage_triplets(cmd_dict):
+            fuse = True
+            if not examples: examples = [ None ] # Allow usage without a corresponding example
+            for example in examples:
+                if fnew: add()
+                add( name if fnew else "", about if fnew else "", usage if fuse else "", example if example else "" )
+                fnew = fuse = False
+        if fnew:
+            add()
+            add( name, about )
+    add()
+    # Maximum width of each column, taking into account title and all lines
+    widths = [ len(title) for title in menu_title ]
+    for line in menu_lines: widths = [ l if l > n else n for l, n in zip( widths, [ len(n) for n in line ] ) ]
+    # Pad all lines
+    lines = menu_lines
+    menu_lines = []
+    for line in lines:
+        menu_lines.append( [ l + ((((w - len(l)) if len(l) < w else 0)) * " ") for w, l in zip( widths, line ) ] )
+    # Print introduction
+    flexout("Flex menu" + ((" (" + ", ".join(commands) + ")") if len(commands) else "") + ":" )
+    flexout("")
+    # Print menu table
+    def flexout_menu(a1, a2, a3, a4, mode=0):
+        if mode:
+            flexout( "+-" + len(a1)*"-" + "-+-" + len(a2)*"-" + "-+-" + len(a3)*"-" + "-+-" + len(a4)*"-" + "-+" )
+            if mode >= 2:
+                t1, t2, t3, t4 = [ t + (len(a) - len(t))*" " for t, a in zip(menu_title, [a1, a2, a3, a4]) ]
+                flexout( "| " + t1 + " | " + t2 + " | " + t3 + " | " + t4 + " |" )
+                flexout( "+-" + len(a1)*"-" + "-+-" + len(a2)*"-" + "-+-" + len(a3)*"-" + "-+-" + len(a4)*"-" + "-+" )
+        else:
+            flexout( "| " + a1 + " | " + a2 + " | " + a3 + " | " + a4 + " |" )
+    first = True
+    name = about = usage = example = ""
+    for name, about, usage, example in menu_lines:
+        if first:
+            flexout_menu( name, about, usage, example, mode=2 )
+        flexout_menu( name, about, usage, example )
+        first = False
+    if not first:
+        flexout_menu( name, about, usage, example, mode=1 )
+    flexout("")
 
 ##
 ## Commands: Selectors
@@ -1826,68 +1826,68 @@ def cmd_help_N(*commands):
 flexgroup = "selectors"
 
 @flex(
-	command = "list",
-	aliases = [["l", "list "]],
-	description = "List all available windows in this tmuxomatic session",
+    command = "list",
+    aliases = [["l", "list "]],
+    description = "List all available windows in this tmuxomatic session",
 )
 def cmd_list():
-	flexout("Available windows in this session file (use serial number or name):\n")
-	for serial in range(1, flexmenu_session.Count_Windows()+1):
-		number = str(serial)
-		name = flexmenu_session.Get_Name(serial)
-		dimensions_int = flexmenu_session.Get_WindowgramDimensions_Int(serial) # Use this to avoid reinitialization
-		dimensions_str = str(dimensions_int[0]) + "x" + str(dimensions_int[1])
-		flexout( "    Window " + number + " (" + dimensions_str + ") : " + name )
-	flexout("")
+    flexout("Available windows in this session file (use serial number or name):\n")
+    for serial in range(1, flexmenu_session.Count_Windows()+1):
+        number = str(serial)
+        name = flexmenu_session.Get_Name(serial)
+        dimensions_int = flexmenu_session.Get_WindowgramDimensions_Int(serial) # Use this to avoid reinitialization
+        dimensions_str = str(dimensions_int[0]) + "x" + str(dimensions_int[1])
+        flexout( "    Window " + number + " (" + dimensions_str + ") : " + name )
+    flexout("")
 
 @flex(
-	command = "use",
-	aliases = [["u", "use "]],
-	examples = [ "use my example", "use 1" ],
-	description = "Select the window you would like to modify",
+    command = "use",
+    aliases = [["u", "use "]],
+    examples = [ "use my example", "use 1" ],
+    description = "Select the window you would like to modify",
 )
 def cmd_use(*name_or_serial_REQUIRED):
-	name_or_serial = " ".join(name_or_serial_REQUIRED)
-	def using(serial):
-		flexsense['printer'] = True
-		flexmenu_index[0] = serial
-		windowgram, warning = flexmenu_session.Get_Windowgram(serial, warning=True)
-		if warning: flexsense['warnings'].append( warning )
-	if name_or_serial.isdigit():
-		serial = int(name_or_serial)
-		if flexmenu_session.Serial_Is_Valid(serial): return using(serial)						# Serial match
-	for serial in range(1, flexmenu_session.Count_Windows()+1):
-		if name_or_serial == flexmenu_session.Get_Name(serial): return using(serial)			# Exact string match
-	for serial in range(1, flexmenu_session.Count_Windows()+1):
-		if flexmenu_session.Get_Name(serial).startswith(name_or_serial): return using(serial)	# Starting string match
-	flexout( "The name or serial you specified is invalid: " + name_or_serial )					# No match
-	flexout("")
+    name_or_serial = " ".join(name_or_serial_REQUIRED)
+    def using(serial):
+        flexsense['printer'] = True
+        flexmenu_index[0] = serial
+        windowgram, warning = flexmenu_session.Get_Windowgram(serial, warning=True)
+        if warning: flexsense['warnings'].append( warning )
+    if name_or_serial.isdigit():
+        serial = int(name_or_serial)
+        if flexmenu_session.Serial_Is_Valid(serial): return using(serial)                       # Serial match
+    for serial in range(1, flexmenu_session.Count_Windows()+1):
+        if name_or_serial == flexmenu_session.Get_Name(serial): return using(serial)            # Exact string match
+    for serial in range(1, flexmenu_session.Count_Windows()+1):
+        if flexmenu_session.Get_Name(serial).startswith(name_or_serial): return using(serial)   # Starting string match
+    flexout( "The name or serial you specified is invalid: " + name_or_serial )                 # No match
+    flexout("")
 
 @flex(
-	command = "new",
-	aliases = [["n", "new "]],
-	examples = [ "new some feeds" ],
-	description = "Create a new window, initialized to '1'",
+    command = "new",
+    aliases = [["n", "new "]],
+    examples = [ "new some feeds" ],
+    description = "Create a new window, initialized to '1'",
 )
 def cmd_new(*window_name_REQUIRED):
-	# Create window
-	name = " ".join(window_name_REQUIRED)
-	comments = "#\n# Added by tmuxomatic flex " + VERSION + "\n#\n\n"
-	windowgram = "1"
-	serial = flexmenu_session.Add_Windowgram( comments, name, windowgram )
-	# Use it
-	cmd_use(*[str(serial)])
+    # Create window
+    name = " ".join(window_name_REQUIRED)
+    comments = "#\n# Added by tmuxomatic flex " + VERSION + "\n#\n\n"
+    windowgram = "1"
+    serial = flexmenu_session.Add_Windowgram( comments, name, windowgram )
+    # Use it
+    cmd_use(*[str(serial)])
 
 @flex(
-	command = "print",
-	aliases = [["p", "print"]],
-	description = "Display windowgram (automatically displayed on modification)",
+    command = "print",
+    aliases = [["p", "print"]],
+    description = "Display windowgram (automatically displayed on modification)",
 )
 def cmd_print():
-	serial = flexmenu_index[0]
-	if flexmenu_session.Serial_Is_Valid(serial):
-		flexout("Windowgram for window #" + str(serial) + " (" + flexmenu_session.Get_Name(serial) + ") ...\n")
-		flexout( "\n".join([ "    " + l for l in flexmenu_session.Get_Windowgram(serial).split("\n") ]) )
+    serial = flexmenu_index[0]
+    if flexmenu_session.Serial_Is_Valid(serial):
+        flexout("Windowgram for window #" + str(serial) + " (" + flexmenu_session.Get_Name(serial) + ") ...\n")
+        flexout( "\n".join([ "    " + l for l in flexmenu_session.Get_Windowgram(serial).split("\n") ]) )
 
 ##
 ## Commands: Modifiers
@@ -1896,133 +1896,133 @@ def cmd_print():
 flexgroup = "modifiers"
 
 @flex(
-	command = "scale",
-	examples = [ "scale 25", "scale 500%", "scale 2x", "scale 64:36" ],
-	description = "Scale by multipliers (x), or percentages (%), or to specific dimensions",
-	aliases = [["s", "scale "], ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"]],
+    command = "scale",
+    examples = [ "scale 25", "scale 500%", "scale 2x", "scale 64:36" ],
+    description = "Scale by multipliers (x), or percentages (%), or to specific dimensions",
+    aliases = [["s", "scale "], ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"]],
 )
 def cmd_scale_1(xy_how):
-	# Split directives like "64:36" and "64x36" into "64 36", also works using percentages "200%:50%", or using
-	# multipliers "2x:2x" as long as ":" is used instead of "x" as there would be a conflict with the multiplier
-	# TODO: This could be more flexible to cover cases like "2xx2" and "2x2x" by using regex
-	xy_spl = None
-	if xy_how.count("x") == 1 and xy_how[-1:] != "x": xy_spl = xy_how.split("x")
-	if xy_how.count(":") == 1: xy_spl = xy_how.split(":")
-	if xy_spl and len(xy_spl) == 2: return cmd_scale_2( *xy_spl )
-	# Others are simply cloned like "2x" into "2x 2x"
-	return cmd_scale_2( xy_how, xy_how )
+    # Split directives like "64:36" and "64x36" into "64 36", also works using percentages "200%:50%", or using
+    # multipliers "2x:2x" as long as ":" is used instead of "x" as there would be a conflict with the multiplier
+    # TODO: This could be more flexible to cover cases like "2xx2" and "2x2x" by using regex
+    xy_spl = None
+    if xy_how.count("x") == 1 and xy_how[-1:] != "x": xy_spl = xy_how.split("x")
+    if xy_how.count(":") == 1: xy_spl = xy_how.split(":")
+    if xy_spl and len(xy_spl) == 2: return cmd_scale_2( *xy_spl )
+    # Others are simply cloned like "2x" into "2x 2x"
+    return cmd_scale_2( xy_how, xy_how )
 
 @flex(
-	command = "scale",
-	examples = [ "scale 25 15", "scale 200% 50%", "scale 2x .5x" ],
+    command = "scale",
+    examples = [ "scale 25 15", "scale 200% 50%", "scale 2x .5x" ],
 )
 def cmd_scale_2(x_how, y_how):
-	# Because text is low resolution, fractional scaling may produce unsatisfactory results
-	serial = flexmenu_index[0]
-	if flexmenu_session.Serial_Is_Valid(serial):
-		# Generics
-		windowgram_before = flexmenu_session.Get_Windowgram(serial)
-		dim_before = Windowgram_Dimensions_Float(windowgram_before)
-		# Convert to common float multipliers for easy scaling
-		args = [ 1.0, 1.0 ] # Default to no scale on error
-		for ix, arg in enumerate([x_how, y_how]):
-			try:
-				if arg[-1:] == "x" or arg[-1:] == "X" or arg[-1:] == "*": args[ix] = float(arg[:-1])
-				elif arg[-1:] == "%": args[ix] = float(arg[:-1]) / 100.0
-				else: args[ix] = float(arg) / float(dim_before[ix])
-			except ValueError: pass
-		x_how, y_how = args
-		dim_after = [ int(x_how * dim_before[0]), int(y_how * dim_before[1]) ]
-		# Verify new dimensions are valid (non-zero)
-		if dim_after[0] < 1 or dim_after[1] < 1:
-			flexsense['warnings'].append( "*** Ignored *** Scale would have resulted in a blank windowgram" )
-			return
-		# Scale the windowgram
-		windowgram_after = []
-		windowgram_work = windowgram_before.split("\n")[:-1]
-		windowgram_work = [ [ ch for ch in list(ln) ] for ix, ln in enumerate(windowgram_work) ]
-		for y in range(0, int( dim_after[1] )):
-			windowgram_after.append( [ windowgram_work[ int(y/y_how) ][ int(x/x_how) ] \
-				for x in range(0, int( dim_after[0] )) ] )
-		windowgram_after = "\n".join( [ "".join(line) for line in windowgram_after ] )
-		# Verify new windowgram (in case of scale error)
-		dim_result = Windowgram_Dimensions_Int(windowgram_after)
-		if dim_result[0] < 1 or dim_result[1] < 1:
-			flexsense['warnings'].append( "*** Ignored *** Scale produced a blank windowgram" )
-			return
-		# Alert user to any panes lost
-		lost_panes = Windowgram_LostPanes( windowgram_before, windowgram_after )
-		if len(lost_panes):
-			flexsense['warnings'].append( "Lost " + str( len(lost_panes) ) + " panes: " + lost_panes )
-		# Update the windowgram
-		flexmenu_session.Replace_Windowgram( serial, windowgram_after )
+    # Because text is low resolution, fractional scaling may produce unsatisfactory results
+    serial = flexmenu_index[0]
+    if flexmenu_session.Serial_Is_Valid(serial):
+        # Generics
+        windowgram_before = flexmenu_session.Get_Windowgram(serial)
+        dim_before = Windowgram_Dimensions_Float(windowgram_before)
+        # Convert to common float multipliers for easy scaling
+        args = [ 1.0, 1.0 ] # Default to no scale on error
+        for ix, arg in enumerate([x_how, y_how]):
+            try:
+                if arg[-1:] == "x" or arg[-1:] == "X" or arg[-1:] == "*": args[ix] = float(arg[:-1])
+                elif arg[-1:] == "%": args[ix] = float(arg[:-1]) / 100.0
+                else: args[ix] = float(arg) / float(dim_before[ix])
+            except ValueError: pass
+        x_how, y_how = args
+        dim_after = [ int(x_how * dim_before[0]), int(y_how * dim_before[1]) ]
+        # Verify new dimensions are valid (non-zero)
+        if dim_after[0] < 1 or dim_after[1] < 1:
+            flexsense['warnings'].append( "*** Ignored *** Scale would have resulted in a blank windowgram" )
+            return
+        # Scale the windowgram
+        windowgram_after = []
+        windowgram_work = windowgram_before.split("\n")[:-1]
+        windowgram_work = [ [ ch for ch in list(ln) ] for ix, ln in enumerate(windowgram_work) ]
+        for y in range(0, int( dim_after[1] )):
+            windowgram_after.append( [ windowgram_work[ int(y/y_how) ][ int(x/x_how) ] \
+                for x in range(0, int( dim_after[0] )) ] )
+        windowgram_after = "\n".join( [ "".join(line) for line in windowgram_after ] )
+        # Verify new windowgram (in case of scale error)
+        dim_result = Windowgram_Dimensions_Int(windowgram_after)
+        if dim_result[0] < 1 or dim_result[1] < 1:
+            flexsense['warnings'].append( "*** Ignored *** Scale produced a blank windowgram" )
+            return
+        # Alert user to any panes lost
+        lost_panes = Windowgram_LostPanes( windowgram_before, windowgram_after )
+        if len(lost_panes):
+            flexsense['warnings'].append( "Lost " + str( len(lost_panes) ) + " panes: " + lost_panes )
+        # Update the windowgram
+        flexmenu_session.Replace_Windowgram( serial, windowgram_after )
 
 ## This original scale produces superior results in certain situations, may be worth reusing this code
 
 """
-		if ARGS.scale and int(ARGS.scale[0]) == window_serial:
-			def scale_one( element, multiplier ):
-				# Scale element using integer rounding, multiplier must be float
-				q, r = math.modf( float(element - 1) * multiplier )
-				if q >= .5: r += 1
-				return int(r) + 1
-			def scale_windowgram( list_panes, sx, sy ):
-				# Scales the windowgram
-				# Because text is low resolution, fractional scaling may produce unsatisfactory results
-				ax, ay = float(sx), float(sy)
-				lost = 0
-				for pane in list_panes:
-					if ax: pane['w'] = scale_one( pane['x'] + pane['w'], sx )
-					if ay: pane['h'] = scale_one( pane['y'] + pane['h'], sy )
-					if ax: pane['x'] = scale_one( pane['x'], sx )
-					if ay: pane['y'] = scale_one( pane['y'], sy )
-					if ax: pane['w'] -= pane['x']
-					if ay: pane['h'] -= pane['y']
-					if not pane['x'] or not pane['y'] or not pane['w'] or not pane['h']: lost += 1
-				return lost
-			def render_windowgram( list_panes ):
-				# Prints the windowgram
-				windowgram = []
-				for pane in list_panes:
-					for y in range( pane['y'], pane['y'] + pane['h'] ):
-						for x in range( pane['x'], pane['x'] + pane['w'] ):
-							ix = int(x) - 1
-							iy = int(y) - 1
-							while len(windowgram) <= iy: windowgram.append([])
-							while len(windowgram[iy]) <= ix: windowgram[iy].append([])
-							windowgram[iy][ix] = pane['n']
-				windowgram_str = ""
-				for line in windowgram:
-					windowgram_str += "".join(line) + "\n"
-				return windowgram_str
-			# Extract the multiplier
-			ax, dx = [ 1.0, 1.0 ] # Set this
-			# Perform the scale
-			list_panes_scaled = copy.deepcopy( list_panes )
-			lost = scale_windowgram( list_panes_scaled, ax, ay )
-			wincfg_scaled = render_windowgram( list_panes_scaled ) # Used either way
+        if ARGS.scale and int(ARGS.scale[0]) == window_serial:
+            def scale_one( element, multiplier ):
+                # Scale element using integer rounding, multiplier must be float
+                q, r = math.modf( float(element - 1) * multiplier )
+                if q >= .5: r += 1
+                return int(r) + 1
+            def scale_windowgram( list_panes, sx, sy ):
+                # Scales the windowgram
+                # Because text is low resolution, fractional scaling may produce unsatisfactory results
+                ax, ay = float(sx), float(sy)
+                lost = 0
+                for pane in list_panes:
+                    if ax: pane['w'] = scale_one( pane['x'] + pane['w'], sx )
+                    if ay: pane['h'] = scale_one( pane['y'] + pane['h'], sy )
+                    if ax: pane['x'] = scale_one( pane['x'], sx )
+                    if ay: pane['y'] = scale_one( pane['y'], sy )
+                    if ax: pane['w'] -= pane['x']
+                    if ay: pane['h'] -= pane['y']
+                    if not pane['x'] or not pane['y'] or not pane['w'] or not pane['h']: lost += 1
+                return lost
+            def render_windowgram( list_panes ):
+                # Prints the windowgram
+                windowgram = []
+                for pane in list_panes:
+                    for y in range( pane['y'], pane['y'] + pane['h'] ):
+                        for x in range( pane['x'], pane['x'] + pane['w'] ):
+                            ix = int(x) - 1
+                            iy = int(y) - 1
+                            while len(windowgram) <= iy: windowgram.append([])
+                            while len(windowgram[iy]) <= ix: windowgram[iy].append([])
+                            windowgram[iy][ix] = pane['n']
+                windowgram_str = ""
+                for line in windowgram:
+                    windowgram_str += "".join(line) + "\n"
+                return windowgram_str
+            # Extract the multiplier
+            ax, dx = [ 1.0, 1.0 ] # Set this
+            # Perform the scale
+            list_panes_scaled = copy.deepcopy( list_panes )
+            lost = scale_windowgram( list_panes_scaled, ax, ay )
+            wincfg_scaled = render_windowgram( list_panes_scaled ) # Used either way
 """
 
 @flex(
-	command = "mirror",
-	description = "Reverse horizontally (left/right)",
+    command = "mirror",
+    description = "Reverse horizontally (left/right)",
 )
 def cmd_mirror():
-	serial = flexmenu_index[0]
-	if flexmenu_session.Serial_Is_Valid(serial):
-		windowgram_lines = Windowgram_StringToLines(flexmenu_session.Get_Windowgram(serial))
-		flexmenu_session.Replace_Windowgram( serial, Windowgram_LinesToString( \
-			[ "".join( [ ch for ch in reversed(list(line)) ] ) for line in windowgram_lines ] ) )
+    serial = flexmenu_index[0]
+    if flexmenu_session.Serial_Is_Valid(serial):
+        windowgram_lines = Windowgram_StringToLines(flexmenu_session.Get_Windowgram(serial))
+        flexmenu_session.Replace_Windowgram( serial, Windowgram_LinesToString( \
+            [ "".join( [ ch for ch in reversed(list(line)) ] ) for line in windowgram_lines ] ) )
 
 @flex(
-	command = "flip",
-	description = "Reverse vertically (top/bottom)",
+    command = "flip",
+    description = "Reverse vertically (top/bottom)",
 )
 def cmd_flip():
-	serial = flexmenu_index[0]
-	if flexmenu_session.Serial_Is_Valid(serial):
-		windowgram_lines = Windowgram_StringToLines(flexmenu_session.Get_Windowgram(serial))
-		flexmenu_session.Replace_Windowgram( serial, Windowgram_LinesToString(reversed(windowgram_lines)) )
+    serial = flexmenu_index[0]
+    if flexmenu_session.Serial_Is_Valid(serial):
+        windowgram_lines = Windowgram_StringToLines(flexmenu_session.Get_Windowgram(serial))
+        flexmenu_session.Replace_Windowgram( serial, Windowgram_LinesToString(reversed(windowgram_lines)) )
 
 ##
 ## Commands: Terminators
@@ -2031,135 +2031,135 @@ def cmd_flip():
 flexgroup = "terminators"
 
 @flex(
-	command = "oops",
-	description = "Restore the original session, then exit without execution",
+    command = "oops",
+    description = "Restore the original session, then exit without execution",
 )
 def cmd_oops():
-	flexsense['finished'] = flexsense['restore'] = True
+    flexsense['finished'] = flexsense['restore'] = True
 
 @flex(
-	command = "done",
-	description = "Keep changes to session, then execute",
-	aliases = [["d", "done"], ["run", "done"], ["go", "done"]],
+    command = "done",
+    description = "Keep changes to session, then execute",
+    aliases = [["d", "done"], ["run", "done"], ["go", "done"]],
 )
 def cmd_done():
-	flexsense['finished'] = flexsense['execute'] = True
+    flexsense['finished'] = flexsense['execute'] = True
 
 @flex(
-	command = "exit",
-	aliases = [["x", "exit"]],
-	description = "Keep changes to session, but do not execute",
+    command = "exit",
+    aliases = [["x", "exit"]],
+    description = "Keep changes to session, but do not execute",
 )
 def cmd_exit():
-	flexsense['finished'] = True
+    flexsense['finished'] = True
 
 ##
 ## Flex Console
 ##
 
 def flex(rows, session, select=None):
-	def clearscreen(): flexout("\n" * rows)
-	global flexmenu_session
-	flexmenu_session = session
-	session_original = copy.deepcopy(session) # Original copy
-	##
-	## Welcome message
-	##
-	clearscreen()
-	flexout("")
-	flexout("___ _   ___ _ _")
-	flexout("__  _   __   _     Flex for tmuxomatic " + VERSION)
-	flexout("_   ___ ___ _ _    Modify windowgrams with visually expressive commands")
-	flexout("")
-	##
-	## Show list of windows (if select is None) or the selected windowgram
-	##
-	if select is None:
-		cmd_list()
-	else:
-		flexout("TODO: Select window from shell")
-	##
-	## Input loop
-	##
-	modified = True
-	printer = True if flexmenu_index[0] else False
-	while True:
-		# Macros
-		string_to_list = lambda string: [ x.strip() for x in string.strip().split() ]
-		filter_input = lambda string: ( string_to_list( string ), " ".join( string_to_list( string ) ) )
-		# Prepare for new command
-		global flexsense
-		warnings = flexsense['warnings'] # Retain
-		flexsense = copy.deepcopy(flexsense_reset)
-		modified = False
-		# Show windowgram if printing
-		if not flexmenu_session.Serial_Is_Valid(flexmenu_index[0]):
-			# If serial is invalid, clear it, to avoid having redundant checks elsewhere
-			flexmenu_index[0] = 0
-		if printer:
-			cmd_print()
-		# Show warnings
-		if warnings:
-			flexout( "\n".join( [ "WARNING    : " + line for line in warnings ] ) )
-		# Show short command list in the context of a selection
-		commands = flexmenu_grouped['helpers'] + flexmenu_grouped['selectors']
-		if flexmenu_index[0]: commands += flexmenu_grouped['modifiers']
-		flexout("Quick Menu : " + ", ".join(commands))
-		# User input
-		try: thisinput_str = input("\n<<< tmuxomatic flex >>> ")
-		except EOFError as e: thisinput_str = "exit" ; flexout("")
-		flexout("")
-		thisinput_lst, thisinput_str = filter_input( thisinput_str )
-		# Clear screen
-		clearscreen()
-		# Command specified
-		if len(thisinput_lst):
-			# Alias handler (repackages input)
-			# Note that trailing space means duplicate parameters: ["?", "help "] forwards "? use new" to "help use new"
-			for alias_tup in flexmenu_aliases:
-				if alias_tup[0] == thisinput_lst[0]:
-					newinput = alias_tup[1]
-					if newinput[-1:] == ' ': newinput += " ".join(thisinput_lst[1:]) # End space == duplicate arguments
-					thisinput_lst, thisinput_str = filter_input( newinput )
-					break
-			# Command handler (based on provided arguments and first matching function)
-			invoked = False
-			argcount = len(thisinput_lst) - 1
-			for cmd_dict in flexmenu:
-				if cmd_dict['about'][0] == thisinput_lst[0]:
-					availability = [] # Available arguments if user error: [ [from, to], [from, to], ... ]
-					for ix, triplet in enumerate(usage_triplets(cmd_dict)):
-						usage, examples, arglens = triplet
-						if argcount >= arglens[0] and (argcount <= arglens[1] or arglens[1] == -1):
-							if argcount: cmd_dict['funcs'][ix]( *(thisinput_lst[1:]) )
-							else: cmd_dict['funcs'][ix]()
-							invoked = True
-							break
-					if not invoked:
-						# No invocation, could show available parameter counts, but showing help may be more useful
-						flexout("ERROR: Parameter mismatch for valid command \"" + thisinput_lst[0] + \
-							"\", displaying help...\n" )
-						cmd_help_N( thisinput_lst[0] )
-						invoked = True # Skips invalid command
-					break
-			if not invoked:
-				flexout("ERROR: Invalid command \"" + thisinput_lst[0] + "\"...\n")
-			# Save if session modified and print next pass
-			if session.Modified():
-				# TODO: Add to stack if command resulted in a modification
-				session.Save()
-				flexsense['printer'] = True
-			# Finish handler
-			if flexsense['finished']:
-				if flexsense['restore']:
-					session = session_original
-					session.Save()
-				if flexsense['execute']:
-					return session # Return object in case of restore
-				exit()
-		# Sense handler
-		printer = flexsense['printer']
-	# Not reached
+    def clearscreen(): flexout("\n" * rows)
+    global flexmenu_session
+    flexmenu_session = session
+    session_original = copy.deepcopy(session) # Original copy
+    ##
+    ## Welcome message
+    ##
+    clearscreen()
+    flexout("")
+    flexout("___ _   ___ _ _")
+    flexout("__  _   __   _     Flex for tmuxomatic " + VERSION)
+    flexout("_   ___ ___ _ _    Modify windowgrams with visually expressive commands")
+    flexout("")
+    ##
+    ## Show list of windows (if select is None) or the selected windowgram
+    ##
+    if select is None:
+        cmd_list()
+    else:
+        flexout("TODO: Select window from shell")
+    ##
+    ## Input loop
+    ##
+    modified = True
+    printer = True if flexmenu_index[0] else False
+    while True:
+        # Macros
+        string_to_list = lambda string: [ x.strip() for x in string.strip().split() ]
+        filter_input = lambda string: ( string_to_list( string ), " ".join( string_to_list( string ) ) )
+        # Prepare for new command
+        global flexsense
+        warnings = flexsense['warnings'] # Retain
+        flexsense = copy.deepcopy(flexsense_reset)
+        modified = False
+        # Show windowgram if printing
+        if not flexmenu_session.Serial_Is_Valid(flexmenu_index[0]):
+            # If serial is invalid, clear it, to avoid having redundant checks elsewhere
+            flexmenu_index[0] = 0
+        if printer:
+            cmd_print()
+        # Show warnings
+        if warnings:
+            flexout( "\n".join( [ "WARNING    : " + line for line in warnings ] ) )
+        # Show short command list in the context of a selection
+        commands = flexmenu_grouped['helpers'] + flexmenu_grouped['selectors']
+        if flexmenu_index[0]: commands += flexmenu_grouped['modifiers']
+        flexout("Quick Menu : " + ", ".join(commands))
+        # User input
+        try: thisinput_str = input("\n<<< tmuxomatic flex >>> ")
+        except EOFError as e: thisinput_str = "exit" ; flexout("")
+        flexout("")
+        thisinput_lst, thisinput_str = filter_input( thisinput_str )
+        # Clear screen
+        clearscreen()
+        # Command specified
+        if len(thisinput_lst):
+            # Alias handler (repackages input)
+            # Note that trailing space means duplicate parameters: ["?", "help "] forwards "? use new" to "help use new"
+            for alias_tup in flexmenu_aliases:
+                if alias_tup[0] == thisinput_lst[0]:
+                    newinput = alias_tup[1]
+                    if newinput[-1:] == ' ': newinput += " ".join(thisinput_lst[1:]) # End space == duplicate arguments
+                    thisinput_lst, thisinput_str = filter_input( newinput )
+                    break
+            # Command handler (based on provided arguments and first matching function)
+            invoked = False
+            argcount = len(thisinput_lst) - 1
+            for cmd_dict in flexmenu:
+                if cmd_dict['about'][0] == thisinput_lst[0]:
+                    availability = [] # Available arguments if user error: [ [from, to], [from, to], ... ]
+                    for ix, triplet in enumerate(usage_triplets(cmd_dict)):
+                        usage, examples, arglens = triplet
+                        if argcount >= arglens[0] and (argcount <= arglens[1] or arglens[1] == -1):
+                            if argcount: cmd_dict['funcs'][ix]( *(thisinput_lst[1:]) )
+                            else: cmd_dict['funcs'][ix]()
+                            invoked = True
+                            break
+                    if not invoked:
+                        # No invocation, could show available parameter counts, but showing help may be more useful
+                        flexout("ERROR: Parameter mismatch for valid command \"" + thisinput_lst[0] + \
+                            "\", displaying help...\n" )
+                        cmd_help_N( thisinput_lst[0] )
+                        invoked = True # Skips invalid command
+                    break
+            if not invoked:
+                flexout("ERROR: Invalid command \"" + thisinput_lst[0] + "\"...\n")
+            # Save if session modified and print next pass
+            if session.Modified():
+                # TODO: Add to stack if command resulted in a modification
+                session.Save()
+                flexsense['printer'] = True
+            # Finish handler
+            if flexsense['finished']:
+                if flexsense['restore']:
+                    session = session_original
+                    session.Save()
+                if flexsense['execute']:
+                    return session # Return object in case of restore
+                exit()
+        # Sense handler
+        printer = flexsense['printer']
+    # Not reached
 
 
 
@@ -2171,99 +2171,99 @@ def flex(rows, session, select=None):
 
 def main():
 
-	# Verify pane count
-	if MAXIMUM_PANES != 62 or len(PANE_CHARACTERS) != MAXIMUM_PANES:
-		print("Pane count does not match")
-		exit(0)
+    # Verify pane count
+    if MAXIMUM_PANES != 62 or len(PANE_CHARACTERS) != MAXIMUM_PANES:
+        print("Pane count does not match")
+        exit(0)
 
-	# Check tmux version (req = required, rep = reported)
-	tmux_req = MINIMUM_TMUX
-	tmux_cli, tmux_rep = tmux_version()
-	if tmux_cli != "tmux" or not tmux_rep:
-		print("The tmux executable cannot be found")
-		exit(0)
-	if not satisfies_minimum_version( tmux_req, tmux_rep ):
-		print("This requires tmux " + tmux_req + " or higher, found tmux " + tmux_rep)
-		exit(0)
+    # Check tmux version (req = required, rep = reported)
+    tmux_req = MINIMUM_TMUX
+    tmux_cli, tmux_rep = tmux_version()
+    if tmux_cli != "tmux" or not tmux_rep:
+        print("The tmux executable cannot be found")
+        exit(0)
+    if not satisfies_minimum_version( tmux_req, tmux_rep ):
+        print("This requires tmux " + tmux_req + " or higher, found tmux " + tmux_rep)
+        exit(0)
 
-	# Settings
-	program_cli = sys.argv[0]					# Program cli: "./tmuxomatic"
-	user_wh = get_xterm_dimensions_wh()			# Screen dimensions
+    # Settings
+    program_cli = sys.argv[0]                   # Program cli: "./tmuxomatic"
+    user_wh = get_xterm_dimensions_wh()         # Screen dimensions
 
-	# Constrain arguments
-	ancillary = False # Used with printonly and scale, to skip over the main tmuxomatic functionality
-	ARGS.verbose = int(ARGS.verbose or 0)
-	if ARGS.verbose > VERBOSE_MAX: ARGS.verbose = VERBOSE_MAX
-	elif ARGS.printonly: 						# Overrides for --printonly
-		ancillary = True
-		ARGS.noexecute = False
-		ARGS.verbose = 0
+    # Constrain arguments
+    ancillary = False # Used with printonly and scale, to skip over the main tmuxomatic functionality
+    ARGS.verbose = int(ARGS.verbose or 0)
+    if ARGS.verbose > VERBOSE_MAX: ARGS.verbose = VERBOSE_MAX
+    elif ARGS.printonly:                        # Overrides for --printonly
+        ancillary = True
+        ARGS.noexecute = False
+        ARGS.verbose = 0
 
-	# Check for presence of specified session filename
-	if not os.path.exists(ARGS.filename):
-		print("The specified session file does not exist: " + ARGS.filename)
-		exit(0)
+    # Check for presence of specified session filename
+    if not os.path.exists(ARGS.filename):
+        print("The specified session file does not exist: " + ARGS.filename)
+        exit(0)
 
-	# Make sure the session file is not unexpectedly large (say the user accidentally specified a binary file)
-	if 2**20 < os.stat(ARGS.filename).st_size:
-		print("The specified session exceeds 1 megabyte, that's nearly 1 megabyte more than expected.")
-		exit(0)
+    # Make sure the session file is not unexpectedly large (say the user accidentally specified a binary file)
+    if 2**20 < os.stat(ARGS.filename).st_size:
+        print("The specified session exceeds 1 megabyte, that's nearly 1 megabyte more than expected.")
+        exit(0)
 
-	# Session name in tmux is always derived from the filename (pathname is dropped to avoid confusion)
-	filename_only = ARGS.filename[ARGS.filename.rfind('/')+1:] # Get the filename only (drop the pathname)
-	session_name = PROGRAM_THIS + "_" + filename_only # Session name with the executable name as a prefix
-	session_name = re.sub(r'([/])', r'_', session_name) # In case of session path: replace '/' with '_'
-	session_name = re.sub(r'\_\_+', r'_', session_name) # Replace two or more consecutive underscores with one
+    # Session name in tmux is always derived from the filename (pathname is dropped to avoid confusion)
+    filename_only = ARGS.filename[ARGS.filename.rfind('/')+1:] # Get the filename only (drop the pathname)
+    session_name = PROGRAM_THIS + "_" + filename_only # Session name with the executable name as a prefix
+    session_name = re.sub(r'([/])', r'_', session_name) # In case of session path: replace '/' with '_'
+    session_name = re.sub(r'\_\_+', r'_', session_name) # Replace two or more consecutive underscores with one
 
-	# Load session file
-	session = SessionFile( ARGS.filename )
-	session.Load()
+    # Load session file
+    session = SessionFile( ARGS.filename )
+    session.Load()
 
-	# Flex console entry
-	if ARGS.flex:
-		session = flex( user_wh[1], session )
-		# Force reload of session file in order to get accurate line counts in the event of changes by user in flex
-		session.Load()
+    # Flex console entry
+    if ARGS.flex:
+        session = flex( user_wh[1], session )
+        # Force reload of session file in order to get accurate line counts in the event of changes by user in flex
+        session.Load()
 
-	# Optional kill session on disconnect
-	def destroy():
-		if ARGS.destroy:
-			tmux_run( EXE_TMUX + " kill-session -t " + session_name, nopipe=True, force=True, real=True )
+    # Optional kill session on disconnect
+    def destroy():
+        if ARGS.destroy:
+            tmux_run( EXE_TMUX + " kill-session -t " + session_name, nopipe=True, force=True, real=True )
 
-	# Existing session handler (skipped when printing or scaling)
-	if not ancillary:
-		# Detect existing session
-		result = tmux_run( EXE_TMUX + " has-session -t " + session_name, nopipe=False, force=True, real=True )
-		if not result:
-			# Handle existing session
-			if ARGS.recreate:
-				# Destroy existing session (optional)
-				print("Destroying running session, \"" + session_name + "\"...")
-				tmux_run( EXE_TMUX + " kill-session -t " + session_name, nopipe=False, force=False, real=True )
-			else:
-				# Attach existing session
-				print("Attaching running session, \"" + session_name + "\"...")
-				try:
-					tmux_run( EXE_TMUX + " attach-session -t " + session_name, nopipe=True, force=False, real=True )
-				except KeyboardInterrupt: # User disconnected
-					destroy()
-				exit(0)
+    # Existing session handler (skipped when printing or scaling)
+    if not ancillary:
+        # Detect existing session
+        result = tmux_run( EXE_TMUX + " has-session -t " + session_name, nopipe=False, force=True, real=True )
+        if not result:
+            # Handle existing session
+            if ARGS.recreate:
+                # Destroy existing session (optional)
+                print("Destroying running session, \"" + session_name + "\"...")
+                tmux_run( EXE_TMUX + " kill-session -t " + session_name, nopipe=False, force=False, real=True )
+            else:
+                # Attach existing session
+                print("Attaching running session, \"" + session_name + "\"...")
+                try:
+                    tmux_run( EXE_TMUX + " attach-session -t " + session_name, nopipe=True, force=False, real=True )
+                except KeyboardInterrupt: # User disconnected
+                    destroy()
+                exit(0)
 
-	# If printing, display header
-	if ARGS.printonly:
-		print("###")
-		print("### Session \"" + session_name + "\"")
-		print("### Generated by tmuxomatic for static configurations")
-		print("### Using screen dimensions: " + str(user_wh[0]) + "x" + str(user_wh[1]) + " (WxH)")
-		print("###")
+    # If printing, display header
+    if ARGS.printonly:
+        print("###")
+        print("### Session \"" + session_name + "\"")
+        print("### Generated by tmuxomatic for static configurations")
+        print("### Using screen dimensions: " + str(user_wh[0]) + "x" + str(user_wh[1]) + " (WxH)")
+        print("###")
 
-	# Process session: generates a new session and attaches, or prints, or scales
-	if not ancillary: print("Running new session, \"" + session_name + "\"...")
-	try:
-		tmuxomatic( program_cli, " ".join(sys.argv), user_wh, session_name, session )
-	except KeyboardInterrupt: # User disconnected
-		destroy()
-	exit(0)
+    # Process session: generates a new session and attaches, or prints, or scales
+    if not ancillary: print("Running new session, \"" + session_name + "\"...")
+    try:
+        tmuxomatic( program_cli, " ".join(sys.argv), user_wh, session_name, session )
+    except KeyboardInterrupt: # User disconnected
+        destroy()
+    exit(0)
 
 
 
@@ -2275,66 +2275,66 @@ def main():
 
 if __name__ == "__main__":
 
-	# Signal handlers
-	signal.signal(signal.SIGINT, signal_handler_break) # SIGINT (user break)
-	signal.signal(signal.SIGHUP, signal_handler_hup) # SIGHUP (user disconnect)
+    # Signal handlers
+    signal.signal(signal.SIGINT, signal_handler_break) # SIGINT (user break)
+    signal.signal(signal.SIGHUP, signal_handler_hup) # SIGHUP (user disconnect)
 
-	# Argument deprecations
-	for arg in sys.argv[1:]:
-		dep = [ [ "Argument " + arg + " removed in version " + version + ": " + reason ] \
-			for version, reason, commands in [
-			[ "1.0.20", "Absolute positioning enabled by default", [ "-a", "--absolute" ] ],
-			[ "1.1.0",  "Use --flex to scale your windowgrams",    [ "-s", "--scale" ] ],
-			[ "1.1.0",  "Use --flex for windowgram modification",  [ "-w", "--scale-replace" ] ],
-			] if arg in commands ]
-		if dep:
-			print("!!! " + dep[0][0])
-			skip = True
-	if 'skip' in vars() and skip is True:
-		print("Exiting...")
-		exit()
+    # Argument deprecations
+    for arg in sys.argv[1:]:
+        dep = [ [ "Argument " + arg + " removed in version " + version + ": " + reason ] \
+            for version, reason, commands in [
+            [ "1.0.20", "Absolute positioning enabled by default", [ "-a", "--absolute" ] ],
+            [ "1.1.0",  "Use --flex to scale your windowgrams",    [ "-s", "--scale" ] ],
+            [ "1.1.0",  "Use --flex for windowgram modification",  [ "-w", "--scale-replace" ] ],
+            ] if arg in commands ]
+        if dep:
+            print("!!! " + dep[0][0])
+            skip = True
+    if 'skip' in vars() and skip is True:
+        print("Exiting...")
+        exit()
 
-	# Argument parser
-	PARSER = argparse.ArgumentParser( description=\
-		"The easiest way to define sessions in tmux! ... An introduction and example " + \
-		"sessions are on the project home page: " + HOMEPAGE )
-	PARSER.add_argument( "-V", "--version", action="version", version=PROGRAM_THIS + " " + VERSION, help=\
-		"Show the version number and exit" )
-	PARSER.add_argument( "-v", "--verbose", action="count", help=\
-		"Increase the verbosity level, up to " + str(VERBOSE_MAX) + " (-" + (VERBOSE_MAX * 'v') + ")" )
-	PARSER.add_argument( "-n", "--renaming", action="store_true", help=\
-		"Let tmux automatically rename the windows" )
-	PARSER.add_argument( "-p", "--printonly", action="store_true", help=\
-		"Print only the tmux commands, then exit" )
-	PARSER.add_argument( "-x", "--noexecute", action="store_true", help=\
-		"Do everything except issue commands to tmux" )
-	PARSER.add_argument( "-r", "--recreate", action="store_true", help=\
-		"If the session exists, it will be destroyed then recreated.  " + \
-		"Normally, if it exists, tmuxomatic will reattach to it.")
-	PARSER.add_argument( "-d", "--destroy", action="store_true", help=\
-		"When you disconnect, your session will be destroyed.  This " + \
-		"is useful in situations where you don't want to consume " + \
-		"resources when you're not 'plugged in'." )
-	PARSER.add_argument( "-f", "--flex", action="store_true", help=\
-		"Windowgram modification console.  Flex gives you the ability " + \
-		"to bend your windowgrams to perfection using visually " + \
-		"oriented commands (scale, break, etc)." )
-	PARSER.add_argument( "filename", help=\
-		"The tmuxomatic session filename (required)" )
-	ARGS = PARSER.parse_args()
+    # Argument parser
+    PARSER = argparse.ArgumentParser( description=\
+        "The easiest way to define sessions in tmux! ... An introduction and example " + \
+        "sessions are on the project home page: " + HOMEPAGE )
+    PARSER.add_argument( "-V", "--version", action="version", version=PROGRAM_THIS + " " + VERSION, help=\
+        "Show the version number and exit" )
+    PARSER.add_argument( "-v", "--verbose", action="count", help=\
+        "Increase the verbosity level, up to " + str(VERBOSE_MAX) + " (-" + (VERBOSE_MAX * 'v') + ")" )
+    PARSER.add_argument( "-n", "--renaming", action="store_true", help=\
+        "Let tmux automatically rename the windows" )
+    PARSER.add_argument( "-p", "--printonly", action="store_true", help=\
+        "Print only the tmux commands, then exit" )
+    PARSER.add_argument( "-x", "--noexecute", action="store_true", help=\
+        "Do everything except issue commands to tmux" )
+    PARSER.add_argument( "-r", "--recreate", action="store_true", help=\
+        "If the session exists, it will be destroyed then recreated.  " + \
+        "Normally, if it exists, tmuxomatic will reattach to it.")
+    PARSER.add_argument( "-d", "--destroy", action="store_true", help=\
+        "When you disconnect, your session will be destroyed.  This " + \
+        "is useful in situations where you don't want to consume " + \
+        "resources when you're not 'plugged in'." )
+    PARSER.add_argument( "-f", "--flex", action="store_true", help=\
+        "Windowgram modification console.  Flex gives you the ability " + \
+        "to bend your windowgrams to perfection using visually " + \
+        "oriented commands (scale, break, etc)." )
+    PARSER.add_argument( "filename", help=\
+        "The tmuxomatic session filename (required)" )
+    ARGS = PARSER.parse_args()
 
-	# Only absolute placement is supported in this version, relative placement could be useful for programs like weechat
-	ARGS.relative = False
+    # Only absolute placement is supported in this version, relative placement could be useful for programs like weechat
+    ARGS.relative = False
 
-	# Locate tmux
-	EXE_TMUX = which( EXE_TMUX )
-	if not EXE_TMUX:
-		print("This requires tmux to be installed on your system...")
-		print("If it's already installed, update your $PATH, or set EXE_TMUX in the source to an absolute filename...")
-		exit(0)
+    # Locate tmux
+    EXE_TMUX = which( EXE_TMUX )
+    if not EXE_TMUX:
+        print("This requires tmux to be installed on your system...")
+        print("If it's already installed, update your $PATH, or set EXE_TMUX in the source to an absolute filename...")
+        exit(0)
 
-	# Run tmuxomatic ... A separate function was needed to quiet pylint (local variable scope)
-	main()
+    # Run tmuxomatic ... A separate function was needed to quiet pylint (local variable scope)
+    main()
 
 
 
