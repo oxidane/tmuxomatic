@@ -1597,6 +1597,8 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 ##      add <edge> <size> [pane]                    append pane to edge of window of the specified size (1, 50%, etc)
 ##      del <pane>                                  remove pane from edge of window (delete, clip, remove, drop, rm)
 ##
+##      Walkthrough needs: add, break, join, split, drag
+##
 ## Possible:
 ##
 ##      links                                       show list of directions
@@ -1606,7 +1608,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 ##
 ## Behaviors:
 ##
-##      Any modification of the windowgram outside of flex will result in an automatic clear on the next use in flex
+##      Any modification of the windowgram outside of flex will result in a "manual" entry in flex stack
 ##
 ## Stack Sketch:
 ##

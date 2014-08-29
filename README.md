@@ -31,6 +31,39 @@ For additional features, run `tmuxomatic --help`.  For example, there's a featur
 
 
 
+## Flex your windowgrams
+
+**Flex is in development, and this tutorial will be expanded as new commands are added**
+
+Windowgrams are a neat way of arranging workspaces.  For general layouts, a windowgram is typed up quickly.  But sometimes you need a windowgram fit to specification, and to deliver, you may find yourself doing a lot of ASCII art.  Not nearly as frustrating as manual pane splits, but somewhat inefficient.
+
+Fortunately there's a better way: Flex.  Introduced in tmuxomatic 1.1.0, flex aims to bring the windowgram to an even greater potential.  I'll walk you through the construction of a windowgram that would otherwise require a lot of typing.  Begin by opening the flex console on a test session file.  `tmuxomatic session_flexample --flex`
+
+Inside this tutorial, the flex console is represented by `flex>`.  Like tmuxomatic, flex is simple but powerful.  For a list of commands type `help`.  Let's make a new window named, `administration`.
+
+	flex> new administration
+
+	1
+
+A single pane window represented by a single character.  Let's scale this to be more readable.  Scale uses multipliers, percentages, or exact characters.  Let's go for 25 characters wide, 10 characters tall.
+
+	flex> scale 25x10
+
+	1111111111111111111111111
+	1111111111111111111111111
+	1111111111111111111111111
+	1111111111111111111111111
+	1111111111111111111111111
+	1111111111111111111111111
+	1111111111111111111111111
+	1111111111111111111111111
+	1111111111111111111111111
+	1111111111111111111111111
+
+**TODO: add, break, join, split, drag**
+
+
+
 ## Installation
 
 This application requires:
