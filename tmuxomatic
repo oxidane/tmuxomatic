@@ -62,103 +62,34 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##-------------------+
 ##
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
-VERSION = "2.0"                                   	# x.y: x = Major feature, y = Minor feature or bug fix
-## TODO 2.x: Flex Console, Windowgram Library, Pypi Readme
+VERSION = "2.1"                                     # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.0   	2014-08-28  Began tmuxomatic --flex, commands will be added over the next few releases
+##  2.1     TBD         Cleared revision history for 1.x, added link in case it's needed
+##                      If specified session file does not exist when using flex, it is created
+##
+##  2.0     2014-08-28  Began tmuxomatic --flex, commands will be added over the next few releases
 ##                      Fixed the readme to fit the recent github style changes
 ##                      Fixed issue #8: Uses window name for focus to support tmux base-index
 ##                      Moved scale feature into flex, added flex section to readme
 ##                      Source indentation now uses spaces, for github readability
-##						New versioning for tmuxomatic, version 1.1.0 re-released as 2.0
+##                      New versioning for tmuxomatic, version 1.1.0 re-released as 2.0
 ##
-##  ------  ----------  ------------------------------------------------------------------------------------
+##  ----------------------------------------------------------------------------------------------------------------
+##  1.x     https://github.com/oxidane/tmuxomatic/blob/ac7290e2206d4470d85c4eb6fa91c88794a17e45/tmuxomatic#L75-157
+##  ----------------------------------------------------------------------------------------------------------------
 ##
-##  1.0.20  2014-07-31  Fixed session file bugs: No header before window, and missing default directory
-##                      The option "--absolute" is now the default, this fixes issue #5
-##
-##  1.0.19  2014-07-30  Installation with pip should now be fully functional
-##                      If the user is not using YAML, installation of PyYAML is optional
-##
-##  1.0.18  2014-07-29  Added support for multiple panes per command, this is an undocumented feature
-##                      Fixed issue #6: Installation with pip now installs to the bin directory
-##
-##  1.0.17  2014-07-29  Added save to YAML session file, this allows scale to be used with YAML sessions
-##                      Shorthand session file loader was broken in 1.0.16, this has been fixed
-##                      The pypi setup.py file now extracts the version and homepage from the source
-##                      Added error reporting of YAML line numbers (limited to a range)
-##
-##  1.0.16  2014-07-27  Session file management moved from session parser into its own class
-##                      Simplified the session parser now that load and save are separate
-##                      Finished YAML support, note that scale is not yet supported
-##                      Added new session file that demonstrates how to use YAML
-##
-##  1.0.15  2014-07-25  Began working on YAML support, this will not be enabled until it's ready
-##                      Fixed issue #4: Support for Solaris and other hosts without "stty size"
-##                      Added option to destroy the session on disconnect, disabled by default
-##                      Added pypi support, now installable using "pip install tmuxomatic".
-##
+##  1.0.20  2014-07-31  Last 1.x release, versioning changed to major.minor after this release
 ##  1.0.14  2014-07-22  The previously unnamed central concept in tmuxomatic is now called a windowgram
-##                      For readability, blank lines between window name and windowgram are allowed
-##                      Added undocumented command synonyms to avoid user documentation lookups
-##                      Rewrote examples since they were mostly just early development tests
-##                      Rewrote the introduction in the readme file and added links to tmuxomatic
-##
-##  1.0.13  2014-07-21  Added example screenshot, shortened the readme example to one window
-##                      Fixed issues #1, #2: Supports non-numeric tmux versions (e.g., "1.9a")
-##                      Fixed issue #3: Relative loading of the python3 interpreter for portability
-##
 ##  1.0.12  2014-07-21  Public release
-##                      Fixed session filename
-##                      Redesigned scale feature to allow differing axial scales in a single pass
-##                      Fixed changing the default directory
-##
-##  1.0.11  2013-11-07  Fixed all non-stylistic pylint warnings
-##                      Various updates including using the absolute location of tmux
-##
-##  1.0.10  2013-11-05  Added the readme file
-##                      Added write option for scaling, that updates session file
-##
-##  1.0.9   2013-11-04  Window renaming is now disabled by default, added option to turn it on
-##                      Various changes to the source, documentation, and session files
-##
-##  1.0.8   2013-11-03  Added optional scaling of the window configuration
-##                      Fixed some more pylint problems
-##
-##  1.0.7   2013-11-02  It now checks the tmux version before proceeding
-##                      Session files have been expanded and cleaned up
-##
-##  1.0.6   2013-11-01  Fixed many problems reported by pylint
-##                      Added support for relative pane sizing and made it the default
-##
-##  1.0.5   2013-10-21  Uses Python 3.x
-##                      Refined sample files and cleaned up source code comments
-##                      Removed space preservation option, it's now the default
-##
-##  1.0.4   2013-10-16  Session definition file is now in its most minimal form
-##                      Extended support to 62 panes by adding characters A-Z, updated introduction
-##
-##  1.0.3   2013-10-11  Made squeeze 1.0.2 the default
-##                      Removed options that are no longer needed
-##                      Miscellaneous clean up
-##
-##  1.0.2   2013-10-11  Running in fast mode is now the default and slow mode is the option
-##                      Added optional support for setting a default directory
-##                      The tmux errors related to squeeze have been replaced by custom messages
-##                      Spaces in window name are now changed to '_' or '\ ' depending on user option
-##                      Fixed complex layouts with squeeze 1.0.2, which is an early version that was fixed
-##
-##  1.0.1   2013-10-09  Added "print tmux command list" for generating static layouts
-##                      Added window focus option, add "foc" anywhere in the pane definitions
-##                      Extended support to 36 panes by adding characters a-z, updated introduction
-##                      Improved the splitting algorithm, resolving an edge case from version 1.0
-##                      Limited support for complex layouts, full support requires tmux upgrades
-##
 ##  1.0.0   2013-10-04  First version, development began in late September 2013
 ##
 ##--------------------+-------------------------------------------------------------------------------------------------
 ##     Expansions     |
 ##--------------------+
+##
+## 2.x:
+##
+##      Flex Console, Windowgram Library, Pypi Readme
 ##
 ## Minor:
 ##
@@ -195,21 +126,6 @@ VERSION = "2.0"                                   	# x.y: x = Major feature, y =
 ##      concept was done in early development, though it had a slightly different design, so it's best rewritten.
 ##
 ## Major:
-##
-##      Add tmuxomatic flex.  A windowgram modification console.  Allows users to perform multiple actions on their
-##      windowgrams, including: scale, rotate, mirror, flip, break <pane>, rename <pane1> <pane2>, swap <pane1> <pane2>.
-##      Session is specified from command line, console is entered with "--flex" argument.  Windows from session are
-##      listed and chosen with the flex command "window <number>".  Maintain changes as an action chain, and modifiable
-##      with the commands: undo, redo.  Store serialized action chain in the session file as a base64 block between the
-##      window header and the windowgram.  User may exit or run the session when they're done.  This should be in the
-##      major section.  Reconsider using the urwid library as a dependency, or make it optional.
-##
-##      Possible console-driven option that allows individual window adjustments on a specified session.  It would also
-##      automatically save the session file on every change, and with it a compressed and encoded undo list in case the
-##      user needs to revert.  Some example commands: "v+", "v-", "h+", "h-" (for window adjustments), "2bd1" (pane 2
-##      bottom down 1), "3sh" (pane 3 split horizontally).  The command list could become too lengthy.  If this feature
-##      is added, it has to be kept simple, and then a user could describe how they want a window laid out in a very
-##      responsive manner that is guaranteed to be read by the loader properly.  Could probably put this in flex.
 ##
 ##      Session Binding: A mode that keeps the session file and its running session synchronized.  Some things won't be
 ##      easy to do.  Changing the name of a window is easy, but changing windowgram may not be (without unique
@@ -1215,7 +1131,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
             synerr(errpkg, "Window serial " + str(window_serial) + " does not have a name")
         for ix, seen_name in enumerate(window_names_seen):
             if window_name == seen_name:
-                synerr(errpkg, "As of version 1.1.0, all window names must be unique.  The duplicate name, \"" + \
+                synerr(errpkg, "As of version 2.0, all window names must be unique.  The duplicate name, \"" + \
                     window_name + "\", for window serial " + str(window_serial) + ", already used by " + str(1+ix))
         window_names_seen.append( window_name )
         layout = {}
@@ -1835,12 +1751,16 @@ flexgroup = "selectors"
 )
 def cmd_list():
     flexout("Available windows in this session file (use serial number or name):\n")
+    found = False
     for serial in range(1, flexmenu_session.Count_Windows()+1):
         number = str(serial)
         name = flexmenu_session.Get_Name(serial)
         dimensions_int = flexmenu_session.Get_WindowgramDimensions_Int(serial) # Use this to avoid reinitialization
         dimensions_str = str(dimensions_int[0]) + "x" + str(dimensions_int[1])
         flexout( "    Window " + number + " (" + dimensions_str + ") : " + name )
+        found = True
+    if not found:
+        flexout("    There are no windows, create one with: new <name>")
     flexout("")
 
 @flex(
@@ -1875,7 +1795,7 @@ def cmd_use(*name_or_serial_REQUIRED):
 def cmd_new(*window_name_REQUIRED):
     # Create window
     name = " ".join(window_name_REQUIRED)
-    comments = "#\n# Added by tmuxomatic flex " + VERSION + "\n#\n\n"
+    comments = "## Window added by tmuxomatic flex " + VERSION + "\n\n"
     windowgram = "1"
     serial = flexmenu_session.Add_Windowgram( comments, name, windowgram )
     # Use it
@@ -2204,8 +2124,14 @@ def main():
 
     # Check for presence of specified session filename
     if not os.path.exists(ARGS.filename):
-        print("The specified session file does not exist: " + ARGS.filename)
-        exit(0)
+        if ARGS.flex:
+            f = open(ARGS.filename, 'w')
+            line = "##" + "-" * 78
+            f.write( line + "\n##\n## Session file created by tmuxomatic flex " + VERSION + "\n##\n" + line + "\n\n" )
+            f.close() # Required for proper updating on first new window
+        else:
+            print("The specified session file does not exist: " + ARGS.filename)
+            exit(0)
 
     # Make sure the session file is not unexpectedly large (say the user accidentally specified a binary file)
     if 2**20 < os.stat(ARGS.filename).st_size:
@@ -2287,8 +2213,8 @@ if __name__ == "__main__":
         dep = [ [ "Argument " + arg + " removed in version " + version + ": " + reason ] \
             for version, reason, commands in [
             [ "1.0.20", "Absolute positioning enabled by default", [ "-a", "--absolute" ] ],
-            [ "1.1.0",  "Use --flex to scale your windowgrams",    [ "-s", "--scale" ] ],
-            [ "1.1.0",  "Use --flex for windowgram modification",  [ "-w", "--scale-replace" ] ],
+            [ "2.0",    "Use --flex to scale your windowgrams",    [ "-s", "--scale" ] ],
+            [ "2.0",    "Use --flex for windowgram modification",  [ "-w", "--scale-replace" ] ],
             ] if arg in commands ]
         if dep:
             print("!!! " + dep[0][0])

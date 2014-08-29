@@ -4,7 +4,7 @@
 
 The other tmux session managers are doing it wrong.  From unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of pane splits.  Instead, session management should be more flexible and more powerful, yet so easy that anybody could use it after just one example.
 
-At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character identifies the position, size, and shape of a pane.  It should take only one short example to demonstrate the flexibility and power of the windowgram.
+At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character grouping identifies the name, position, size, and shape of a pane.  It should take only one short example to demonstrate the flexibility and power of the windowgram.
 
 Compare this window from `session_example`, with its screenshot from `tmuxomatic session_example`:
 
@@ -27,25 +27,29 @@ Compare this window from `session_example`, with its screenshot from `tmuxomatic
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
 
-For additional features, run `tmuxomatic --help`.  For example, there's a feature to scale your windowgram larger or smaller -- by any multiplier, on either axis -- to help with fine-tuning.  This is useful if you need very small panes on a window.
+For additional features, see `tmuxomatic --help`.
 
 
 
-## Flex your windowgrams
+## Flex your tmuxomatic windowgrams
 
-**Flex is in development, and this tutorial will be expanded as new commands are added**
+**Flex is in early development, this tutorial is incomplete**
 
-Windowgrams are a neat way of arranging workspaces.  For general layouts, a windowgram is typed up quickly.  But sometimes you need a windowgram fit to specification, and to deliver, you may find yourself doing a lot of ASCII art.  Not nearly as frustrating as manual pane splits, but somewhat inefficient.
+Windowgrams are a neat way of arranging workspaces.  For general layouts, a windowgram is typed up quickly.  But if you need a more detailed windowgram, you may find yourself doing a lot of ASCII art.  Not nearly as frustrating as manual pane splits, but somewhat inefficient.
 
-Fortunately there's a better way: Flex.  Introduced in tmuxomatic 1.1.0, flex aims to bring the windowgram to an even greater potential.  I'll walk you through the construction of a windowgram that would otherwise require a lot of typing.  Begin by opening the flex console on a test session file.  `tmuxomatic session_flexample --flex`
+Fortunately there's flex, introduced in tmuxomatic 2.0.  Flex aims to bring the windowgram to even greater potential by automating the modification of detailed windowgrams.  Let's use flex to build a windowgram that previously required a lot of typing.  Begin by opening the flex console on the session file `session_flexample` -- flex will create the file for you if it does not already exist.
 
-Inside this tutorial, the flex console is represented by `flex>`.  Like tmuxomatic, flex is simple but powerful.  For a list of commands type `help`.  Let's make a new window named, `administration`.
+	% tmuxomatic session_flexample --flex
+
+	flex>
+
+For brevity, the flex console is represented here by a `flex>` prompt.  Like tmuxomatic, flex is simple but powerful.  For a full list of commands, type `help` at any time.  Let's start with a new window named `administration`.
 
 	flex> new administration
 
 	1
 
-A single pane window represented by a single character.  Let's scale this to be more readable.  Scale uses multipliers, percentages, or exact characters.  Let's go for 25 characters wide, 10 characters tall.
+The default is a single character windowgram.  Let's `scale` this windowgram to `25` characters wide, by `10` characters tall.  Many flex parameters are flexible, and we could have used multipliers or percentages instead of characters.
 
 	flex> scale 25x10
 
@@ -60,7 +64,7 @@ A single pane window represented by a single character.  Let's scale this to be 
 	1111111111111111111111111
 	1111111111111111111111111
 
-**TODO: add, break, join, split, drag**
+**TODO: break, join, split, drag, rename, swap**
 
 
 
