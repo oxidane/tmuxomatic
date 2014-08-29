@@ -62,14 +62,15 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##-------------------+
 ##
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
-VERSION = "1.1.0"                                   # x.y.z: x = Rewrite, y = Major Feature, z = Minor Feature / Fix
-## TODO 1.1.x: Flex Console, Windowgram Library, Pypi Readme
+VERSION = "2.0"                                   	# x.y: x = Major feature, y = Minor feature or bug fix
+## TODO 2.x: Flex Console, Windowgram Library, Pypi Readme
 ##
-##  1.1.0   2014-08-28  Began tmuxomatic --flex, commands will be added over the next few releases
+##  2.0   	2014-08-28  Began tmuxomatic --flex, commands will be added over the next few releases
 ##                      Fixed the readme to fit the recent github style changes
 ##                      Fixed issue #8: Uses window name for focus to support tmux base-index
 ##                      Moved scale feature into flex, added flex section to readme
 ##                      Source indentation now uses spaces, for github readability
+##						New versioning for tmuxomatic, version 1.1.0 re-released as 2.0
 ##
 ##  ------  ----------  ------------------------------------------------------------------------------------
 ##
