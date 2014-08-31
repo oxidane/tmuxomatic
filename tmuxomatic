@@ -1593,7 +1593,7 @@ flexsense_reset = copy.copy( flexsense )
 flexgroup = ""
 
 ##
-## Table Printer
+## Table Printer (used by help and list)
 ##
 
 def table(printer, markers, marklines, title, contents):
@@ -1724,7 +1724,7 @@ def cmd_help_N(*commands):
     lengths = lambda name, about, usage, example: [ len(name), len(about), len(usage), len(example) ]
     # All menus are four columns representing: name, about, usage, example
     menu_title = [ "Command", "Description", "Usage", "Examples" ]
-    menu_lines = [] # Printed columns, padded before display
+    menu_lines = [] # Printed columns, not padded
     # Build menu print list from all known commands
     add = lambda name="", about="", usage="", example="": menu_lines.append( [ name, about, usage, example ] )
     for cmd_dict in flexmenu:
@@ -1761,16 +1761,20 @@ flexgroup = "selectors"
 )
 def cmd_list():
     flexout("Available windows in this session file (use serial number or name):\n")
-    found = False
+    list_title = [ "Window", "Dimensions", "Name" ]
+    list_lines = [] # Printed columns, not padded
     for serial in range(1, flexmenu_session.Count_Windows()+1):
-        number = str(serial)
+        number_str = str(serial)
         name = flexmenu_session.Get_Name(serial)
         dimensions_int = flexmenu_session.Get_WindowgramDimensions_Int(serial) # Use this to avoid reinitialization
         dimensions_str = str(dimensions_int[0]) + "x" + str(dimensions_int[1])
-        flexout( "    Window " + number + " (" + dimensions_str + ") : " + name )
-        found = True
-    if not found:
+        list_lines.append( [ number_str, dimensions_str, name ] )
+    if not list_lines:
         flexout("    There are no windows, create one with: new <name>")
+    else:
+        selected = []
+        if flexmenu_index[0]: selected.append( flexmenu_index[0] + 1 ) # Skip title line
+        table( flexout, ["    ", "  ->"], selected, list_title, list_lines )
     flexout("")
 
 @flex(
