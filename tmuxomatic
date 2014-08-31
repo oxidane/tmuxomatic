@@ -66,6 +66,7 @@ VERSION = "2.1"                                     # x.y: x = Major feature, y 
 ##
 ##  2.1     TBD         Cleared revision history for 1.x, added link in case it's needed
 ##                      If specified session file does not exist when using flex, it is created
+##                      Improved list of windows, shares table code with menu
 ##
 ##  2.0     2014-08-28  Began tmuxomatic --flex, commands will be added over the next few releases
 ##                      Fixed the readme to fit the recent github style changes
@@ -1592,6 +1593,41 @@ flexsense_reset = copy.copy( flexsense )
 flexgroup = ""
 
 ##
+## Table Printer
+##
+
+def table(printer, markers, marklines, title, contents):
+    def table_divider(marker, row):
+        printer(marker + "+-" + "-+-".join( [ len(col) * "-" for col in row ] ) + "-+")
+    def table_line(marker, row):
+        printer(marker + "| " + " | ".join( [ col for col in row ] ) + " |")
+    # Count columns
+    columns = 0
+    for row in contents:
+        if len(row) > columns: columns = len(row)
+    # Maximum width of each column, taking into account title and all lines
+    widths = [ len(col) for col in title ]
+    for line in contents: widths = [ l if l > n else n for l, n in zip( widths, [ len(n) for n in line ] ) ]
+    # Pad all lines
+    contents.insert( 0, title )
+    contents_unpadded = contents
+    contents = []
+    for line in contents_unpadded:
+        contents.append( [ l + ((((w - len(l)) if len(l) < w else 0)) * " ") for w, l in zip( widths, line ) ] )
+    if columns:
+        first = True
+        line = 0
+        for row in contents:
+            line += 1
+            marker = markers[1] if line in marklines else markers[0]
+            if first: table_divider( markers[0], row )
+            table_line( marker, row )
+            if first: table_divider( markers[0], row )
+            first = False
+        table_divider( markers[0], row )
+        printer("")
+
+##
 ## Decorator
 ##
 
@@ -1706,37 +1742,11 @@ def cmd_help_N(*commands):
             add()
             add( name, about )
     add()
-    # Maximum width of each column, taking into account title and all lines
-    widths = [ len(title) for title in menu_title ]
-    for line in menu_lines: widths = [ l if l > n else n for l, n in zip( widths, [ len(n) for n in line ] ) ]
-    # Pad all lines
-    lines = menu_lines
-    menu_lines = []
-    for line in lines:
-        menu_lines.append( [ l + ((((w - len(l)) if len(l) < w else 0)) * " ") for w, l in zip( widths, line ) ] )
     # Print introduction
     flexout("Flex menu" + ((" (" + ", ".join(commands) + ")") if len(commands) else "") + ":" )
     flexout("")
     # Print menu table
-    def flexout_menu(a1, a2, a3, a4, mode=0):
-        if mode:
-            flexout( "+-" + len(a1)*"-" + "-+-" + len(a2)*"-" + "-+-" + len(a3)*"-" + "-+-" + len(a4)*"-" + "-+" )
-            if mode >= 2:
-                t1, t2, t3, t4 = [ t + (len(a) - len(t))*" " for t, a in zip(menu_title, [a1, a2, a3, a4]) ]
-                flexout( "| " + t1 + " | " + t2 + " | " + t3 + " | " + t4 + " |" )
-                flexout( "+-" + len(a1)*"-" + "-+-" + len(a2)*"-" + "-+-" + len(a3)*"-" + "-+-" + len(a4)*"-" + "-+" )
-        else:
-            flexout( "| " + a1 + " | " + a2 + " | " + a3 + " | " + a4 + " |" )
-    first = True
-    name = about = usage = example = ""
-    for name, about, usage, example in menu_lines:
-        if first:
-            flexout_menu( name, about, usage, example, mode=2 )
-        flexout_menu( name, about, usage, example )
-        first = False
-    if not first:
-        flexout_menu( name, about, usage, example, mode=1 )
-    flexout("")
+    table( flexout, ["", ""], [], menu_title, menu_lines )
 
 ##
 ## Commands: Selectors

@@ -33,11 +33,11 @@ For additional features, see `tmuxomatic --help`.
 
 ## Flex your tmuxomatic windowgrams
 
-**Flex is in early development, this tutorial is incomplete**
+**Flex is in development, this tutorial is a work in progress**
 
 Windowgrams are a neat way of arranging workspaces.  For general layouts, a windowgram is typed up quickly.  But if you need a more detailed windowgram, you may find yourself doing a lot of ASCII art.  Not nearly as frustrating as manual pane splits, but somewhat inefficient.
 
-Fortunately there's flex, introduced in tmuxomatic 2.0.  Flex aims to bring the windowgram to even greater potential by automating the modification of detailed windowgrams.  Let's use flex to build a windowgram that previously required a lot of typing.  Begin by opening the flex console on the session file `session_flexample` -- flex will create the file for you if it does not already exist.
+Fortunately there's flex, introduced in tmuxomatic 2.0.  Flex aims to bring the windowgram to even greater potential by automating the modification of detailed windowgrams.  Let's use flex to build a windowgram that previously required a lot of typing.  Begin by opening the flex console on the session file `session_flexample`.  Note that flex will create the file for you if it does not already exist.
 
 	% tmuxomatic session_flexample --flex
 
@@ -64,7 +64,7 @@ The default is a single character windowgram.  Let's `scale` this windowgram to 
 	1111111111111111111111111
 	1111111111111111111111111
 
-**TODO: break, join, split, drag, rename, swap**
+**TODO: add, break, join, split, drag, rename, swap**
 
 
 
