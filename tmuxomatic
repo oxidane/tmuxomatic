@@ -64,9 +64,10 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
 VERSION = "2.1"                                     # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.1     TBD         Cleared revision history for 1.x, added link in case it's needed
+##  2.1     2014-09-01  Cleared revision history for 1.x, added link in case it's needed
 ##                      If specified session file does not exist when using flex, it is created
 ##                      Improved the window list, shares the table printer code with the help menu
+##                      New flex command: add
 ##
 ##  2.0     2014-08-28  Began tmuxomatic --flex, commands will be added over the next few releases
 ##                      Fixed the readme to fit the recent github style changes
