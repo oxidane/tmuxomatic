@@ -43,7 +43,7 @@ Fortunately there's flex, introduced in tmuxomatic 2.0.  Flex aims to bring the 
 
 	flex>
 
-For brevity, the flex console is represented here by a `flex>` prompt.  Like tmuxomatic, flex is simple but powerful.  For a full list of commands, type `help` at any time.  Let's start with a new window named `administration`.
+For brevity, the flex console is represented by a `flex>` prompt.  Like tmuxomatic, flex is simple but powerful.  For a full list of commands, type `help` at any time.  Let's start with a new window named `administration`.
 
 	flex> new administration
 

@@ -66,7 +66,7 @@ VERSION = "2.1"                                     # x.y: x = Major feature, y 
 ##
 ##  2.1     TBD         Cleared revision history for 1.x, added link in case it's needed
 ##                      If specified session file does not exist when using flex, it is created
-##                      Improved list of windows, shares table code with menu
+##                      Improved the window list, shares the table printer code with the help menu
 ##
 ##  2.0     2014-08-28  Began tmuxomatic --flex, commands will be added over the next few releases
 ##                      Fixed the readme to fit the recent github style changes
@@ -1567,7 +1567,7 @@ flexout = lambda lines: print("    " + str(lines)) if not '\n' in lines else [ f
 usage_triplets = lambda cmd_dict: [ cmd_dict['usage'][ix:ix+3] for ix in range( 0, len(cmd_dict['usage']), 3 ) ]
 
 ##
-## Lists of commands are ordered by appearance
+## Lists of commands ... Commands are ordered by appearance in source
 ##
 
 flexmenu = []                       # List of all commands and aliases (recognition)
@@ -1647,16 +1647,17 @@ class flex(object):
         class NoDefault: pass # Placeholder since None is a valid default argument
         args_with_defaults = [ ( spec.args[ix], (NoDefault if ix < la-ld else spec.defaults[ix-(la-ld)]) ) \
             for ix in range(0, len(spec.args)) ]
+        brackets = lambda optional: "[]" if optional else "<>"
         for arg, default in args_with_defaults:
             self.arglens[1] += 1
             if default is NoDefault: self.arglens[0] += 1
-            enclosed = "<>" if default is NoDefault else "[]"
+            enclosed = brackets( default is not NoDefault )
             self.usage += " " + enclosed[0] + arg + enclosed[1]
         if spec.varargs:
             marker = "_REQUIRED"
             varargs = spec.varargs
             required = True if varargs.endswith(marker) else False
-            enclosed = "<>" if required else "[]"
+            enclosed = brackets( not required )
             if varargs.endswith(marker): varargs = varargs[:-len(marker)] # Clip marker before printing
             self.usage += " " + enclosed[0] + varargs + "..." + enclosed[1]
             if required: self.arglens[0] += 1 # If required then varargs is [REQ+1, -1] instead of [REQ, -1]
@@ -1679,10 +1680,10 @@ class flex(object):
         # Add aliases if any
         for ix, alias_tup in enumerate(self.aliases):
             if type(alias_tup) is not list:
-                print("Flux command indexing error: " + self.command_only + " alias #" + str(1+ix) + " is not a list")
+                print("Flex command indexing error: " + self.command_only + " alias #" + str(1+ix) + " is not a list")
                 exit()
             if len(alias_tup) != 2:
-                print("Flux command indexing error: " + self.command_only + " alias #" + str(1+ix) + " is not a pair")
+                print("Flex command indexing error: " + self.command_only + " alias #" + str(1+ix) + " is not a pair")
                 exit()
             flexmenu_aliases.append( alias_tup )
         # Grouped commands
@@ -1702,7 +1703,7 @@ flexgroup = "helpers"
 
 @flex(
     command = "help",
-    description = "Show information for one or more commands (this list)",
+    description = "Show information for one or more commands",
 )
 def cmd_help_0():
     return cmd_help_N() # Wrapper
@@ -1734,7 +1735,7 @@ def cmd_help_N(*commands):
         for usage, examples, arglens in usage_triplets(cmd_dict):
             fuse = True
             if not examples: examples = [ None ] # Allow usage without a corresponding example
-            for example in examples:
+            for example in examples: # Add to menu_lines
                 if fnew: add()
                 add( name if fnew else "", about if fnew else "", usage if fuse else "", example if example else "" )
                 fnew = fuse = False
@@ -1742,6 +1743,39 @@ def cmd_help_N(*commands):
             add()
             add( name, about )
     add()
+    # Spread the description over multiple lines, adding blank lines where necessary
+    # Note: Only the about column ("Description") supports word-wrap
+    lines = menu_lines
+    menu_lines = []
+    width = 60
+    carry = ""
+    for name, about, usage, example in lines:
+        def recursive_carry(carry, name, about, usage, example): # carry
+            def carry_on(about, carry): # about, carry
+                if len(about) > width:
+                    hardbreak = width # In the event of an egregious sesquipedalian portmanteau occurrence
+                    for ix in range(width-1, -1, -1):
+                        if about[ix] == " " or about[ix] == "\t":
+                            hardbreak = ix
+                            break
+                    if about[hardbreak] == " " or about[hardbreak] == "\t":
+                        carry, about = about[hardbreak+1:].strip(), about[:hardbreak].strip()
+                else:
+                    carry = ""
+                return about, carry
+            if carry:
+                about = carry
+                about, carry = carry_on( about, carry )
+                add( name, about, usage, example )
+                about = ""
+                if not name+about+usage+example:
+                    # Inserting new lines to list to accommodate a lengthy description
+                    return recursive_carry( carry, name, about, usage, example )
+                return carry
+            about, carry = carry_on( about, carry )
+            add( name, about, usage, example )
+            return carry
+        carry = recursive_carry( carry, name, about, usage, example )
     # Print introduction
     flexout("Flex menu" + ((" (" + ", ".join(commands) + ")") if len(commands) else "") + ":" )
     flexout("")
@@ -1818,7 +1852,7 @@ def cmd_new(*window_name_REQUIRED):
 @flex(
     command = "print",
     aliases = [["p", "print"]],
-    description = "Display windowgram (automatically displayed on modification)",
+    description = "Display windowgram (automatically called after modification)",
 )
 def cmd_print():
     serial = flexmenu_index[0]
@@ -1835,7 +1869,9 @@ flexgroup = "modifiers"
 @flex(
     command = "scale",
     examples = [ "scale 25", "scale 500%", "scale 2x", "scale 64:36" ],
-    description = "Scale by multipliers (x), or percentages (%), or to specific dimensions",
+    description = "Scale a windowgram.  Valid parameters are multipliers (x), percentages (%), exact character " + \
+                  "dimensions, or any combination thereof.  Use a space ( ), colon (:), or times (x) to separate " + \
+                  "the x and y axis.  If only one axis is specified then the value will be applied to both x and y.",
     aliases = [["s", "scale "], ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"]],
 )
 def cmd_scale_1(xy_how):
@@ -1894,7 +1930,7 @@ def cmd_scale_2(x_how, y_how):
         # Update the windowgram
         flexmenu_session.Replace_Windowgram( serial, windowgram_after )
 
-## This original scale produces superior results in certain situations, may be worth reusing this code
+## It may be worth reusing this original scale code, since it produces superior results in certain cases
 
 """
         if ARGS.scale and int(ARGS.scale[0]) == window_serial:
