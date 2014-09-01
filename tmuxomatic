@@ -997,6 +997,15 @@ class SessionFile(object):
         # Modified
         self.modified = True
         return serial
+    def Get_PaneListPair(self, serial): # available, unavailable
+        # Mutually exclusive list of pane ids for given window ( PANE_CHARACTERS == available + unavailable )
+        if serial < 1 or serial > self.Count_Windows(): return "", ""
+        windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( self.windows[serial-1]['windowgram'] ) )
+        unavailable = "".join(sorted( list(set(list("".join(windowgram_lines)))),
+            key=lambda x: PANE_CHARACTERS.find(x) ))
+        available = "".join(sorted( [ ch for ch in PANE_CHARACTERS if ch not in unavailable ],
+            key=lambda x: PANE_CHARACTERS.find(x) ))
+        return available, unavailable
 
 
 
@@ -1628,7 +1637,50 @@ def table(printer, markers, marklines, title, contents):
         printer("")
 
 ##
-## Decorator
+## Used by modifier commands
+##
+
+# Detectors
+is_mul = lambda how: True if how[-1:] == "x" or how[-1:] == "X" or how[-1:] == "*" else False
+is_per = lambda how: True if how[-1:] == "%" else False
+
+# Convert 'how' to float multiplier; how may be multiplier (x), percentage (%), or exact characters
+def how_to_multiplier(arg, base_dimensions):
+    try:
+        if is_mul(arg[-1:]): return float(arg[:-1])
+        elif is_per(arg[-1:]): return float(arg[:-1]) / 100.0
+        return float(arg) / float(base_dimensions)
+    except ValueError:
+        return None
+
+# Convert 'how' to characters
+def how_to_characters(arg, base_characters):
+    try:
+        if is_mul(arg[-1:]): return int(base_characters * float(arg[:-1]))
+        elif is_per(arg[-1:]): return int(base_characters * (float(arg[:-1]) / 100.0))
+        return int(arg)
+    except ValueError:
+        return None
+
+# Valid directions; 0123 == TBRL | NSEW
+valid_directions = [
+    [ "top", "t", "tp",     "north", "n",   "up", "u", "over", "above",     ],
+    [ "bottom", "b", "bt",  "south", "s",   "down", "d", "under", "below",  ],
+    [ "right", "r", "rt",   "east", "e"                                     ],
+    [ "left", "l", "lt",    "west", "w"                                     ],
+]
+
+# Select pane id (specific validated or first available)
+def NewPaneId(session, serial, preferred=None): # newpaneid, error
+    available, unavailable = session.Get_PaneListPair(serial)
+    if not available: return None, "All pane identifiers have been used"
+    if preferred is None: return available[0], None
+    if preferred not in PANE_CHARACTERS: return None, "Invalid pane identifier"
+    if preferred not in available: return None, "Pane id `" + preferred + "` is in use"
+    return preferred, None
+
+##
+## Decorator for building flex commands
 ##
 
 class flex(object):
@@ -1702,16 +1754,16 @@ class flex(object):
 flexgroup = "helpers"
 
 @flex(
-    command = "help",
+    command     = "help",
     description = "Show information for one or more commands",
 )
 def cmd_help_0():
     return cmd_help_N() # Wrapper
 
 @flex(
-    command = "help",
-    aliases = [["h", "help "], ["?", "help "], ["/", "help "]],
-    examples = [ "help new scale" ],
+    command     = "help",
+    aliases     = [["h", "help "], ["?", "help "], ["/", "help "]],
+    examples    = [ "help new scale" ],
 )
 def cmd_help_N(*commands):
     # Filter specified commands into a list of unique commands, sorted by the official command order
@@ -1789,8 +1841,8 @@ def cmd_help_N(*commands):
 flexgroup = "selectors"
 
 @flex(
-    command = "list",
-    aliases = [["l", "list "]],
+    command     = "list",
+    aliases     = [["l", "list "]],
     description = "List all available windows in this tmuxomatic session",
 )
 def cmd_list():
@@ -1812,9 +1864,9 @@ def cmd_list():
         table( flexout, ["    ", "  ->"], selected, list_title, list_lines )
 
 @flex(
-    command = "use",
-    aliases = [["u", "use "]],
-    examples = [ "use my example", "use 1" ],
+    command     = "use",
+    aliases     = [["u", "use "]],
+    examples    = [ "use my example", "use 1" ],
     description = "Select the window you would like to modify",
 )
 def cmd_use(*name_or_serial_REQUIRED):
@@ -1841,9 +1893,9 @@ def cmd_use(*name_or_serial_REQUIRED):
     flexout("")
 
 @flex(
-    command = "new",
-    aliases = [["n", "new "]],
-    examples = [ "new some feeds" ],
+    command     = "new",
+    aliases     = [["n", "new "]],
+    examples    = [ "new some feeds" ],
     description = "Create a new window, initialized to '1'",
 )
 def cmd_new(*window_name_REQUIRED):
@@ -1856,8 +1908,8 @@ def cmd_new(*window_name_REQUIRED):
     cmd_use(*[str(serial)])
 
 @flex(
-    command = "print",
-    aliases = [["p", "print"]],
+    command     = "print",
+    aliases     = [["p", "print"]],
     description = "Display windowgram (automatically called after modification)",
 )
 def cmd_print():
@@ -1873,12 +1925,12 @@ def cmd_print():
 flexgroup = "modifiers"
 
 @flex(
-    command = "scale",
-    examples = [ "scale 25", "scale 500%", "scale 2x", "scale 64:36" ],
+    command     = "scale",
+    examples    = [ "scale 25", "scale 500%", "scale 2x", "scale 64:36" ],
     description = "Scale a windowgram.  Valid parameters are multipliers (x), percentages (%), exact character " + \
                   "dimensions, or any combination thereof.  Use a space ( ), colon (:), or times (x) to separate " + \
                   "the x and y axis.  If only one axis is specified then the value will be applied to both x and y.",
-    aliases = [["s", "scale "], ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"]],
+    aliases     = [["s", "scale "], ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"]],
 )
 def cmd_scale_1(xy_how):
     # Split directives like "64:36" and "64x36" into "64 36", also works using percentages "200%:50%", or using
@@ -1892,8 +1944,8 @@ def cmd_scale_1(xy_how):
     return cmd_scale_2( xy_how, xy_how )
 
 @flex(
-    command = "scale",
-    examples = [ "scale 25 15", "scale 200% 50%", "scale 2x .5x" ],
+    command     = "scale",
+    examples    = [ "scale 25 15", "scale 200% 50%", "scale 2x .5x" ],
 )
 def cmd_scale_2(x_how, y_how):
     # Because text is low resolution, fractional scaling may produce unsatisfactory results
@@ -1905,11 +1957,7 @@ def cmd_scale_2(x_how, y_how):
         # Convert to common float multipliers for easy scaling
         args = [ 1.0, 1.0 ] # Default to no scale on error
         for ix, arg in enumerate([x_how, y_how]):
-            try:
-                if arg[-1:] == "x" or arg[-1:] == "X" or arg[-1:] == "*": args[ix] = float(arg[:-1])
-                elif arg[-1:] == "%": args[ix] = float(arg[:-1]) / 100.0
-                else: args[ix] = float(arg) / float(dim_before[ix])
-            except ValueError: pass
+            args[ix] = how_to_multiplier(arg, dim_before[ix])
         x_how, y_how = args
         dim_after = [ int(x_how * dim_before[0]), int(y_how * dim_before[1]) ]
         # Verify new dimensions are valid (non-zero)
@@ -1983,7 +2031,43 @@ def cmd_scale_2(x_how, y_how):
 """
 
 @flex(
-    command = "mirror",
+    command     = "add",
+    examples    = [ "add right 50% A", "add b 3", "add l .5x" ],
+    description = "Append pane to windowgram edge.  Edge is identified by name (e.g., right), or a variety of " + \
+                  "abbreviations (e.g., r, rt).  The size of the pane may be defined as an exact character size, " + \
+                  "a percentage (%), or a multiplier (x).  If the new pane id is not specified, lowest available " + \
+                  "is used.",
+    aliases     = [ ["a", "add "], ["append", "add "], ["app", "add "] ],
+)
+def cmd_add(edge, size, newpaneid=None):
+    serial = flexmenu_index[0]
+    if flexmenu_session.Serial_Is_Valid(serial):
+        newpaneid, error = NewPaneId( flexmenu_session, serial, newpaneid )
+        if error:
+            flexout("Unable to secure a new pane id: " + error + "\n")
+            return
+        for ix, directions_ent in enumerate(valid_directions):
+            if edge in directions_ent:
+                # ix = 0123 == TBRL | NSEW
+                windowgram_lines = Windowgram_StringToLines(flexmenu_session.Get_Windowgram(serial))
+                axis_length = len(windowgram_lines) if (2**ix & 3) else len(windowgram_lines[0])
+                axis_width = len(windowgram_lines) if not (2**ix & 3) else len(windowgram_lines[0])
+                size_chars = how_to_characters( size, axis_length )
+                if ix == 0: # Top
+                    for _ in range( size_chars ): windowgram_lines.insert( 0, newpaneid * axis_width )
+                elif ix == 1: # Bottom
+                    for _ in range( size_chars ): windowgram_lines.append( newpaneid * axis_width )
+                elif ix == 2: # Right
+                    windowgram_lines = [ line + (newpaneid * size_chars) for line in windowgram_lines ]
+                elif ix == 3: # Left
+                    windowgram_lines = [ (newpaneid * size_chars) + line for line in windowgram_lines ]
+                flexmenu_session.Replace_Windowgram( serial, Windowgram_LinesToString( windowgram_lines ) )
+                return
+        # Edge not found
+        flexout("The edge you specified is invalid, please specify: top, bottom, left, or right.\n")
+
+@flex(
+    command     = "mirror",
     description = "Reverse horizontally (left/right)",
 )
 def cmd_mirror():
@@ -1994,7 +2078,7 @@ def cmd_mirror():
             [ "".join( [ ch for ch in reversed(list(line)) ] ) for line in windowgram_lines ] ) )
 
 @flex(
-    command = "flip",
+    command     = "flip",
     description = "Reverse vertically (top/bottom)",
 )
 def cmd_flip():
@@ -2010,23 +2094,23 @@ def cmd_flip():
 flexgroup = "terminators"
 
 @flex(
-    command = "oops",
+    command     = "oops",
     description = "Restore the original session, then exit without execution",
 )
 def cmd_oops():
     flexsense['finished'] = flexsense['restore'] = True
 
 @flex(
-    command = "done",
+    command     = "done",
     description = "Keep changes to session, then execute",
-    aliases = [["d", "done"], ["run", "done"], ["go", "done"]],
+    aliases     = [["d", "done"], ["run", "done"], ["go", "done"]],
 )
 def cmd_done():
     flexsense['finished'] = flexsense['execute'] = True
 
 @flex(
-    command = "exit",
-    aliases = [["x", "exit"]],
+    command     = "exit",
+    aliases     = [["x", "exit"]],
     description = "Keep changes to session, but do not execute",
 )
 def cmd_exit():
