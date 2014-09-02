@@ -1969,7 +1969,9 @@ flexgroup = "modifiers"
     description = "Scale a windowgram.  Valid parameters are multipliers (x), percentages (%), exact character " + \
                   "dimensions, or any combination thereof.  Use a space ( ), colon (:), or times (x) to separate " + \
                   "the x and y axis.  If only one axis is specified then the value will be applied to both x and y.",
-    aliases     = [["s", "scale "], ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"]],
+    aliases     = [ ["s", "scale "], ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"],
+                    ["wider", "scale 200%:100%"], ["thinner", "scale 50%:100%"], ["taller", "scale 100%:200%"],
+                    ["shorter", "scale 100%:50%"], ["higher", "scale 100%:200%"], ["lower", "scale 100%:50%"], ],
 )
 def cmd_scale_1(xy_how):
     # Split directives like "64:36" and "64x36" into "64 36", also works using percentages "200%:50%", or using
@@ -2147,12 +2149,13 @@ def cmd_break(pane, grid, newpanes=None):
                 if gw.isdigit() and gh.isdigit():
                     gw, gh = int(gw), int(gh)
                     panes = gw * gh
+                    len_available = len(available) + 1 # The +1 accounts for the target pane that becomes available
                     if not panes:
                         reason = ": Grid you specified results in no panes"
                     elif panes > len(PANE_CHARACTERS):
                         reason = ": Grid is " + str(panes) + " panes, exceeding max of " + str(len(PANE_CHARACTERS))
-                    elif panes > len(available):
-                        reason = ": Grid is " + str(panes) + " panes, only " + str(len(available)) + " are available"
+                    elif panes > len_available:
+                        reason = ": Grid is " + str(panes) + " panes, only " + str(len_available) + " will be available"
                     else:
                         reason = None
             if reason is not None:
