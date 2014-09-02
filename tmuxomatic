@@ -1934,8 +1934,12 @@ def cmd_use(*name_or_serial_REQUIRED):
     description = "Create a new window, initialized to '1'",
 )
 def cmd_new(*window_name_REQUIRED):
-    # Create window
     name = " ".join(window_name_REQUIRED)
+    for serial in range(1, flexmenu_session.Count_Windows()+1):
+        if name == flexmenu_session.Get_Name(serial):
+            flexout("The name you specified is already in use, try another.")
+            return
+    # Create window
     comments = "## Window added by tmuxomatic flex " + VERSION + "\n\n"
     windowgram = "1"
     serial = flexmenu_session.Add_Windowgram( comments, name, windowgram )
@@ -2287,7 +2291,7 @@ def flex_shell(rows, session, serial=0):
     flexout("_   ___ ___ _ _    Modify windowgrams with visually expressive commands")
     flexout("")
     ##
-    ## Show list of windows if serial is 0
+    ## Show list of windows, or assign selected window
     ##
     if serial is 0:
         cmd_list()
