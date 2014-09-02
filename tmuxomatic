@@ -62,7 +62,9 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##-------------------+
 ##
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
-VERSION = "2.1"                                     # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.2"                                     # x.y: x = Major feature, y = Minor feature or bug fix
+##
+##  2.2     TBD         New flex command: break
 ##
 ##  2.1     2014-09-01  Cleared revision history for 1.x, added link in case it's needed
 ##                      If specified session file does not exist when using flex, it is created
@@ -998,15 +1000,6 @@ class SessionFile(object):
         # Modified
         self.modified = True
         return serial
-    def Get_PaneListPair(self, serial): # available, unavailable
-        # Mutually exclusive list of pane ids for given window ( PANE_CHARACTERS == available + unavailable )
-        if serial < 1 or serial > self.Count_Windows(): return "", ""
-        windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( self.windows[serial-1]['windowgram'] ) )
-        unavailable = "".join(sorted( list(set(list("".join(windowgram_lines)))),
-            key=lambda x: PANE_CHARACTERS.find(x) ))
-        available = "".join(sorted( [ ch for ch in PANE_CHARACTERS if ch not in unavailable ],
-            key=lambda x: PANE_CHARACTERS.find(x) ))
-        return available, unavailable
 
 
 
@@ -1050,6 +1043,46 @@ def Windowgram_LostPanes(windowgram1, windowgram2):
 def Windowgram_IsBlank(windowgram):
     dimensions = Windowgram_Dimensions_Int(windowgram)
     return True if not dimensions[0] or not dimensions[1] else False
+
+def Windowgram_PaneListPair(windowgram): # available, unavailable
+    # Mutually exclusive list of pane ids for given window ( PANE_CHARACTERS == available + unavailable )
+    windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( windowgram ) )
+    unavailable = "".join(sorted( list(set(list("".join(windowgram_lines)))),
+        key=lambda x: PANE_CHARACTERS.find(x) ))
+    available = "".join(sorted( [ ch for ch in PANE_CHARACTERS if ch not in unavailable ],
+        key=lambda x: PANE_CHARACTERS.find(x) ))
+    return available, unavailable
+
+def Windowgram_PaneListPair_Move(fr, to, batch): # fr, to
+    for pane in list(batch):
+        if pane in PANE_CHARACTERS and (pane in fr or pane not in to):
+            # Assert ordering every pass, in some situations the batch is expected to be unsorted
+            fr = "".join([ch for ch in PANE_CHARACTERS if ch in fr and ch != pane])
+            to = "".join([ch for ch in PANE_CHARACTERS if ch in to or ch == pane])
+    return fr, to
+
+def Windowgram_Dimensions(windowgram): # w, h
+    windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( windowgram ) )
+    return len(windowgram_lines[0]), len(windowgram_lines)
+
+def Windowgram_PaneDimensions(windowgram, pane): # x1, y1, x2, y2
+    windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( windowgram ) )
+    x2 = y2 = -1
+    x1 = len(windowgram_lines[0])
+    y1 = len(windowgram_lines)
+    for y, line in enumerate(windowgram_lines):
+        for x, char in enumerate(line):
+            if char == pane:
+                if x < x1: x1 = x
+                if x > x2: x2 = x
+                if y < y1: y1 = y
+                if y > y2: y2 = y
+    return x1+1, y1+1, x2+1, y2+1
+
+def Windowgram_PaneXYWH(windowgram, pane): # w, h
+    x1, y1, x2, y2 = Windowgram_PaneDimensions(windowgram, pane)
+    w, h = x2 - x1 + 1, y2 - y1 + 1
+    return x1, y1, w, h
 
 
 
@@ -1511,21 +1544,18 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 ##
 ## Planned:
 ##
-##      break <pane> <shapes>                       shapes == 2x2; x 2x2 3x1; y 1 3x3 1
-##      drag <pane_or_intersection> <direction>     pane == A, ab ... direction == up 2, u2, 50%, l 100%, +2, -50%
-##      split <panes> <how>                         pane == A, ab ... how == v, h
+##      drag <edge> <panes> <dir> <how>             panes == A, ab / edge == left / dir == up, u / how == 2, 50%, -50%
+##      split <panes> <how> [drag_dir_how]          pane == A, ab / how == v, h
 ##      join <panes>                                must have fully shared edges (merge)
 ##      rename <panes1> <panes2>                    rename pane, target must be unused
-##      swap <panes1> <panes2>                      swap two panes (mutual rename), both panes must exist
+##      swap <panes1> <panes2>                      swap two panes (mutual rename), both must exist, 3+ args for cycle
 ##      move <panes1> <panes2>                      swap if both panes are defined, otherwise rename (mv)
-##      rotate <how>                                how = cw, ccw, 180
+##      rotate <how>                                how == cw, ccw, 180
+##      insert <panes> <edge> <size> [newpanes]     insert pane at edge of panes, just like add but with panes
+##      del <pane>                                  remove pane from edge of window (delete, clip, remove, drop, rm)
 ##      undo                                        undo
 ##      redo                                        redo
 ##      wipe                                        destroy the windowgram modification history (cannot undo)
-##      add <edge> <size> [pane]                    append pane to edge of window of the specified size (1, 50%, etc)
-##      del <pane>                                  remove pane from edge of window (delete, clip, remove, drop, rm)
-##
-##      Walkthrough needs: add, break, join, split, drag
 ##
 ## Possible:
 ##
@@ -1533,6 +1563,8 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 ##      link [data...]                              add line to directions
 ##      unlink <line>                               remove from directions by line number
 ##      mvlink <line_from> <line_to>                move line in directions
+##      breakout <pane> [shapes]                    break with axial concatenated shapes == 2x2; x 2x2 3x1; y 1 3x3 1
+##      shuffle <panegroup1> <panegroup2>           shuffle if all bounding boxes share full edge, or are of equal size
 ##
 ## Behaviors:
 ##
@@ -1673,7 +1705,8 @@ valid_directions = [
 
 # Select pane id (specific validated or first available)
 def NewPaneId(session, serial, preferred=None): # newpaneid, error
-    available, unavailable = session.Get_PaneListPair(serial)
+    windowgram = session.Get_Windowgram(serial)
+    available, unavailable = Windowgram_PaneListPair(windowgram)
     if not available: return None, "All pane identifiers have been used"
     if preferred is None: return available[0], None
     if preferred not in PANE_CHARACTERS: return None, "Invalid pane identifier"
@@ -1939,10 +1972,69 @@ def cmd_scale_1(xy_how):
     # TODO: This could be more flexible to cover cases like "2xx2" and "2x2x" by using regex
     xy_spl = None
     if xy_how.count("x") == 1 and xy_how[-1:] != "x": xy_spl = xy_how.split("x")
-    if xy_how.count(":") == 1: xy_spl = xy_how.split(":")
+    elif xy_how.count(":") == 1: xy_spl = xy_how.split(":")
     if xy_spl and len(xy_spl) == 2: return cmd_scale_2( *xy_spl )
     # Others are simply cloned like "2x" into "2x 2x"
     return cmd_scale_2( xy_how, xy_how )
+
+def scalecore_v1(windowgram, x_mul, y_mul):
+    # For example where v1 > v2, compare the two with this: "12\n34" -> "s 1.5x 1x" -> "112\n334" -> "s .75x 1x"
+    # In that edge case, v1 has reversibility, but v2 does not.  Investigate further, decide which to use.
+    """
+    if ARGS.scale and int(ARGS.scale[0]) == window_serial:
+        def scale_one( element, multiplier ):
+            # Scale element using integer rounding, multiplier must be float
+            q, r = math.modf( float(element - 1) * multiplier )
+            if q >= .5: r += 1
+            return int(r) + 1
+        def scale_windowgram( list_panes, sx, sy ):
+            # Scales the windowgram
+            # Because text is low resolution, fractional scaling may produce unsatisfactory results
+            ax, ay = float(sx), float(sy)
+            lost = 0
+            for pane in list_panes:
+                if ax: pane['w'] = scale_one( pane['x'] + pane['w'], sx )
+                if ay: pane['h'] = scale_one( pane['y'] + pane['h'], sy )
+                if ax: pane['x'] = scale_one( pane['x'], sx )
+                if ay: pane['y'] = scale_one( pane['y'], sy )
+                if ax: pane['w'] -= pane['x']
+                if ay: pane['h'] -= pane['y']
+                if not pane['x'] or not pane['y'] or not pane['w'] or not pane['h']: lost += 1
+            return lost
+        def render_windowgram( list_panes ):
+            # Prints the windowgram
+            windowgram = []
+            for pane in list_panes:
+                for y in range( pane['y'], pane['y'] + pane['h'] ):
+                    for x in range( pane['x'], pane['x'] + pane['w'] ):
+                        ix = int(x) - 1
+                        iy = int(y) - 1
+                        while len(windowgram) <= iy: windowgram.append([])
+                        while len(windowgram[iy]) <= ix: windowgram[iy].append([])
+                        windowgram[iy][ix] = pane['n']
+            windowgram_str = ""
+            for line in windowgram:
+                windowgram_str += "".join(line) + "\n"
+            return windowgram_str
+        # Extract the multiplier
+        ax, dx = [ 1.0, 1.0 ] # Set this
+        # Perform the scale
+        list_panes_scaled = copy.deepcopy( list_panes )
+        lost = scale_windowgram( list_panes_scaled, ax, ay )
+        wincfg_scaled = render_windowgram( list_panes_scaled ) # Used either way
+    """
+    pass
+
+def scalecore_v2(windowgram, x_mul, y_mul):
+    dim_before = Windowgram_Dimensions_Float(windowgram)
+    dim_after = [ int(x_mul * dim_before[0]), int(y_mul * dim_before[1]) ]
+    windowgram_after = []
+    windowgram_work = windowgram.split("\n")[:-1]
+    windowgram_work = [ [ ch for ch in list(ln) ] for ix, ln in enumerate(windowgram_work) ]
+    for y in range(0, int( dim_after[1] )):
+        windowgram_after.append( [ windowgram_work[ int(y/y_mul) ][ int(x/x_mul) ] \
+            for x in range(0, int( dim_after[0] )) ] )
+    return "\n".join( [ "".join(line) for line in windowgram_after ] )
 
 @flex(
     command     = "scale",
@@ -1959,20 +2051,12 @@ def cmd_scale_2(x_how, y_how):
         args = [ 1.0, 1.0 ] # Default to no scale on error
         for ix, arg in enumerate([x_how, y_how]):
             args[ix] = how_to_multiplier(arg, dim_before[ix])
+            if args[ix] is None:
+                flexsense['warnings'].append( "*** Ignored *** Invalid size parameter: " + arg )
+                return
         x_how, y_how = args
-        dim_after = [ int(x_how * dim_before[0]), int(y_how * dim_before[1]) ]
-        # Verify new dimensions are valid (non-zero)
-        if dim_after[0] < 1 or dim_after[1] < 1:
-            flexsense['warnings'].append( "*** Ignored *** Scale would have resulted in a blank windowgram" )
-            return
         # Scale the windowgram
-        windowgram_after = []
-        windowgram_work = windowgram_before.split("\n")[:-1]
-        windowgram_work = [ [ ch for ch in list(ln) ] for ix, ln in enumerate(windowgram_work) ]
-        for y in range(0, int( dim_after[1] )):
-            windowgram_after.append( [ windowgram_work[ int(y/y_how) ][ int(x/x_how) ] \
-                for x in range(0, int( dim_after[0] )) ] )
-        windowgram_after = "\n".join( [ "".join(line) for line in windowgram_after ] )
+        windowgram_after = scalecore_v2( windowgram_before, x_how, y_how )
         # Verify new windowgram (in case of scale error)
         dim_result = Windowgram_Dimensions_Int(windowgram_after)
         if dim_result[0] < 1 or dim_result[1] < 1:
@@ -1985,65 +2069,22 @@ def cmd_scale_2(x_how, y_how):
         # Update the windowgram
         flexmenu_session.Replace_Windowgram( serial, windowgram_after )
 
-## It may be worth reusing this original scale code, since it produces superior results in certain cases
-
-"""
-        if ARGS.scale and int(ARGS.scale[0]) == window_serial:
-            def scale_one( element, multiplier ):
-                # Scale element using integer rounding, multiplier must be float
-                q, r = math.modf( float(element - 1) * multiplier )
-                if q >= .5: r += 1
-                return int(r) + 1
-            def scale_windowgram( list_panes, sx, sy ):
-                # Scales the windowgram
-                # Because text is low resolution, fractional scaling may produce unsatisfactory results
-                ax, ay = float(sx), float(sy)
-                lost = 0
-                for pane in list_panes:
-                    if ax: pane['w'] = scale_one( pane['x'] + pane['w'], sx )
-                    if ay: pane['h'] = scale_one( pane['y'] + pane['h'], sy )
-                    if ax: pane['x'] = scale_one( pane['x'], sx )
-                    if ay: pane['y'] = scale_one( pane['y'], sy )
-                    if ax: pane['w'] -= pane['x']
-                    if ay: pane['h'] -= pane['y']
-                    if not pane['x'] or not pane['y'] or not pane['w'] or not pane['h']: lost += 1
-                return lost
-            def render_windowgram( list_panes ):
-                # Prints the windowgram
-                windowgram = []
-                for pane in list_panes:
-                    for y in range( pane['y'], pane['y'] + pane['h'] ):
-                        for x in range( pane['x'], pane['x'] + pane['w'] ):
-                            ix = int(x) - 1
-                            iy = int(y) - 1
-                            while len(windowgram) <= iy: windowgram.append([])
-                            while len(windowgram[iy]) <= ix: windowgram[iy].append([])
-                            windowgram[iy][ix] = pane['n']
-                windowgram_str = ""
-                for line in windowgram:
-                    windowgram_str += "".join(line) + "\n"
-                return windowgram_str
-            # Extract the multiplier
-            ax, dx = [ 1.0, 1.0 ] # Set this
-            # Perform the scale
-            list_panes_scaled = copy.deepcopy( list_panes )
-            lost = scale_windowgram( list_panes_scaled, ax, ay )
-            wincfg_scaled = render_windowgram( list_panes_scaled ) # Used either way
-"""
-
 @flex(
     command     = "add",
     examples    = [ "add right 50% A", "add b 3", "add l .5x" ],
-    description = "Append pane to windowgram edge.  Edge is identified by name (e.g., right), or a variety of " + \
+    description = "Append pane to a windowgram edge.  Edge is identified by name (e.g., right), or a variety of " + \
                   "abbreviations (e.g., r, rt).  The size of the pane may be defined as an exact character size, " + \
-                  "a percentage (%), or a multiplier (x).  If the new pane id is not specified, lowest available " + \
-                  "is used.",
+                  "a percentage (%), or a multiplier (x).  If a pane id is not specified, lowest available will " + \
+                  "be used.",
     aliases     = [ ["a", "add "], ["append", "add "], ["app", "add "] ],
 )
-def cmd_add(edge, size, newpaneid=None):
+def cmd_add(edge, size, newpane=None):
+    # TODO: Edge could also represent a combined edge of panes.  The panes would have to be adjacent, but it would
+    # allow for the insertion of panes into the middle of windows.  Would require a bit of recursive acrobatics to
+    # scale the surrounding panes to support the insertion, but it could be done.
     serial = flexmenu_index[0]
     if flexmenu_session.Serial_Is_Valid(serial):
-        newpaneid, error = NewPaneId( flexmenu_session, serial, newpaneid )
+        newpane, error = NewPaneId( flexmenu_session, serial, newpane )
         if error:
             flexout("Unable to secure a new pane id: " + error + "\n")
             return
@@ -2051,21 +2092,128 @@ def cmd_add(edge, size, newpaneid=None):
             if edge in directions_ent:
                 # ix = 0123 == TBRL | NSEW
                 windowgram_lines = Windowgram_StringToLines(flexmenu_session.Get_Windowgram(serial))
-                axis_length = len(windowgram_lines) if (2**ix & 3) else len(windowgram_lines[0])
-                axis_width = len(windowgram_lines) if not (2**ix & 3) else len(windowgram_lines[0])
+                axis_length = len(windowgram_lines) if (ix == 0 or ix == 1) else len(windowgram_lines[0])
+                axis_width = len(windowgram_lines) if (ix == 2 or ix == 3) else len(windowgram_lines[0])
                 size_chars = how_to_characters( size, axis_length )
+                if size_chars is None:
+                    flexout("Invalid size parameter: " + size + "\n")
+                    return
                 if ix == 0: # Top
-                    for _ in range( size_chars ): windowgram_lines.insert( 0, newpaneid * axis_width )
+                    for _ in range( size_chars ): windowgram_lines.insert( 0, newpane * axis_width )
                 elif ix == 1: # Bottom
-                    for _ in range( size_chars ): windowgram_lines.append( newpaneid * axis_width )
+                    for _ in range( size_chars ): windowgram_lines.append( newpane * axis_width )
                 elif ix == 2: # Right
-                    windowgram_lines = [ line + (newpaneid * size_chars) for line in windowgram_lines ]
+                    windowgram_lines = [ line + (newpane * size_chars) for line in windowgram_lines ]
                 elif ix == 3: # Left
-                    windowgram_lines = [ (newpaneid * size_chars) + line for line in windowgram_lines ]
+                    windowgram_lines = [ (newpane * size_chars) + line for line in windowgram_lines ]
                 flexmenu_session.Replace_Windowgram( serial, Windowgram_LinesToString( windowgram_lines ) )
                 return
         # Edge not found
         flexout("The edge you specified is invalid, please specify: top, bottom, left, or right.\n")
+
+@flex(
+    command     = "break",
+    examples    = [ "break 1 3x3", "break z 2x1 A", "break z 2x1 OT" ],
+    description = "Break a pane into a grid of specified dimensions.  If the break does not produce even results " + \
+                  "at the given resolution, it will be automatically scaled up to the next best fit.  The newpanes " + \
+                  "parameter may be leveraged for simultaneous pane renaming by users familiar with this command.",
+    aliases     = [ ["b", "break "], ["grid", "break "], ["divide", "break "], ["div", "break "], ["crack", "break "],
+                    ["shatter", "break "], ["fragment", "break "], ["crush", "break "], ],
+)
+def cmd_break(pane, grid, newpanes=None):
+    serial = flexmenu_index[0]
+    if flexmenu_session.Serial_Is_Valid(serial):
+        # In order to produce a break of even proportions, we have to scale this windowgram up to next best fit.  It
+        # could go one step further and find the most optimal size, being a resolution that evenly scales the original
+        # windowgram constituent panes, while simultaneously providing a grid of even sizes.  The problem is that common
+        # use cases would result in massive sizes to accommodate; though accurate, it would not be very practical.
+        windowgram = flexmenu_session.Get_Windowgram( serial )
+        available, unavailable = Windowgram_PaneListPair( windowgram )
+        if pane not in PANE_CHARACTERS:
+            flexout("The pane you specified is invalid\n")
+        elif pane in available:
+            flexout("The pane you specified does not exist\n")
+        else: # if pane in available:
+            # Grid analysis and validity check
+            gw = gh = panes = 0
+            reason = ""
+            if grid.count("x") == 1:
+                gw, gh = grid.split("x")
+                if gw.isdigit() and gh.isdigit():
+                    gw, gh = int(gw), int(gh)
+                    panes = gw * gh
+                    if not panes:
+                        reason = ": Grid you specified results in no panes"
+                    elif panes > len(PANE_CHARACTERS):
+                        reason = ": Grid is " + str(panes) + " panes, exceeding max of " + str(len(PANE_CHARACTERS))
+                    elif panes > len(available):
+                        reason = ": Grid is " + str(panes) + " panes, only " + str(len(available)) + " are available"
+                    else:
+                        reason = None
+            if reason is not None:
+                return flexout("The grid you specified is invalid" + reason + "\n")
+            # Extract the dimensions of the pane to determine requisite scale (if any)
+            wg_w, wg_h = Windowgram_Dimensions( windowgram )
+            px, py, pw, ph = Windowgram_PaneXYWH( windowgram, pane )
+            # Perform a scale if needed
+            scale_to = lambda r1, r2: (((float(int(r1/r2))+1.0)*r2) if (r1 % r2) else r1) if (r1 > r2) else r2
+            scale_to_pane_x = int( scale_to( float(pw), float(gw) ) ) # Pane target x
+            scale_to_pane_y = int( scale_to( float(ph), float(gh) ) ) # Pane target y
+            stw_x = int(float(wg_w) * float(scale_to_pane_x) / float(pw)) # Window target x
+            stw_y = int(float(wg_h) * float(scale_to_pane_y) / float(ph)) # Window target y
+            # Scale ... In some cases, the derived windowgram scale dimensions do not produce the desired dimensions
+            # for the pane.  When this occurs, we repeatedly increment or decrement the dimensions by a character and
+            # scale again, until the target pane size has been achieved.  This discrepancy may be because of disparate
+            # algorithms break and scale.  Regardless, this retry approach should solve the problem in many or perhaps
+            # all cases.  The only disadvantage is a significant performance hit when dealing with huge windowgrams.
+            retries = 16 # For edge case of above: Set to 0, then flex "n 1 ; s 42x42 ; b 1 6x6 ; b 1 3x3"
+            while retries:
+                # Scale
+                windowgram_new = scalecore_v2( windowgram, float(stw_x) / float(wg_w), float(stw_y) / float(wg_h) )
+                _, _, npw, nph = Windowgram_PaneXYWH( windowgram_new, pane )
+                # Validate
+                if (npw == scale_to_pane_x and nph == scale_to_pane_y) or not retries:
+                    # Replace windowgram
+                    windowgram = windowgram_new
+                    flexmenu_session.Replace_Windowgram( serial, windowgram )
+                    # Target scale achieved
+                    break
+                # Adjust and try again, note that in cases of large windowgrams, this 
+                stw_x += 1 if npw < scale_to_pane_x else -1 if npw > scale_to_pane_x else 0
+                stw_y += 1 if nph < scale_to_pane_y else -1 if nph > scale_to_pane_y else 0
+                retries -= 1
+            # Dimensions must be reloaded in the event that the windowgram was scaled
+            wg_w, wg_h = Windowgram_Dimensions( windowgram )
+            px, py, pw, ph = Windowgram_PaneXYWH( windowgram, pane )
+            # Manually move availability of pane so it may be reused
+            unavailable, available = Windowgram_PaneListPair_Move( unavailable, available, pane )
+            # Set starting panes.  By default this starts at the lowest available pane id and iterates forward.  However
+            # the user may specify a pane to start the iteration at, for example if it's a 3x2 grid (6 panes produced):
+            #   specified == (None)    produces == 012345
+            #                A                     ABCDEF
+            #                BLN                   BLNOPQ
+            #                BLN1                  BLN123
+            if newpanes:
+                work, available = available, ""
+                lastpaneid = ""
+                for paneid in list(newpanes):
+                    if paneid in PANE_CHARACTERS: lastpaneid = paneid # Last valid paneid
+                    if paneid in work and paneid not in unavailable: available += paneid # Ignore invalid panes
+                work, unavailable = Windowgram_PaneListPair_Move( work, unavailable, available )
+                # Combine by next highest match
+                ix = 0 # In case of empty set
+                for chkix, paneid in enumerate(list(work)):
+                    if PANE_CHARACTERS.find(paneid) >= PANE_CHARACTERS.find(lastpaneid): ix = chkix ; break
+                available += work[ix:] + work[:ix]
+            # Replace pane with grid
+            windowgram_lines = Windowgram_StringToLines(windowgram)
+            windowgram = "\n".join([
+                "".join( [ ch if ch != pane else available[int((iy-py+1)*gh/ph)*gw+int((ix-px+1)*gw/pw)] \
+                    for ix, ch in enumerate(list(line)) ] ) for iy, line in enumerate(windowgram_lines)
+            ]) + "\n"
+            # Replace windowgram
+            flexmenu_session.Replace_Windowgram( serial, windowgram )
+            # Break complete
 
 @flex(
     command     = "mirror",

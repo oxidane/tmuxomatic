@@ -43,9 +43,9 @@ Fortunately there's flex, introduced in tmuxomatic 2.0.  Flex aims to bring the 
 
 	flex>
 
-For brevity, the flex console is represented by a `flex>` prompt.  Like tmuxomatic, flex is simple but powerful.  For a full list of commands, type `help` at any time.  Let's start with a new window named `administration`.
+For brevity, the flex console is represented by a `flex>` prompt.  Like tmuxomatic, flex is simple but powerful.  For a full list of commands, type `help` at any time.  Let's start with a new window named `wallets`.
 
-	flex> new administration
+	flex> new wallets
 
 	1
 
@@ -79,7 +79,32 @@ It's easy to append new panes to a windowgram.  Let's `add` a new pane on the `r
 	1111111111111111111111111000000000000
 	1111111111111111111111111000000000000
 
-**TODO: break, join, split, drag, rename, swap**
+What I actually have in mind for pane `0` looks like this:
+
+	zzz
+	abc
+	abc
+	def
+	def
+
+There are at least two simple ways to accomplish this.  One is with `split` and `break`.  The other is with `break` and `join`.  Let's go with the latter, since we'll be using `split` in a moment.
+
+First we `break` the new pane `0` into a grid, `3` panes wide by `5` panes high -- this reflects the envisioned shape above.  We'll also make use of the optional parameter, forcing new panes to start at `A` for readability.
+
+	flex> break 0 3x5 A
+
+	1111111111111111111111111AAAABBBBCCCC
+	1111111111111111111111111AAAABBBBCCCC
+	1111111111111111111111111DDDDEEEEFFFF
+	1111111111111111111111111DDDDEEEEFFFF
+	1111111111111111111111111GGGGHHHHIIII
+	1111111111111111111111111GGGGHHHHIIII
+	1111111111111111111111111JJJJKKKKLLLL
+	1111111111111111111111111JJJJKKKKLLLL
+	1111111111111111111111111MMMMNNNNOOOO
+	1111111111111111111111111MMMMNNNNOOOO
+
+**TODO: join, split, drag, rename, swap, mirror**
 
 
 
