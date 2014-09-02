@@ -65,6 +65,7 @@ HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE a
 VERSION = "2.2"                                     # x.y: x = Major feature, y = Minor feature or bug fix
 ##
 ##  2.2     TBD         New flex command: break
+##                      Optional window specification with filename when using flex
 ##
 ##  2.1     2014-09-01  Cleared revision history for 1.x, added link in case it's needed
 ##                      If specified session file does not exist when using flex, it is created
@@ -2166,7 +2167,7 @@ def cmd_break(pane, grid, newpanes=None):
             # scale again, until the target pane size has been achieved.  This discrepancy may be because of disparate
             # algorithms break and scale.  Regardless, this retry approach should solve the problem in many or perhaps
             # all cases.  The only disadvantage is a significant performance hit when dealing with huge windowgrams.
-            retries = 16 # For edge case of above: Set to 0, then flex "n 1 ; s 42x42 ; b 1 6x6 ; b 1 3x3"
+            retries = 16 # Example of above edge case: Set retries to 0, then flex "n 1 ; s 42x42 ; b 1 6x6 ; b 1 3x3"
             while retries:
                 # Scale
                 windowgram_new = scalecore_v2( windowgram, float(stw_x) / float(wg_w), float(stw_y) / float(wg_h) )
@@ -2178,7 +2179,7 @@ def cmd_break(pane, grid, newpanes=None):
                     flexmenu_session.Replace_Windowgram( serial, windowgram )
                     # Target scale achieved
                     break
-                # Adjust and try again, note that in cases of large windowgrams, this 
+                # Adjust and try again
                 stw_x += 1 if npw < scale_to_pane_x else -1 if npw > scale_to_pane_x else 0
                 stw_y += 1 if nph < scale_to_pane_y else -1 if nph > scale_to_pane_y else 0
                 retries -= 1
@@ -2220,6 +2221,7 @@ def cmd_break(pane, grid, newpanes=None):
     description = "Reverse horizontally (left/right)",
 )
 def cmd_mirror():
+    # TODO: Optional pane group mirror
     serial = flexmenu_index[0]
     if flexmenu_session.Serial_Is_Valid(serial):
         windowgram_lines = Windowgram_StringToLines(flexmenu_session.Get_Windowgram(serial))
@@ -2231,6 +2233,7 @@ def cmd_mirror():
     description = "Reverse vertically (top/bottom)",
 )
 def cmd_flip():
+    # TODO: Optional pane group flip
     serial = flexmenu_index[0]
     if flexmenu_session.Serial_Is_Valid(serial):
         windowgram_lines = Windowgram_StringToLines(flexmenu_session.Get_Windowgram(serial))
@@ -2269,7 +2272,7 @@ def cmd_exit():
 ## Flex Console
 ##
 
-def flex(rows, session, select=None):
+def flex_shell(rows, session, serial=0):
     def clearscreen(): flexout("\n" * rows)
     global flexmenu_session
     flexmenu_session = session
@@ -2284,12 +2287,12 @@ def flex(rows, session, select=None):
     flexout("_   ___ ___ _ _    Modify windowgrams with visually expressive commands")
     flexout("")
     ##
-    ## Show list of windows (if select is None) or the selected windowgram
+    ## Show list of windows if serial is 0
     ##
-    if select is None:
+    if serial is 0:
         cmd_list()
     else:
-        flexout("TODO: Select window from shell")
+        flexmenu_index[0] = serial
     ##
     ## Input loop
     ##
@@ -2315,7 +2318,7 @@ def flex(rows, session, select=None):
             flexout( "\n".join( [ "WARNING    : " + line for line in warnings ] ) )
         # Show short command list in the context of a selection
         commands = flexmenu_grouped['helpers'] + flexmenu_grouped['selectors']
-        if flexmenu_index[0]: commands += flexmenu_grouped['modifiers']
+        if flexmenu_index[0]: commands = flexmenu_grouped['helpers'] + flexmenu_grouped['modifiers']
         flexout("Quick Menu : " + ", ".join(commands))
         # User input
         try: thisinput_str = input("\n<<< tmuxomatic flex >>> ")
@@ -2411,6 +2414,15 @@ def main():
         ARGS.noexecute = False
         ARGS.verbose = 0
 
+    # If using flex and a serial was specified
+    serial = 0
+    if ARGS.flex and ":" in ARGS.filename:
+        ARGS.filename, serial = ARGS.filename.split(":", 1)
+        if not serial.isdigit():
+            print("You specified a flex window serial that does not make sense: " + serial)
+            exit(0)
+        serial = int(serial)
+
     # Check for presence of specified session filename
     if not os.path.exists(ARGS.filename):
         if ARGS.flex:
@@ -2439,7 +2451,7 @@ def main():
 
     # Flex console entry
     if ARGS.flex:
-        session = flex( user_wh[1], session )
+        session = flex_shell( user_wh[1], session, serial )
         # Force reload of session file in order to get accurate line counts in the event of changes by user in flex
         session.Load()
 
@@ -2536,7 +2548,8 @@ if __name__ == "__main__":
     PARSER.add_argument( "-f", "--flex", action="store_true", help=\
         "Windowgram modification console.  Flex gives you the ability " + \
         "to bend your windowgrams to perfection using visually " + \
-        "oriented commands (scale, break, etc)." )
+        "oriented commands (scale, break, etc).  If you know which " + \
+        "window you'll edit, add \":<number>\" after the filename." )
     PARSER.add_argument( "filename", help=\
         "The tmuxomatic session filename (required)" )
     ARGS = PARSER.parse_args()
