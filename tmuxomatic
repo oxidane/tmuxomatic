@@ -1627,24 +1627,6 @@ def scalecore_v2(windowgram, w_chars, h_chars):
     windowgram_new = Windowgram_CharArrayToString( windowgram_chars_scaled )
     return windowgram_new
 
-##
-## Temporary note for this release:
-##
-## Prior versions used multipliers as parameters, this caused problems related to an occasional loss of precision when
-## scaling with exact character sizes.  Prior implementation had accidentally cycled chars->multiplier->chars, which
-## would occasionally yield a result of chars!=chars.  This release fixes this problem.
-##
-## Also incorporated into the scale core, an optional automatic resize until pane dimensions are met.  This is used by
-## the break command, where it's an easy way to deal with a pane size mismatch at expected windowgram dimensions.
-##
-## Illustrations of these scale problems may be replicated (with a previous version) by doing the following:
-##
-##      Break example ... "n 1 ; s 42x42 ; b 1 6x6 ; b 1 3x3"
-##      Scale example ... "n 1 ; s 49x1 ; s 2x1"
-##
-## Both of these were verified fixed prior to release.
-##
-
 def scalecore(windowgram, w_chars, h_chars, retry=None):
     # Scope, and clone in case of error
     windowgram_scaled = windowgram
@@ -1959,7 +1941,7 @@ def cmd_help_N(*commands):
         def recursive_carry(carry, name, about, usage, example): # carry
             def carry_on(about, carry): # about, carry
                 if len(about) > width:
-                    hardbreak = width # In the event of an egregious sesquipedalian portmanteau occurrence
+                    hardbreak = width # In the event the max width exceeds a word width
                     for ix in range(width-1, -1, -1):
                         if about[ix] == " " or about[ix] == "\t":
                             hardbreak = ix
@@ -2001,20 +1983,23 @@ flexgroup = "selectors"
 )
 def cmd_list():
     flexout("Available windows in this session file (use serial number or name):\n")
-    list_title = [ "Window", "Dimensions", "Name" ]
     list_lines = [] # Printed columns, not padded
     for serial in range(1, flexmenu_session.Count_Windows()+1):
         number_str = str(serial)
         name = flexmenu_session.Get_Name(serial)
         dimensions_int = flexmenu_session.Get_WindowgramDimensions_Int(serial) # Use this to avoid reinitialization
         dimensions_str = str(dimensions_int[0]) + "x" + str(dimensions_int[1])
-        list_lines.append( [ number_str, dimensions_str, name ] )
+        windowgram = flexmenu_session.Get_Windowgram( serial )
+        available, unavailable = Windowgram_PaneListPair( windowgram )
+        panecount = str(len(unavailable))
+        list_lines.append( [ number_str, dimensions_str, panecount, name ] )
     if not list_lines:
         flexout("    There are no windows, create one with: new <name>")
         flexout("")
     else:
         selected = []
         if flexmenu_index[0]: selected.append( flexmenu_index[0] + 1 ) # Skip title line
+        list_title = [ "Window", "Dimensions", "Panes", "Name" ]
         table( flexout, ["    ", "  ->"], selected, list_title, list_lines )
 
 @flex(
@@ -2073,7 +2058,10 @@ def cmd_new(*window_name_REQUIRED):
 def cmd_print():
     serial = flexmenu_index[0]
     if flexmenu_session.Serial_Is_Valid(serial):
-        flexout("Windowgram for window #" + str(serial) + " (" + flexmenu_session.Get_Name(serial) + ") ...\n")
+        windowgram = flexmenu_session.Get_Windowgram( serial )
+        unused, used = Windowgram_PaneListPair( windowgram )
+        flexout("Windowgram for window #" + str(serial) + " (" + flexmenu_session.Get_Name(serial) + ") ..." + \
+            " " + used + " < used panes unused > " + unused + "\n")
         flexout( "\n".join([ "    " + l for l in flexmenu_session.Get_Windowgram(serial).split("\n") ]) )
 
 ##
