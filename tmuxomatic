@@ -67,6 +67,7 @@ VERSION = "2.2"                                     # x.y: x = Major feature, y 
 ##  2.2     TBD         New flex command: break
 ##                      Optional window specification with filename when using flex
 ##                      Fixed scale core to resolve accuracy problems in scale and break commands
+##                      Started windowgram class
 ##
 ##  2.1     2014-09-01  Cleared revision history for 1.x, added link in case it's needed
 ##                      If specified session file does not exist when using flex, it is created
@@ -80,14 +81,9 @@ VERSION = "2.2"                                     # x.y: x = Major feature, y 
 ##                      Source indentation now uses spaces, for github readability
 ##                      New versioning for tmuxomatic, version 1.1.0 re-released as 2.0
 ##
-##  ----------------------------------------------------------------------------------------------------------------
-##  1.x     https://github.com/oxidane/tmuxomatic/blob/ac7290e2206d4470d85c4eb6fa91c88794a17e45/tmuxomatic#L75-157
-##  ----------------------------------------------------------------------------------------------------------------
+##  ------- --------------------------------------------------------------------------------------------------------
 ##
-##  1.0.20  2014-07-31  Last 1.x release, versioning changed to major.minor after this release
-##  1.0.14  2014-07-22  The previously unnamed central concept in tmuxomatic is now called a windowgram
-##  1.0.12  2014-07-21  Public release
-##  1.0.0   2013-10-04  First version, development began in late September 2013
+##  1.x     https://github.com/oxidane/tmuxomatic/blob/ac7290e2206d4470d85c4eb6fa91c88794a17e45/tmuxomatic#L75-157
 ##
 ##--------------------+-------------------------------------------------------------------------------------------------
 ##     Expansions     |
@@ -95,7 +91,11 @@ VERSION = "2.2"                                     # x.y: x = Major feature, y 
 ##
 ## 2.x:
 ##
-##      Flex Console, Windowgram Library, Pypi Readme
+##      Flex Console
+##
+##      Windowgram Library
+##
+##      Pypi Readme
 ##
 ## Minor:
 ##
@@ -256,7 +256,7 @@ MINIMUM_TMUX    = "1.8"                 # Minimum supported tmux version (1.8 is
 VERBOSE_MAX     = 4                     # 0 = quiet, 1 = summary, 2 = inputs, 3 = fitting, 4 = commands
 MAXIMUM_PANES   = len(PANE_CHARACTERS)  # 62 maximum panes (not windows)
 
-# Aliases for directions block, this is intended to leverage intuitiveness for the broadest possible audience
+# Aliases for flexible directions
 
 ALIASES = {
     'foc': "focus key keys cur cursor", # Use "use user" or reserve them for other use?
@@ -672,6 +672,252 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
+## Windowgram class
+##
+## Interface for the general-purpose use of windowgram data.  Instances of this class should use the name wg.
+## Eventually this class will become a library for use in other applications.
+##
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Formats:
+##
+##      Data    Example Value              Variable           Description
+##      ------- -------------------------- ------------------ --------------------------------------------------------
+##      Raw     "12\n34 # etc\n"           windowgram_raw     The file input and output, may have spaces or comments
+##      String  "12\n34\n"                 windowgram_string  Stripped lines delimited by "\n", no spaces or comments
+##      Lines   [ "12", "34" ]             windowgram_lines   List of lines, pure windowgram data (no delimiters)
+##      Chars   [['1', '2'], ['3', '4']]   windowgram_chars   List of chars, pure windowgram data (no delimiters)
+##      Parsed  {'a': {'x': 1, ...}, ...}  windowgram_parsed  Processed dictionary of panes with keys: n, x, y, w, h
+##      ------- -------------------------- ------------------ --------------------------------------------------------
+##
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Layers:
+##
+##      1222 444. ....
+##      3333 444. .555
+##      3333 .... .555
+##
+## TODO: Layers are not yet supported
+##
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Pane arrangement types:
+##
+##      Name                    Example     Description
+##      ----------------------- ----------- ------------------------------------------------------------------------
+##      Implicit Overlaps       12          Pane 1 overlaps pane 2, this is an implicit overlap
+##                              22
+##      ----------------------- ----------- ------------------------------------------------------------------------
+##      Explicit Overlaps       11 22       Pane 2 overlaps pane 1, explicit implies multiple layers are used
+##                              11 22
+##      ----------------------- ----------- ------------------------------------------------------------------------
+##      Positioned              112         These panes cannot be defined using nested splits, however these are
+##                              452         valid in other environments where explicit positioning is possible
+##                              433
+##      ----------------------- ----------- ------------------------------------------------------------------------
+##
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Support analysis types:
+##
+##      Name     Support        Description
+##      -------- -------------- -------------------------------------------------------------------------------------
+##      split    tmux, ???, os  Fully split compatible, no overlaps of either kind, no positioned panes
+##      tiled    ???, os        No overlaps, supports positioned panes, not bound to a split mechanism for layout
+##      layered  os             Has one or more layers with implicit overlaps and/or explicit overlaps
+##      -------- -------------- -------------------------------------------------------------------------------------
+##
+## The "???" represents a hypothetical console-based window management system that is more flexible, like a typical
+## window based user interface (of any modern operating system).  At the minimum it supports positioned windows, but if
+## it also supports overlapping panes then it would support layered windowgrams.  Does dvtm support positioning?
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+linestrip = lambda line: (line[:line.find("#")] if line.find("#") >= 0 else line).strip()
+
+class Windowgram():
+
+    def __init__(self, windowgram_raw):
+        self.change_count = 0
+        self.change_query = 0
+        self.Import_Raw(windowgram_raw)
+        self.change_query = self.change_count
+
+    def Reset(self):
+        self.windowgram_string = None
+        self.windowgram_lines = None
+        self.windowgram_chars = None
+        self.windowgram_parsed = None
+        self.metrics_width = None
+        self.metrics_height = None
+        self.analysis_layers = 0
+        self.analysis_type = None
+        self.change_count += 1
+
+    def Import_Raw(self, windowgram_raw):
+        self.Reset()
+        self.windowgram_string = Windowgram_Purify( windowgram_raw )
+        self.windowgram_lines = None
+        self.windowgram_chars = None
+        self.windowgram_parsed = None
+        self.metrics_width = 0
+        self.metrics_height = 0
+        self.analysis_layers = 1        # Fixed for now
+        self.analysis_type = "split"    # Fixed for now
+        self.change_count += 1          # Rebuild complete
+
+    def Export_Raw(self):
+        # Converts to single string delimited by "\n", for direct inclusion in a configuration file
+        return self.windowgram_string
+
+##
+## These need to be sorted out and moved into the class
+##
+
+def Windowgram_Purify(windowgram):
+    # Full cycle purification -- asserts consistency of form
+    return Windowgram_LinesToString( Windowgram_StringToLines( windowgram ) )
+def Windowgram_StringToLines(windowgram):
+    # No blank lines
+    return [ linestrip(line) for line in list(filter(None, (windowgram+"\n").split("\n"))) ]
+def Windowgram_LinesToString(windowgram_lines):
+    # Each line has one \n
+    return "\n".join([ line for line in windowgram_lines ]) + "\n"
+def Windowgram_StringToCharArray(windowgram):
+    # A list of lists, each containing one or more single characters representing a line
+    return [ [ ch for ch in list(ln) ] for ix, ln in enumerate(windowgram.split("\n")[:-1]) ]
+def Windowgram_CharArrayToString(windowgram_chars):
+    return Windowgram_LinesToString( [ "".join(line_chars) for line_chars in windowgram_chars ] )
+
+##
+## Queries: Metrics
+##
+
+def Windowgram_Dimensions_Int(windowgram):
+    w = h = 0
+    lines = Windowgram_StringToLines(windowgram)
+    for l in lines:
+        if len(l.strip()) > w: w = len(l.strip())
+        h += 1
+    return [ w, h ]
+def Windowgram_Dimensions_Float(windowgram):
+    return [ float(elem) for elem in Windowgram_Dimensions_Int(windowgram) ]
+
+##
+## Queries: Other
+##
+
+def Windowgram_IsBlank(windowgram):
+    dimensions = Windowgram_Dimensions_Int(windowgram)
+    return True if not dimensions[0] or not dimensions[1] else False
+
+##
+## Other
+##
+
+def Windowgram_OrderedUniques(windowgram):
+    paneids = set(list("".join(windowgram.split("\n"))))
+    return "".join([ paneid for paneid in PANE_CHARACTERS if paneid in paneids ])
+def Windowgram_LostPanes(windowgram1, windowgram2):
+    return Windowgram_OrderedUniques( # Additionally useful in this context
+        "".join(list(set(Windowgram_OrderedUniques(windowgram1)) - set(Windowgram_OrderedUniques(windowgram2)))) )
+def Windowgram_PaneListPair(windowgram): # available, unavailable
+    # Mutually exclusive list of pane ids for given window ( PANE_CHARACTERS == available + unavailable )
+    windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( windowgram ) )
+    unavailable = "".join(sorted( list(set(list("".join(windowgram_lines)))),
+        key=lambda x: PANE_CHARACTERS.find(x) ))
+    available = "".join(sorted( [ ch for ch in PANE_CHARACTERS if ch not in unavailable ],
+        key=lambda x: PANE_CHARACTERS.find(x) ))
+    return available, unavailable
+def Windowgram_PaneListPair_Move(fr, to, batch): # fr, to
+    for pane in list(batch):
+        if pane in PANE_CHARACTERS and (pane in fr or pane not in to):
+            # Assert ordering every pass, in some situations the batch is expected to be unsorted
+            fr = "".join([ch for ch in PANE_CHARACTERS if ch in fr and ch != pane])
+            to = "".join([ch for ch in PANE_CHARACTERS if ch in to or ch == pane])
+    return fr, to
+def Windowgram_Dimensions(windowgram): # w, h
+    windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( windowgram ) )
+    return len(windowgram_lines[0]), len(windowgram_lines)
+def Windowgram_PaneDimensions(windowgram, pane): # x1, y1, x2, y2
+    windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( windowgram ) )
+    x2 = y2 = -1
+    x1 = len(windowgram_lines[0])
+    y1 = len(windowgram_lines)
+    for y, line in enumerate(windowgram_lines):
+        for x, char in enumerate(line):
+            if char == pane:
+                if x < x1: x1 = x
+                if x > x2: x2 = x
+                if y < y1: y1 = y
+                if y > y2: y2 = y
+    return x1+1, y1+1, x2+1, y2+1
+def Windowgram_PaneXYWH(windowgram, pane): # w, h
+    if not Windowgram_HasPane( windowgram, pane ): return 0, 0, 0, 0
+    x1, y1, x2, y2 = Windowgram_PaneDimensions(windowgram, pane)
+    w, h = x2 - x1 + 1, y2 - y1 + 1
+    return x1, y1, w, h
+def Windowgram_HasPane(windowgram, pane):
+    for line in Windowgram_StringToLines( windowgram ):
+        for ch in line:
+            if ch == pane: return True
+    return False
+def Windowgram_GetNewPaneId(windowgram, preferred=None): # newpaneid, error
+    # Input preferred: None == First available pane / paneid == Specified if valid
+    available, unavailable = Windowgram_PaneListPair(windowgram)
+    if not available: return None, "All pane identifiers have been used"
+    if preferred is None: return available[0], None
+    if preferred not in PANE_CHARACTERS: return None, "Invalid pane identifier"
+    if preferred not in available: return None, "Pane id `" + preferred + "` is in use"
+    return preferred, None
+def Windowgram_LoadPaneDict(windowgram): # dict, error, linenumber
+    windowgram_lines = Windowgram_StringToLines(windowgram)
+    layout = {} # Indexed by pane: { 'Q': { 'n': 'Q', 'x': 1, 'y': 1, 'w': 1, 'h': 1  }, ... }
+    panes_y = 0 # Line number
+    try:
+        panes_x = panes_y = width = 0
+        for ix, line in enumerate(windowgram_lines):
+            if not line: continue
+            panes_y += 1
+            panes_x = 0
+            for ch in line:
+                if ch not in PANE_CHARACTERS:
+                    raise Exception("Windowgram must contain valid identifiers: [0-9a-zA-Z]")
+            if panes_y > 1 and len(line) != width:
+                raise Exception("Windowgram width does not match previous lines")
+            else:
+                if width == 0: width = len(line)
+                for ch in line:
+                    panes_x += 1
+                    if ch not in PANE_CHARACTERS:
+                        # Outside of valid pane identifier range
+                        raise Exception("Windowgram must contain valid identifiers: [0-9a-zA-Z]")
+                    # Builds "bounding box" around pane for easy error detection through overlap algorithm
+                    if not ch in layout:
+                        # New pane
+                        layout[ch] = { 'n': ch, 'x': panes_x, 'y': panes_y, 'w': 1, 'h': 1 }
+                    else:
+                        # Expand width
+                        x2 = panes_x - layout[ch]['x'] + 1
+                        if x2 > layout[ch]['w']:
+                            layout[ch]['w'] = x2
+                        # Expand height
+                        y2 = panes_y - layout[ch]['y'] + 1
+                        if y2 > layout[ch]['h']:
+                            layout[ch]['h'] = y2
+                        # Update x
+                        if layout[ch]['x'] > panes_x:
+                            layout[ch]['x'] = panes_x
+        if not layout: raise Exception("Windowgram not specified")
+    except Exception as error:
+        return None, str(error), panes_y
+    return layout, None, None
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
 ## Session file objects
 ##
 ##----------------------------------------------------------------------------------------------------------------------
@@ -915,7 +1161,7 @@ class SessionFile(object):
                 for ix, window in enumerate(self.windows):
                     serial = 1+ix
                     # Extract name: "window panel 1\n" -> "panel 1"
-                    name = windowdeclaration_name( self.Get_WindowDecarationLine( serial ) )
+                    name = windowdeclaration_name( self.Get_WindowDeclarationLine( serial ) )
                     # Append window definition
                     # TODO: Sort as "name", "windowgram", "directions".  Maybe use: http://pyyaml.org/ticket/29
                     window_dict = {
@@ -951,8 +1197,7 @@ class SessionFile(object):
         self.modified = True
     def Replace_Windowgram(self, serial, windowgram):
         if serial < 1 or serial > self.Count_Windows(): return
-        windowgram = Windowgram_Purify( windowgram ) # Force consistency
-        self.windows[serial-1]["windowgram"] = windowgram
+        self.windows[serial-1]["windowgram"] = Windowgram( windowgram ).Export_Raw() # Clean via class
         self.modified = True
     def Modified(self): # See flag use for limitations
         return self.modified
@@ -960,12 +1205,12 @@ class SessionFile(object):
         return len(self.windows)
     def Serial_Is_Valid(self, serial):
         return serial >= 1 and serial <= len(self.windows)
-    def Get_WindowDecarationLine(self, serial):
+    def Get_WindowDeclarationLine(self, serial):
         if serial < 1 or serial > self.Count_Windows(): return "???" # Out of range
-        return self.windows[serial-1]['title'].split("\n")[0].strip() # Assumes the window declaration is on first line
+        return linestrip(self.windows[serial-1]['title'].split("\n")[0]) # Window declaration is on first line
     def Get_Name(self, serial):
         if serial < 1 or serial > self.Count_Windows(): return "???" # Out of range
-        return windowdeclaration_name( self.Get_WindowDecarationLine( serial ) )
+        return windowdeclaration_name( self.Get_WindowDeclarationLine( serial ) )
     def Get_WindowgramDimensions_Int(self, serial):
         windowgram = self.windows[serial-1]['windowgram']
         return Windowgram_Dimensions_Int(windowgram)
@@ -1007,112 +1252,6 @@ class SessionFile(object):
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Windowgram functions
-##
-##----------------------------------------------------------------------------------------------------------------------
-
-def Windowgram_Purify(windowgram):
-    # Full cycle purification -- asserts consistency of form
-    return Windowgram_LinesToString( Windowgram_StringToLines( windowgram ) )
-
-def Windowgram_StringToLines(windowgram):
-    # No blank lines
-    return list(filter(None, (windowgram+"\n").split("\n")))
-
-def Windowgram_LinesToString(windowgram_lines):
-    # Each line has one \n
-    return "\n".join([ line for line in windowgram_lines ]) + "\n"
-
-def Windowgram_StringToCharArray(windowgram):
-    # A list of lists, each containing one or more single characters representing a line
-    return [ [ ch for ch in list(ln) ] for ix, ln in enumerate(windowgram.split("\n")[:-1]) ]
-
-def Windowgram_CharArrayToString(windowgram_chars):
-    return Windowgram_LinesToString( [ "".join(line_chars) for line_chars in windowgram_chars ] )
-
-def Windowgram_OrderedUniques(windowgram):
-    paneids = set(list("".join(windowgram.split("\n"))))
-    return "".join([ paneid for paneid in PANE_CHARACTERS if paneid in paneids ])
-
-def Windowgram_Dimensions_Int(windowgram):
-    w = h = 0
-    lines = Windowgram_StringToLines(windowgram)
-    for l in lines:
-        if len(l.strip()) > w: w = len(l.strip())
-        h += 1
-    return [ w, h ]
-
-def Windowgram_Dimensions_Float(windowgram):
-    return [ float(elem) for elem in Windowgram_Dimensions_Int(windowgram) ]
-
-def Windowgram_LostPanes(windowgram1, windowgram2):
-    return Windowgram_OrderedUniques( # Additionally useful in this context
-        "".join( list( set(Windowgram_OrderedUniques(windowgram1)) - set(Windowgram_OrderedUniques(windowgram2)) ) ) )
-
-def Windowgram_IsBlank(windowgram):
-    dimensions = Windowgram_Dimensions_Int(windowgram)
-    return True if not dimensions[0] or not dimensions[1] else False
-
-def Windowgram_PaneListPair(windowgram): # available, unavailable
-    # Mutually exclusive list of pane ids for given window ( PANE_CHARACTERS == available + unavailable )
-    windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( windowgram ) )
-    unavailable = "".join(sorted( list(set(list("".join(windowgram_lines)))),
-        key=lambda x: PANE_CHARACTERS.find(x) ))
-    available = "".join(sorted( [ ch for ch in PANE_CHARACTERS if ch not in unavailable ],
-        key=lambda x: PANE_CHARACTERS.find(x) ))
-    return available, unavailable
-
-def Windowgram_PaneListPair_Move(fr, to, batch): # fr, to
-    for pane in list(batch):
-        if pane in PANE_CHARACTERS and (pane in fr or pane not in to):
-            # Assert ordering every pass, in some situations the batch is expected to be unsorted
-            fr = "".join([ch for ch in PANE_CHARACTERS if ch in fr and ch != pane])
-            to = "".join([ch for ch in PANE_CHARACTERS if ch in to or ch == pane])
-    return fr, to
-
-def Windowgram_Dimensions(windowgram): # w, h
-    windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( windowgram ) )
-    return len(windowgram_lines[0]), len(windowgram_lines)
-
-def Windowgram_PaneDimensions(windowgram, pane): # x1, y1, x2, y2
-    windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( windowgram ) )
-    x2 = y2 = -1
-    x1 = len(windowgram_lines[0])
-    y1 = len(windowgram_lines)
-    for y, line in enumerate(windowgram_lines):
-        for x, char in enumerate(line):
-            if char == pane:
-                if x < x1: x1 = x
-                if x > x2: x2 = x
-                if y < y1: y1 = y
-                if y > y2: y2 = y
-    return x1+1, y1+1, x2+1, y2+1
-
-def Windowgram_PaneXYWH(windowgram, pane): # w, h
-    if not Windowgram_HasPane( windowgram, pane ): return 0, 0, 0, 0
-    x1, y1, x2, y2 = Windowgram_PaneDimensions(windowgram, pane)
-    w, h = x2 - x1 + 1, y2 - y1 + 1
-    return x1, y1, w, h
-
-def Windowgram_HasPane(windowgram, pane):
-    for line in Windowgram_StringToLines( windowgram ):
-        for ch in line:
-            if ch == pane: return True
-    return False
-
-def Windowgram_GetNewPaneId(windowgram, preferred=None): # newpaneid, error
-    # Input preferred: None == First available pane / paneid == Specified if valid
-    available, unavailable = Windowgram_PaneListPair(windowgram)
-    if not available: return None, "All pane identifiers have been used"
-    if preferred is None: return available[0], None
-    if preferred not in PANE_CHARACTERS: return None, "Invalid pane identifier"
-    if preferred not in available: return None, "Pane id `" + preferred + "` is in use"
-    return preferred, None
-
-
-
-##----------------------------------------------------------------------------------------------------------------------
-##
 ## Processing (session file -> tmux commands)
 ##
 ##----------------------------------------------------------------------------------------------------------------------
@@ -1143,9 +1282,6 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
     window_serial = 0 # 1+
     window_name = ""
     window_names_seen = [] # Assert unique window names (related to issue #8)
-    layout = {} # Indexed by line
-    panes_w = 0
-    panes_h = 0
     focus_window_name = None # Use window name rather than window index (supports tmux option: base-index)
     line = "" # Loaded line stored here
 
@@ -1200,62 +1336,24 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
             synerr(errpkg, "Window serial " + str(window_serial) + " does not have a name")
         for ix, seen_name in enumerate(window_names_seen):
             if window_name == seen_name:
-                synerr(errpkg, "As of version 2.0, all window names must be unique.  The duplicate name, \"" + \
-                    window_name + "\", for window serial " + str(window_serial) + ", already used by " + str(1+ix))
+                synerr(errpkg, "As of version 2.0, window names must be unique.  The duplicate name, \"" + \
+                    window_name + "\", for window " + str(window_serial) + ", already used by window " + str(1+ix))
         window_names_seen.append( window_name )
-        layout = {}
-        panes_w = 0
-        panes_h = 0
-        panes_y = 0
         if ARGS.verbose >= 2: print("")
 
         #
         # 2) Windowgram parser
         #
-        found = False
-        for ix, line in enumerate(window.SplitCleanByKey('windowgram')):
-            SetLineNumber( window.GetLines('windowgram'), ix )
-            if not line: continue
-            found = True
-            panes_h += 1 # 1.0.17: Should be here to detect Nx2 windowgram width mismatch
-            panes_y += 1
-            panes_x = 0
-            for ch in line:
-                if ch not in PANE_CHARACTERS:
-                    synerr(errpkg, "Windowgram must contain valid identifiers: [0-9a-zA-Z]")
-            if panes_h > 1 and len(line) != panes_w:
-                synerr(errpkg, "Windowgram width does not match previous lines")
-            else:
-                if ARGS.verbose >= 2: print("(2) Windowgram: " + line)
-                if panes_w == 0:
-                    panes_w = len(line)
-                for ch in line:
-                    panes_x += 1
-                    if ch not in PANE_CHARACTERS:
-                        # Outside of valid pane identifier range
-                        synerr(errpkg, "Windowgram must contain valid identifiers: [0-9a-zA-Z]")
-                    # Builds "bounding box" around pane for easy error detection through overlap algorithm
-                    if not ch in layout:
-                        # New pane
-                        layout[ch] = {
-                            'n': ch,
-                            'x': panes_x, 'y': panes_y, 'w': 1, 'h': 1,
-                            'l': 0 # init link to 0
-                        }
-                    else:
-                        # Expand width
-                        x2 = panes_x - layout[ch]['x'] + 1
-                        if x2 > layout[ch]['w']:
-                            layout[ch]['w'] = x2
-                        # Expand height
-                        y2 = panes_y - layout[ch]['y'] + 1
-                        if y2 > layout[ch]['h']:
-                            layout[ch]['h'] = y2
-                        # Update x
-                        if layout[ch]['x'] > panes_x:
-                            layout[ch]['x'] = panes_x
-        if not found:
-            synerr(errpkg, "Windowgram not specified for window serial " + str(window_serial))
+        windowgram_lines = window.SplitCleanByKey('windowgram')
+        windowgram = Windowgram_LinesToString( windowgram_lines )
+        if ARGS.verbose >= 2:
+            print( "\n".join([ "(2) Windowgram: " + line for line in windowgram_lines if line ]) )
+        layout, error, linenumber = Windowgram_LoadPaneDict(windowgram)
+        if error:
+            SetLineNumber( window.GetLines('windowgram'), linenumber - 1 )
+            synerr(errpkg, "Windowgram parsing error for window serial " + str(window_serial) + ": " + error)
+        # For every pane, add an initialized 'l' key that's used later for linking
+        for pane in layout.keys(): layout[pane]['l'] = 0
 
         #
         # 3) Build list_panes
@@ -1264,8 +1362,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
         #
         # 3.1) Sort top to bottom, left to right, move into list (layout[] -> list_panes[])
         #
-        panes_x = 1
-        panes_y = 1
+        panes_x = panes_y = 1
         list_panes = [] # List of user defined panes (derived from windowgram)
         while len(layout):
             pane = ""
@@ -1305,7 +1402,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
             if not line: continue
             if ARGS.verbose >= 2:
                 if not first_pdl: print("") ; first_pdl = True
-                print("(2) Pane definition: " + line)
+                print("(2) Directions: " + line)
             if command_matches(line, "foc"):
                 # Window focus
                 focus_window_name = window_name
@@ -1319,7 +1416,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
                 continue # Next line
             # Splits the line into easier to handle strings, there's probably a better way to do this
             if not ' ' in line and not '\t' in line:
-                synerr(errpkg, "Pane definition line syntax error")
+                synerr(errpkg, "Directions line syntax error")
             panedef_paneids, panedef_cmdplusargs = line.split( None, 1 )
             if not ' ' in panedef_cmdplusargs and not '\t' in panedef_cmdplusargs:
                 panedef_cmd = panedef_cmdplusargs
@@ -1332,7 +1429,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
             panelist = list(panedef_paneids)
             for paneid in panelist:
                 if not paneid in PANE_CHARACTERS:
-                    synerr(errpkg, "Pane definition id is outside of the supported range: [0-9a-zA-Z]")
+                    synerr(errpkg, "Directions pane id is outside of the supported range: [0-9a-zA-Z]")
             def into(key, value, mode=0): # 0 = Set, 1 = Set or append if present, 2 = Set or skip if present
                 found = []
                 for pane in list_panes:
@@ -1363,15 +1460,15 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
             # Command handlers
             #
             if command_matches(panedef_cmd, "run"):
-                if not panedef_args: synerr(errpkg, "Pane definition command 'run' must have arguments")
+                if not panedef_args: synerr(errpkg, "Directions command 'run' must have arguments")
                 into('run', panedef_args, 1)
             elif command_matches(panedef_cmd, "dir"):
-                if not panedef_args: synerr(errpkg, "Pane definition command 'dir' must have arguments")
+                if not panedef_args: synerr(errpkg, "Directions command 'dir' must have arguments")
                 into('dir', panedef_args)
             elif command_matches(panedef_cmd, "foc"):
-                if panedef_args: synerr(errpkg, "Pane definition command 'foc' must have no arguments")
+                if panedef_args: synerr(errpkg, "Directions command 'foc' must have no arguments")
                 panes = all_panes_that_have_key('foc')
-                if panes: synerr(errpkg, "Pane definition command 'foc' already specified for panes: " + panes)
+                if panes: synerr(errpkg, "Directions command 'foc' already specified for panes: " + panes)
                 into('foc', True)
             else:
                 synerr(errpkg, "Unknown command '" + panedef_cmd + "'")
@@ -1406,11 +1503,12 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
             print("")
             print("(3) Fitting panes = {")
         # Run the recursive splitter
+        windowgram_w, windowgram_h = Windowgram_Dimensions_Int(windowgram)
         dim = {}
-        dim['win'] = [ panes_w, panes_h ]
+        dim['win'] = [ windowgram_w, windowgram_h ]
         dim['scr'] = [ user_wh[0], user_wh[1] ]
         tmuxomatic_filler_recursive( \
-            dim, linkid, list_split, list_links, list_panes, linkid[0], 1, 1, panes_w, panes_h )
+            dim, linkid, list_split, list_links, list_panes, linkid[0], 1, 1, windowgram_w, windowgram_h )
         # Verbose
         if ARGS.verbose >= 3:
             print("(3) }")
@@ -1442,7 +1540,9 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
             if not ent_panes:
                 synerr(errpkg,
                     "Unable to fully cross-link, probably because of an unsupported window layout.  " + \
-                    "Please see the included example file session_unsupported for more information...")
+                    "Please see the included example file session_unsupported for more information on what " + \
+                    "layouts are and are not possible in tmux.  Use flex to generate windowgrams that are " + \
+                    "always valid.")
             list_panes_dir = ent_panes['dir']       # "/tmp"        Directory of pane
             if list_panes_dir: adddir = " -c " + list_panes_dir
             else: adddir = ""
@@ -2014,6 +2114,7 @@ def cmd_use(*name_or_serial_REQUIRED):
         flexsense['printer'] = True
         flexmenu_index[0] = serial
         windowgram, warning = flexmenu_session.Get_Windowgram(serial, warning=True)
+        windowgram = Windowgram(windowgram).Export_Raw() # Windowgram should be clean
         if warning: flexsense['warnings'].append( warning )
     if name_or_serial.isdigit():
         serial = int(name_or_serial)
