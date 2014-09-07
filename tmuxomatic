@@ -67,7 +67,7 @@ VERSION = "2.2"                                     # x.y: x = Major feature, y 
 ##  2.2     TBD         New flex command: break
 ##                      Optional window specification with filename when using flex
 ##                      Fixed scale core to resolve accuracy problems in scale and break commands
-##                      Started windowgram class
+##                      Moved core windowgram functions into a central Windowgram class
 ##
 ##  2.1     2014-09-01  Cleared revision history for 1.x, added link in case it's needed
 ##                      If specified session file does not exist when using flex, it is created
@@ -675,7 +675,11 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 ## Windowgram class
 ##
 ## Interface for the general-purpose use of windowgram data.  Instances of this class should use the name wg.
-## Eventually this class will become a library for use in other applications.
+##
+## TODO:
+##
+##          Move flex commands into this class, or an accompanying class, free of shell interface concerns
+##          Move this class into a library for use in other applications
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 ##
@@ -708,10 +712,10 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 ##      ----------------------- ----------- ------------------------------------------------------------------------
 ##      Implicit Overlaps       12          Pane 1 overlaps pane 2, this is an implicit overlap
 ##                              22
-##      ----------------------- ----------- ------------------------------------------------------------------------
+##
 ##      Explicit Overlaps       11 22       Pane 2 overlaps pane 1, explicit implies multiple layers are used
 ##                              11 22
-##      ----------------------- ----------- ------------------------------------------------------------------------
+##
 ##      Positioned              112         These panes cannot be defined using nested splits, however these are
 ##                              452         valid in other environments where explicit positioning is possible
 ##                              433
@@ -728,13 +732,102 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 ##      layered  os             Has one or more layers with implicit overlaps and/or explicit overlaps
 ##      -------- -------------- -------------------------------------------------------------------------------------
 ##
-## The "???" represents a hypothetical console-based window management system that is more flexible, like a typical
-## window based user interface (of any modern operating system).  At the minimum it supports positioned windows, but if
-## it also supports overlapping panes then it would support layered windowgrams.  Does dvtm support positioning?
+## The "???" represents a hypothetical console-based tmux-like system with more flexible positioning.  Not necessarily
+## with overlap like a typical graphical user interface, though if it did it would then by extension support layered
+## windowgrams.  Does dvtm support positioning?
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
 linestrip = lambda line: (line[:line.find("#")] if line.find("#") >= 0 else line).strip()
+
+##
+## Windowgram Convert
+##
+## These are windowgram conversion macros as static methods
+##
+
+class Windowgram_Convert():
+
+    ## String <-> Lines
+
+    @staticmethod
+    def String_To_Lines(windowgram):
+        # No blank lines
+        return [ linestrip(line) for line in list(filter(None, (windowgram+"\n").split("\n"))) ]
+    @staticmethod
+    def Lines_To_String(windowgram_lines):
+        # Each line has one \n
+        return "\n".join([ line for line in windowgram_lines ]) + "\n"
+
+    ## String <-> Chars
+
+    @staticmethod
+    def String_To_Chars(windowgram):
+        # A list of lists, each containing one or more single characters representing a line
+        return [ [ ch for ch in list(ln) ] for ix, ln in enumerate(windowgram.split("\n")[:-1]) ]
+    @staticmethod
+    def Chars_To_String(windowgram_chars):
+        return Windowgram_Convert.Lines_To_String( [ "".join(line_chars) for line_chars in windowgram_chars ] )
+
+    ## String -> Parsed ... Reversibility not needed at the moment, but may be implemented in a future version
+
+    @staticmethod
+    def String_To_Parsed(windowgram):
+        # This function returns: windowgram_parsed, error_string, error_line
+        windowgram_lines = Windowgram_Convert.String_To_Lines(windowgram)
+        windowgram_parsed = {} # Indexed by pane: { 'Q': { 'n': 'Q', 'x': 1, 'y': 1, 'w': 1, 'h': 1  }, ... }
+        panes_y = 0 # Line number
+        try:
+            panes_x = panes_y = width = 0
+            for ix, line in enumerate(windowgram_lines):
+                if not line: continue
+                panes_y += 1
+                panes_x = 0
+                for ch in line:
+                    if ch not in PANE_CHARACTERS:
+                        raise Exception("Windowgram must contain valid identifiers: [0-9a-zA-Z]")
+                if panes_y > 1 and len(line) != width:
+                    raise Exception("Windowgram width does not match previous lines")
+                else:
+                    if width == 0: width = len(line)
+                    for ch in line:
+                        panes_x += 1
+                        if ch not in PANE_CHARACTERS:
+                            # Outside of valid pane identifier range
+                            raise Exception("Windowgram must contain valid identifiers: [0-9a-zA-Z]")
+                        # Builds "bounding box" around pane for easy error detection through overlap algorithm
+                        if not ch in windowgram_parsed:
+                            # New pane
+                            windowgram_parsed[ch] = { 'n': ch, 'x': panes_x, 'y': panes_y, 'w': 1, 'h': 1 }
+                        else:
+                            # Expand width
+                            x2 = panes_x - windowgram_parsed[ch]['x'] + 1
+                            if x2 > windowgram_parsed[ch]['w']:
+                                windowgram_parsed[ch]['w'] = x2
+                            # Expand height
+                            y2 = panes_y - windowgram_parsed[ch]['y'] + 1
+                            if y2 > windowgram_parsed[ch]['h']:
+                                windowgram_parsed[ch]['h'] = y2
+                            # Update x
+                            if windowgram_parsed[ch]['x'] > panes_x:
+                                windowgram_parsed[ch]['x'] = panes_x
+            if not windowgram_parsed: raise Exception("Windowgram not specified")
+        except Exception as error:
+            return None, str(error), panes_y
+        return windowgram_parsed, None, None
+
+    ## String -> Lines -> String ... Purifies the windowgram by stripping comments and whitespace
+
+    @staticmethod
+    def Purify(windowgram):
+        # Full cycle purification -- asserts consistency of form
+        return Windowgram_Convert.Lines_To_String( Windowgram_Convert.String_To_Lines( windowgram ) )
+
+##
+## Windowgram
+##
+## Error handling is done by polling GetErrorPair() after calling an error-generating method
+##
 
 class Windowgram():
 
@@ -742,78 +835,80 @@ class Windowgram():
         self.change_count = 0
         self.change_query = 0
         self.Import_Raw(windowgram_raw)
-        self.change_query = self.change_count
+        self.NoChange()
 
     def Reset(self):
         self.windowgram_string = None
-        self.windowgram_lines = None
-        self.windowgram_chars = None
-        self.windowgram_parsed = None
         self.metrics_width = None
         self.metrics_height = None
         self.analysis_layers = 0
         self.analysis_type = None
+        self.error_string = None
+        self.error_line = 0
         self.change_count += 1
+
+    def GetErrorPair(self): # Resets error when polled.  Returns: error_string, error_line
+        error_string = self.error_string
+        error_line = self.error_line
+        self.error_string = None
+        self.error_line = 0
+        return error_string, error_line
+
+    ##
+    ## Imports
+    ##
 
     def Import_Raw(self, windowgram_raw):
         self.Reset()
-        self.windowgram_string = Windowgram_Purify( windowgram_raw )
-        self.windowgram_lines = None
-        self.windowgram_chars = None
-        self.windowgram_parsed = None
-        self.metrics_width = 0
-        self.metrics_height = 0
+        self.windowgram_string = Windowgram_Convert.Purify( windowgram_raw ) # Strip all comments and whitespace
+        self.Analyze()
+        self.Changed()
+
+    def Import_String(self, windowgram_string): return Import_Raw( windowgram_string )
+    def Import_Lines(self, windowgram_lines): return Import_Raw( Windowgram_Convert.Lines_To_String(windowgram_lines) )
+    def Import_Chars(self, windowgram_chars): return Import_Raw( Windowgram_Convert.Chars_To_String(windowgram_chars) )
+    def Import_Parsed(self, windowgram_parsed): # Generates error
+        self.error = "Parsed format is not supported as an import method"
+
+    ##
+    ## Exports ... The windowgram is only converted upon request
+    ##
+
+    def Export_String(self): return self.windowgram_string
+    def Export_Lines(self): return Windowgram_Convert.String_To_Lines( self.windowgram_string )
+    def Export_Chars(self): return Windowgram_Convert.String_To_Chars( self.windowgram_string )
+    def Export_Parsed(self): # Generates error
+        windowgram_parsed, error_string, error_line = Windowgram_Convert.String_To_Parsed( self.windowgram_string )
+        if error_string:
+            windowgram_parsed = {}
+            self.error_string = error_string
+            self.error_line = error_line
+        return windowgram_parsed
+
+    ##
+    ## Analyze windowgram for metrics and supportability
+    ##
+
+    def Analyze(self):
+        windowgram_lines = Windowgram_Convert.String_To_Lines( self.windowgram_string )
+        self.metrics_width = max( [ len(line) for line in windowgram_lines ] ) if windowgram_lines else 0
+        self.metrics_height = len( windowgram_lines )
         self.analysis_layers = 1        # Fixed for now
         self.analysis_type = "split"    # Fixed for now
-        self.change_count += 1          # Rebuild complete
+    def Analyze_WidthHeight(self): return [ self.metrics_width, self.metrics_height ]
+    def Analyze_IsBlank(self): return True if not max(self.Analyze_WidthHeight()) else False
 
-    def Export_Raw(self):
-        # Converts to single string delimited by "\n", for direct inclusion in a configuration file
-        return self.windowgram_string
+    ##
+    ## Update / Change Detection
+    ##
 
-##
-## These need to be sorted out and moved into the class
-##
-
-def Windowgram_Purify(windowgram):
-    # Full cycle purification -- asserts consistency of form
-    return Windowgram_LinesToString( Windowgram_StringToLines( windowgram ) )
-def Windowgram_StringToLines(windowgram):
-    # No blank lines
-    return [ linestrip(line) for line in list(filter(None, (windowgram+"\n").split("\n"))) ]
-def Windowgram_LinesToString(windowgram_lines):
-    # Each line has one \n
-    return "\n".join([ line for line in windowgram_lines ]) + "\n"
-def Windowgram_StringToCharArray(windowgram):
-    # A list of lists, each containing one or more single characters representing a line
-    return [ [ ch for ch in list(ln) ] for ix, ln in enumerate(windowgram.split("\n")[:-1]) ]
-def Windowgram_CharArrayToString(windowgram_chars):
-    return Windowgram_LinesToString( [ "".join(line_chars) for line_chars in windowgram_chars ] )
+    def Changed(self): self.change_count += 1
+    def NoChange(self): self.change_query = self.change_count
+    def HasChanged_SenseOnly(self): return True if self.change_count == self.change_query else False
+    def HasChanged(self): flag = self.HasChanged_SenseOnly() ; NoChange() ; return flag
 
 ##
-## Queries: Metrics
-##
-
-def Windowgram_Dimensions_Int(windowgram):
-    w = h = 0
-    lines = Windowgram_StringToLines(windowgram)
-    for l in lines:
-        if len(l.strip()) > w: w = len(l.strip())
-        h += 1
-    return [ w, h ]
-def Windowgram_Dimensions_Float(windowgram):
-    return [ float(elem) for elem in Windowgram_Dimensions_Int(windowgram) ]
-
-##
-## Queries: Other
-##
-
-def Windowgram_IsBlank(windowgram):
-    dimensions = Windowgram_Dimensions_Int(windowgram)
-    return True if not dimensions[0] or not dimensions[1] else False
-
-##
-## Other
+## TODO: After migration is complete, Windowgram_Convert should not be used outside of the Windowgram class
 ##
 
 def Windowgram_OrderedUniques(windowgram):
@@ -824,7 +919,7 @@ def Windowgram_LostPanes(windowgram1, windowgram2):
         "".join(list(set(Windowgram_OrderedUniques(windowgram1)) - set(Windowgram_OrderedUniques(windowgram2)))) )
 def Windowgram_PaneListPair(windowgram): # available, unavailable
     # Mutually exclusive list of pane ids for given window ( PANE_CHARACTERS == available + unavailable )
-    windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( windowgram ) )
+    windowgram_lines = Windowgram_Convert.String_To_Lines( Windowgram_Convert.Purify( windowgram ) )
     unavailable = "".join(sorted( list(set(list("".join(windowgram_lines)))),
         key=lambda x: PANE_CHARACTERS.find(x) ))
     available = "".join(sorted( [ ch for ch in PANE_CHARACTERS if ch not in unavailable ],
@@ -837,11 +932,8 @@ def Windowgram_PaneListPair_Move(fr, to, batch): # fr, to
             fr = "".join([ch for ch in PANE_CHARACTERS if ch in fr and ch != pane])
             to = "".join([ch for ch in PANE_CHARACTERS if ch in to or ch == pane])
     return fr, to
-def Windowgram_Dimensions(windowgram): # w, h
-    windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( windowgram ) )
-    return len(windowgram_lines[0]), len(windowgram_lines)
 def Windowgram_PaneDimensions(windowgram, pane): # x1, y1, x2, y2
-    windowgram_lines = Windowgram_StringToLines( Windowgram_Purify( windowgram ) )
+    windowgram_lines = Windowgram_Convert.String_To_Lines( Windowgram_Convert.Purify( windowgram ) )
     x2 = y2 = -1
     x1 = len(windowgram_lines[0])
     y1 = len(windowgram_lines)
@@ -859,7 +951,7 @@ def Windowgram_PaneXYWH(windowgram, pane): # w, h
     w, h = x2 - x1 + 1, y2 - y1 + 1
     return x1, y1, w, h
 def Windowgram_HasPane(windowgram, pane):
-    for line in Windowgram_StringToLines( windowgram ):
+    for line in Windowgram_Convert.String_To_Lines( windowgram ):
         for ch in line:
             if ch == pane: return True
     return False
@@ -871,48 +963,6 @@ def Windowgram_GetNewPaneId(windowgram, preferred=None): # newpaneid, error
     if preferred not in PANE_CHARACTERS: return None, "Invalid pane identifier"
     if preferred not in available: return None, "Pane id `" + preferred + "` is in use"
     return preferred, None
-def Windowgram_LoadPaneDict(windowgram): # dict, error, linenumber
-    windowgram_lines = Windowgram_StringToLines(windowgram)
-    layout = {} # Indexed by pane: { 'Q': { 'n': 'Q', 'x': 1, 'y': 1, 'w': 1, 'h': 1  }, ... }
-    panes_y = 0 # Line number
-    try:
-        panes_x = panes_y = width = 0
-        for ix, line in enumerate(windowgram_lines):
-            if not line: continue
-            panes_y += 1
-            panes_x = 0
-            for ch in line:
-                if ch not in PANE_CHARACTERS:
-                    raise Exception("Windowgram must contain valid identifiers: [0-9a-zA-Z]")
-            if panes_y > 1 and len(line) != width:
-                raise Exception("Windowgram width does not match previous lines")
-            else:
-                if width == 0: width = len(line)
-                for ch in line:
-                    panes_x += 1
-                    if ch not in PANE_CHARACTERS:
-                        # Outside of valid pane identifier range
-                        raise Exception("Windowgram must contain valid identifiers: [0-9a-zA-Z]")
-                    # Builds "bounding box" around pane for easy error detection through overlap algorithm
-                    if not ch in layout:
-                        # New pane
-                        layout[ch] = { 'n': ch, 'x': panes_x, 'y': panes_y, 'w': 1, 'h': 1 }
-                    else:
-                        # Expand width
-                        x2 = panes_x - layout[ch]['x'] + 1
-                        if x2 > layout[ch]['w']:
-                            layout[ch]['w'] = x2
-                        # Expand height
-                        y2 = panes_y - layout[ch]['y'] + 1
-                        if y2 > layout[ch]['h']:
-                            layout[ch]['h'] = y2
-                        # Update x
-                        if layout[ch]['x'] > panes_x:
-                            layout[ch]['x'] = panes_x
-        if not layout: raise Exception("Windowgram not specified")
-    except Exception as error:
-        return None, str(error), panes_y
-    return layout, None, None
 
 
 
@@ -1197,7 +1247,7 @@ class SessionFile(object):
         self.modified = True
     def Replace_Windowgram(self, serial, windowgram):
         if serial < 1 or serial > self.Count_Windows(): return
-        self.windows[serial-1]["windowgram"] = Windowgram( windowgram ).Export_Raw() # Clean via class
+        self.windows[serial-1]["windowgram"] = Windowgram( windowgram ).Export_String() # Clean via class
         self.modified = True
     def Modified(self): # See flag use for limitations
         return self.modified
@@ -1213,23 +1263,13 @@ class SessionFile(object):
         return windowdeclaration_name( self.Get_WindowDeclarationLine( serial ) )
     def Get_WindowgramDimensions_Int(self, serial):
         windowgram = self.windows[serial-1]['windowgram']
-        return Windowgram_Dimensions_Int(windowgram)
-    def Get_Windowgram(self, serial, warning=None): # windowgram, warning
+        return Windowgram(windowgram).Analyze_WidthHeight()
+    def Get_Windowgram(self, serial): # windowgram
         if serial < 1 or serial > self.Count_Windows():
             if warning is None: return None
             return None, "Out of range"
-        windowgram = None
-        message = None
-        while True:
-            windowgram = Windowgram_Purify(self.windows[serial-1]['windowgram'])
-            if Windowgram_IsBlank(windowgram):
-                flexmenu_session.Replace_Windowgram(serial, "1")
-                message = "The windowgram was blank and had to be reinitialized"
-            else:
-                break
-        if warning is None:
-            return windowgram
-        return windowgram, message
+        windowgram = Windowgram_Convert.Purify(self.windows[serial-1]['windowgram'])
+        return windowgram
     def Add_Windowgram(self, comments, name, windowgram):
         self.windows.append( Window() )
         serial = len(self.windows)
@@ -1345,10 +1385,10 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
         # 2) Windowgram parser
         #
         windowgram_lines = window.SplitCleanByKey('windowgram')
-        windowgram = Windowgram_LinesToString( windowgram_lines )
+        windowgram = Windowgram_Convert.Lines_To_String( windowgram_lines )
         if ARGS.verbose >= 2:
             print( "\n".join([ "(2) Windowgram: " + line for line in windowgram_lines if line ]) )
-        layout, error, linenumber = Windowgram_LoadPaneDict(windowgram)
+        layout, error, linenumber = Windowgram_Convert.String_To_Parsed(windowgram)
         if error:
             SetLineNumber( window.GetLines('windowgram'), linenumber - 1 )
             synerr(errpkg, "Windowgram parsing error for window serial " + str(window_serial) + ": " + error)
@@ -1503,7 +1543,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
             print("")
             print("(3) Fitting panes = {")
         # Run the recursive splitter
-        windowgram_w, windowgram_h = Windowgram_Dimensions_Int(windowgram)
+        windowgram_w, windowgram_h = Windowgram(windowgram).Analyze_WidthHeight()
         dim = {}
         dim['win'] = [ windowgram_w, windowgram_h ]
         dim['scr'] = [ user_wh[0], user_wh[1] ]
@@ -1716,15 +1756,15 @@ def scalecore_v1(windowgram, w_chars, h_chars):
     pass
 
 def scalecore_v2(windowgram, w_chars, h_chars):
-    from_w, from_h = Windowgram_Dimensions_Int(windowgram)
+    from_w, from_h = Windowgram(windowgram).Analyze_WidthHeight()
     x_mul = float(w_chars) / float(from_w)
     y_mul = float(h_chars) / float(from_h)
-    windowgram_chars = Windowgram_StringToCharArray(windowgram)
+    windowgram_chars = Windowgram_Convert.String_To_Chars(windowgram)
     windowgram_chars_scaled = []
     for y in range(0, h_chars):
         windowgram_chars_scaled.append( [ windowgram_chars[ int(y/y_mul) ][ int(x/x_mul) ] \
             for x in range(0, w_chars) ] )
-    windowgram_new = Windowgram_CharArrayToString( windowgram_chars_scaled )
+    windowgram_new = Windowgram_Convert.Chars_To_String( windowgram_chars_scaled )
     return windowgram_new
 
 def scalecore(windowgram, w_chars, h_chars, retry=None):
@@ -1897,8 +1937,8 @@ arg_is_percentage = lambda how: True if how[-1:] == "%" else False
 
 def how_to_characters(arg, base_characters):
     try:
-        if arg_is_multiplier(arg[-1:]): return int(base_characters * float(arg[:-1]))
-        elif arg_is_percentage(arg[-1:]): return int(base_characters * (float(arg[:-1]) / 100.0))
+        if arg_is_multiplier(arg[-1:]): return int(float(base_characters) * float(arg[:-1]))
+        elif arg_is_percentage(arg[-1:]): return int(float(base_characters) * (float(arg[:-1]) / 100.0))
         return int(arg)
     except ValueError:
         return None
@@ -2100,7 +2140,7 @@ def cmd_list():
         selected = []
         if flexmenu_index[0]: selected.append( flexmenu_index[0] + 1 ) # Skip title line
         list_title = [ "Window", "Dimensions", "Panes", "Name" ]
-        table( flexout, ["    ", "  ->"], selected, list_title, list_lines )
+        table( flexout, ["    ", " -> "], selected, list_title, list_lines )
 
 @flex(
     command     = "use",
@@ -2113,9 +2153,12 @@ def cmd_use(*name_or_serial_REQUIRED):
     def using(serial):
         flexsense['printer'] = True
         flexmenu_index[0] = serial
-        windowgram, warning = flexmenu_session.Get_Windowgram(serial, warning=True)
-        windowgram = Windowgram(windowgram).Export_Raw() # Windowgram should be clean
-        if warning: flexsense['warnings'].append( warning )
+        windowgram = flexmenu_session.Get_Windowgram(serial)
+        if Windowgram(windowgram).Analyze_IsBlank():
+            flexmenu_session.Replace_Windowgram(serial, "1")
+            windowgram = flexmenu_session.Get_Windowgram(serial)
+            flexsense['warnings'].append( "The windowgram was blank and required initialization" )
+        windowgram = Windowgram(windowgram).Export_String() # Windowgram should be clean
     if name_or_serial.isdigit():
         serial = int(name_or_serial)
         if flexmenu_session.Serial_Is_Valid(serial): return using(serial)               # Serial match
@@ -2197,12 +2240,12 @@ def cmd_scale_1(xy_how):
     examples    = [ "scale 25 15", "scale 200% 50%", "scale 2x .5x" ],
 )
 def cmd_scale_2(x_how, y_how):
-    # Because text is low resolution, fractional scaling may produce unsatisfactory results
+    # Because text is inherently low resolution, fractional scaling may produce unsatisfactory results
     serial = flexmenu_index[0]
     if flexmenu_session.Serial_Is_Valid(serial):
         # Generics
         windowgram_before = flexmenu_session.Get_Windowgram(serial)
-        dim_before = Windowgram_Dimensions_Float(windowgram_before)
+        dim_before = Windowgram(windowgram_before).Analyze_WidthHeight()
         # Convert to common float multipliers for easy scaling
         args = [ dim_before[0], dim_before[1] ] # Default to no scale on error
         for ix, arg in enumerate([x_how, y_how]):
@@ -2214,7 +2257,7 @@ def cmd_scale_2(x_how, y_how):
         # Scale the windowgram
         windowgram_after = scalecore( windowgram_before, w_chars, h_chars )
         # Verify new windowgram (in case of scale error)
-        dim_result = Windowgram_Dimensions_Int(windowgram_after)
+        dim_result = Windowgram(windowgram_after).Analyze_WidthHeight()
         if dim_result[0] < 1 or dim_result[1] < 1:
             flexsense['warnings'].append( "*** Ignored *** Scale produced a blank windowgram" )
             return
@@ -2251,7 +2294,7 @@ def cmd_add(edge, size, newpane=None):
         for ix, directions_ent in enumerate(valid_directions):
             if edge in directions_ent:
                 # ix = 0123 == TBRL | NSEW
-                windowgram_lines = Windowgram_StringToLines(flexmenu_session.Get_Windowgram(serial))
+                windowgram_lines = Windowgram_Convert.String_To_Lines(flexmenu_session.Get_Windowgram(serial))
                 axis_length = len(windowgram_lines) if (ix == 0 or ix == 1) else len(windowgram_lines[0])
                 axis_width = len(windowgram_lines) if (ix == 2 or ix == 3) else len(windowgram_lines[0])
                 size_chars = how_to_characters( size, axis_length )
@@ -2266,14 +2309,14 @@ def cmd_add(edge, size, newpane=None):
                     windowgram_lines = [ line + (newpane * size_chars) for line in windowgram_lines ]
                 elif ix == 3: # Left
                     windowgram_lines = [ (newpane * size_chars) + line for line in windowgram_lines ]
-                flexmenu_session.Replace_Windowgram( serial, Windowgram_LinesToString( windowgram_lines ) )
+                flexmenu_session.Replace_Windowgram( serial, Windowgram_Convert.Lines_To_String( windowgram_lines ) )
                 return
         # Edge not found
         flexout("The edge you specified is invalid, please specify: top, bottom, left, or right.\n")
 
 @flex(
     command     = "break",
-    examples    = [ "break 1 3x3", "break z 3x1 X", "break 3x2 IVXLCD" ],
+    examples    = [ "break 1 3x3", "break 0 3x1 x", "break z 3x2 IVXLCD" ],
     description = "Break a pane into a grid of specified dimensions.  If the break does not produce even panes at " + \
                   "the specified resolution, it will automatically scale up to the next best fit.  The newpanes " + \
                   "parameter is an optional starting pane id, or pane rename sequence.",
@@ -2314,7 +2357,7 @@ def cmd_break(pane, grid, newpanes=None):
             if reason is not None:
                 return flexout("The grid you specified is invalid" + reason + "\n")
             # Extract the dimensions of the pane to determine requisite scale (if any)
-            wg_w, wg_h = Windowgram_Dimensions( windowgram )
+            wg_w, wg_h = Windowgram( windowgram ).Analyze_WidthHeight()
             px, py, pw, ph = Windowgram_PaneXYWH( windowgram, pane )
             # Perform a scale if needed
             scale_to = lambda r1, r2: (((float(int(r1/r2))+1.0)*r2) if (r1 % r2) else r1) if (r1 > r2) else r2
@@ -2332,7 +2375,7 @@ def cmd_break(pane, grid, newpanes=None):
             windowgram = windowgram_new
             flexmenu_session.Replace_Windowgram( serial, windowgram )
             # Dimensions must be reloaded in the event that the windowgram was scaled
-            wg_w, wg_h = Windowgram_Dimensions( windowgram )
+            wg_w, wg_h = Windowgram( windowgram ).Analyze_WidthHeight()
             px, py, pw, ph = Windowgram_PaneXYWH( windowgram, pane )
             # Manually move availability of pane so it may be reused
             unavailable, available = Windowgram_PaneListPair_Move( unavailable, available, pane )
@@ -2355,8 +2398,8 @@ def cmd_break(pane, grid, newpanes=None):
                     if PANE_CHARACTERS.find(paneid) >= PANE_CHARACTERS.find(lastpaneid): ix = chkix ; break
                 available += work[ix:] + work[:ix]
             # Replace pane with grid
-            windowgram_lines = Windowgram_StringToLines(windowgram)
-            windowgram = Windowgram_LinesToString( [
+            windowgram_lines = Windowgram_Convert.String_To_Lines(windowgram)
+            windowgram = Windowgram_Convert.Lines_To_String( [
                 "".join( [ ch if ch != pane else available[int((iy-py+1)*gh/ph)*gw+int((ix-px+1)*gw/pw)] \
                     for ix, ch in enumerate(list(line)) ] ) for iy, line in enumerate(windowgram_lines)
             ] )
@@ -2372,8 +2415,8 @@ def cmd_mirror():
     # TODO: Optional pane group mirror
     serial = flexmenu_index[0]
     if flexmenu_session.Serial_Is_Valid(serial):
-        windowgram_lines = Windowgram_StringToLines(flexmenu_session.Get_Windowgram(serial))
-        flexmenu_session.Replace_Windowgram( serial, Windowgram_LinesToString( \
+        windowgram_lines = Windowgram_Convert.String_To_Lines(flexmenu_session.Get_Windowgram(serial))
+        flexmenu_session.Replace_Windowgram( serial, Windowgram_Convert.Lines_To_String( \
             [ "".join( [ ch for ch in reversed(list(line)) ] ) for line in windowgram_lines ] ) )
 
 @flex(
@@ -2384,8 +2427,8 @@ def cmd_flip():
     # TODO: Optional pane group flip
     serial = flexmenu_index[0]
     if flexmenu_session.Serial_Is_Valid(serial):
-        windowgram_lines = Windowgram_StringToLines(flexmenu_session.Get_Windowgram(serial))
-        flexmenu_session.Replace_Windowgram( serial, Windowgram_LinesToString(reversed(windowgram_lines)) )
+        windowgram_lines = Windowgram_Convert.String_To_Lines(flexmenu_session.Get_Windowgram(serial))
+        flexmenu_session.Replace_Windowgram( serial, Windowgram_Convert.Lines_To_String(reversed(windowgram_lines)) )
 
 ##
 ## Commands: Terminators
