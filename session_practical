@@ -1,19 +1,22 @@
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 #
 # Practical example (session_practical)
 #
-# This is a more practical example of how one might use tmuxomatic.  Three example windows, each
-# for a specific purpose.  Note all windowgrams are unique, so you can make your own exactly as
-# you want it to appear.  Try the scale feature if you need large windowgrams for small panes.
+# This is a more practical example of how one might use tmuxomatic.  Three example
+# windows, each for a specific purpose.
 #
-#-------------------------------------------------------------------------------------------------
+# All windowgrams are unique, so make your own exactly as you want it to appear.
+#
+# If you need large windowgrams for small panes, try the new --flex console.
+#
+#--------------------------------------------------------------------------------------
 
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 #
-# First window: Administrative overview.  Summary of the system, its hostname, network addresses,
-# process list, some log tails, package installation, service summaries, etc.
+# First window: Administrative overview.  Host name, network addresses, process list,
+# some log tails, package installation, service summaries, etc.
 #
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 
 window system monitor
 
@@ -40,12 +43,13 @@ s run tail --follow=name /var/log/secure
 3 run echo "another log file here"
 4 run echo "a service overview here"
 
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 #
-# Second window: An irc client that you want to take up most of the screen, but you also want
-# tickers and scrollers for various feeds like twitter, news, financial monitoring, etc.
+# Second window: An irc client that you want to take up most of the screen, but maybe
+# you also want tickers and scrollers for various feeds like twitter, news, financial
+# monitoring, etc.
 #
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 
 window irc
 
@@ -68,12 +72,12 @@ dir ~/irc
 i foc
 i run echo "you'd run irc here"
 
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 #
-# Third window: A few cryptocurrency peers, the panes where they're running are configured to take
-# up very little space compared to a shell where you perform installations or check some logs.
+# Third window: A few cryptocurrency peers, the panes are set to take little space
+# compared to a shell where you perform installations, check logs, etc.
 #
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 
 window wallets
 abcX
@@ -99,6 +103,4 @@ dir /cc
 X run echo "disk monitor"
 1 run echo "work here"
 1 run ls -la
-
-#-------------------------------------------------------------------------------------------------
 

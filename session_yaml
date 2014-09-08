@@ -1,16 +1,19 @@
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 #
 # YAML session file example (session_yaml)
 #
-# This demonstrates a tmuxomatic session file in YAML format.  For specifics on tmuxomatic see
-# the other session examples.  Using YAML as the format for tmuxomatic sessions has one minor
-# limitation, the first line of a YAML block literal cannot be indented, this affects indenting
-# unlinked commands in the directions.
+# This demonstrates a tmuxomatic session file in YAML format.  For configuration
+# specifics, see the other session examples.
 #
-# IMPORTANT: Any comments will be lost when tmuxomatic writes to a YAML session file (for example
-# when using scale).  If you want to comment your session configurations, use shorthand.
+# Using YAML as the format for tmuxomatic sessions has one minor limitation, the first
+# line of a YAML block literal cannot be indented, this affects indenting unlinked
+# commands in the directions section (used in the other examples for readability).
+#
+# IMPORTANT: ALL comments will be lost when tmuxomatic writes to a YAML session file
+# (for example when using flex).  If you want to comment your session configurations,
+# use shorthand, and don't comment on the same lines as the windowgram.
 # 
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 
 ---
 

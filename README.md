@@ -8,18 +8,18 @@ At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux 
 
 Compare this window from `session_example`, with its screenshot from `tmuxomatic session_example`:
 
-	window example_one        # A new window begins like this, spaces in names are allowed
+	window example_one        # A new window begins like this, spaces in names allowed
 
-	AAAAAAvvvvvXXXXXTTTT      # The windowgram, it defines the shapes and positions of panes
-	jjjQQQQQQQuuuuuuTTTT      # Make your own, of any size and arrangement, 62 panes maximum
+	AAAAAAvvvvvXXXXXTTTT      # The windowgram, defines the shapes and positions of panes
+	jjjQQQQQQQuuuuuuTTTT      # Make your own, any size and arrangement, 62 panes maximum
 	jjjQQQQQQQuuuuuuTTTT
 	jjjQQQQQQQuuuuuuTTTT
 	0000llllllllllaaaaaa
 	1234llllllllllaaaaaa
 
-	  foc                     # Three 3-letter commands to remember: Focus, Directory, Run
-	  dir ~                   # Unlinked directory, becomes default for all undefined panes
-	A run figlet "A"          # Linked to pane A, this command prints a large "A" in pane A
+	  foc                     # Only three 3-letter commands: Focus, Directory, Run
+	  dir ~                   # Unlinked directory is the default for all undefined panes
+	A run figlet "A"          # Linked command to pane A, in this case prints a large "A"
 	Q run figlet "Q"
 	A foc
 
@@ -31,9 +31,9 @@ For additional features, see `tmuxomatic --help`.
 
 
 
-## Flex your tmuxomatic windowgrams
+## Flex your windowgrams
 
-**Flex is in development, this tutorial is a work in progress**
+**Flex is in development, and this tutorial is a work in progress**
 
 Windowgrams are a neat way of arranging workspaces.  For general layouts, a windowgram is typed up quickly.  But if you need one with more detail, you may find yourself doing a lot of ASCII art.  Not nearly as frustrating as manual pane splits, but somewhat inefficient.
 

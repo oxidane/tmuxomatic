@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Debugging: python3 setup.py
-
 from distutils.core import setup
 from distutils import sysconfig
 import re, os, sys
@@ -12,13 +10,14 @@ extract = lambda what: [re.search(r'"([^"]*)"', line).group() for line in lines 
 
 version = extract("VERSION")
 homepage = extract("HOMEPAGE")
+description = extract("DESCRIPTION")
 keywords = "tmux, screen, awesome"
 
-# Maybe someone could help get this sorted out properly.  I don't want to use a subdirectory or a manifest file for this.
-# When the user installs, I want tmuxomatic to go into the user's bin directory.  I have been able to accomplish this by
-# using the data_files parameter, which seems to work except for setup() imposing chmod 644.  So afterwards, if setup was
-# called with "install", we search for tmuxomatic in the user's path, and then chmod 755.  If you happen know of a way to
-# do this install without the chmod step, or in a more correct manner, please send a pull request with the changes.
+# Maybe someone could help get this sorted out properly.  I don't want to use a subdirectory or a manifest file.  When
+# the user installs, I want tmuxomatic to go into the user's bin directory.  I have been able to accomplish this by
+# using the data_files parameter, which seems to work except for setup() imposing chmod 644.  So afterwards, if setup
+# was called with "install", we search for tmuxomatic in the user's path, and then chmod 755.  If you happen know of a
+# way to do this install without a chmod step, or in a more correct manner, please send a pull request with the changes.
 
 packages = [] # ["tmuxomatic"]
 package_dir = {} # {'tmuxomatic': "/usr/bin"}
@@ -62,7 +61,7 @@ setup(
 	name="tmuxomatic",
 	version=version,
 
-	description="An altogether better way to do session management with tmux",
+	description=description,
 	license="BSD 3-Clause",
 	url=homepage,
 	download_url="https://pypi.python.org/pypi/tmuxomatic",
@@ -79,6 +78,8 @@ setup(
 	classifiers=classifiers,
 
 )
+
+# This is necessary to make tmuxomatic an executable on install, see notes above
 
 if "install" in sys.argv:
 	for path in os.environ["PATH"].split(os.pathsep):

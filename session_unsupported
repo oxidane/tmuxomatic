@@ -1,20 +1,20 @@
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 #
 # Unsupported layouts (session_unsupported)
 #
-# These unsupported layouts have to do with the way tmux itself works.  The window mechanism in
-# tmux is basically the nested arrangement of vertical and horizontal splits.  If such a split
-# cannot be found, the layout cannot be supported.  See "session_unsupported" in source for more
-# details.  Keep the clean split rule in mind, and you shouldn't have a problem with this.
+# These unsupported layouts have to do with the way tmux itself works.  The window
+# layout mechanism in tmux is basically the nested arrangement of vertical and
+# horizontal splits.  If such a split cannot be found, the layout cannot be supported.
+# See "session_unsupported" in source for more details.
 #
-#-------------------------------------------------------------------------------------------------
+# Follow the clean split rule, and you won't have a problem with unsupported layouts.
+#
+#--------------------------------------------------------------------------------------
 
 window tmux_incompatibility      # The following layout is not possible in tmux
 122                              # This is the tmux edge case that is mentioned in the source
 154                              # The problem with this layout is that there are no clean splits
 334                              # If tmux supports new layout mechanics, this could be fixed
-
-#-------------------------------------------------------------------------------------------------
 
 window overlap_not_supported     # Overlapping panes are not supported by tmuxomatic or tmux
 12                               # This is an inherent limitation of the tmux split arrangement

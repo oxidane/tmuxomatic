@@ -61,10 +61,11 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##     Revisions     |
 ##-------------------+
 ##
+DESCRIPTION = "An altogether better way to do session management with tmux" # TODO: Need a better description for 2.x
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
 VERSION = "2.2"                                     # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.2     TBD         New flex command: break
+##  2.2     2014-09-08  New flex command: break
 ##                      Optional window specification with filename when using flex
 ##                      Fixed scale core to resolve accuracy problems in scale and break commands
 ##                      Moved windowgram functions into a Windowgram class

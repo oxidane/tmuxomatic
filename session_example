@@ -1,29 +1,29 @@
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 #
 # Simple two window example (session_example)
 #
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 
-window example_one        # A new window begins like this, spaces in names are allowed
+window example_one        # A new window begins like this, spaces in names allowed
 
-AAAAAAvvvvvXXXXXTTTT      # The windowgram, it defines the shapes and positions of panes
-jjjQQQQQQQuuuuuuTTTT      # Make your own, of any size and arrangement, 62 panes maximum
+AAAAAAvvvvvXXXXXTTTT      # The windowgram, defines the shapes and positions of panes
+jjjQQQQQQQuuuuuuTTTT      # Make your own, any size and arrangement, 62 panes maximum
 jjjQQQQQQQuuuuuuTTTT
 jjjQQQQQQQuuuuuuTTTT
 0000llllllllllaaaaaa
 1234llllllllllaaaaaa
 
-  foc                     # Three 3-letter commands to remember: Focus, Directory, Run
-  dir ~                   # Unlinked directory, becomes default for all undefined panes
-A run figlet "A"          # Linked to pane A, this command prints a large "A" in pane A
+  foc                     # Only three 3-letter commands: Focus, Directory, Run
+  dir ~                   # Unlinked directory is the default for all undefined panes
+A run figlet "A"          # Linked command to pane A, in this case prints a large "A"
 Q run figlet "Q"
 A foc
 
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 
 window example_two        # Multiple windows per session
 
-111XYZ                    # Try scaling with "tmuxomatic session_example --scale 2 5x 4x"
+111XYZ                    # Try scaling this window in --flex with "scale 5x 4x"
 000000
 000000
 
@@ -36,5 +36,5 @@ Z run echo "Z"
 0 run ls -la
 1 run htop
 
-#-------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
 
