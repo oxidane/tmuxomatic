@@ -67,7 +67,7 @@ VERSION = "2.2"                                     # x.y: x = Major feature, y 
 ##  2.2     TBD         New flex command: break
 ##                      Optional window specification with filename when using flex
 ##                      Fixed scale core to resolve accuracy problems in scale and break commands
-##                      Moved core windowgram functions into a central Windowgram class
+##                      Moved windowgram functions into a Windowgram class
 ##
 ##  2.1     2014-09-01  Cleared revision history for 1.x, added link in case it's needed
 ##                      If specified session file does not exist when using flex, it is created
@@ -678,6 +678,7 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 ##
 ## TODO:
 ##
+##          Update all uses of windowgram to use a wg instance, instead of instantiating to use a method
 ##          Move flex commands into this class, or an accompanying class, free of shell interface concerns
 ##          Move this class into a library for use in other applications
 ##
@@ -863,7 +864,6 @@ class Windowgram():
         self.windowgram_string = Windowgram_Convert.Purify( windowgram_raw ) # Strip all comments and whitespace
         self.Analyze()
         self.Changed()
-
     def Import_String(self, windowgram_string): return Import_Raw( windowgram_string )
     def Import_Lines(self, windowgram_lines): return Import_Raw( Windowgram_Convert.Lines_To_String(windowgram_lines) )
     def Import_Chars(self, windowgram_chars): return Import_Raw( Windowgram_Convert.Chars_To_String(windowgram_chars) )
@@ -899,7 +899,7 @@ class Windowgram():
     def Analyze_IsBlank(self): return True if not max(self.Analyze_WidthHeight()) else False
 
     ##
-    ## Update / Change Detection
+    ## Change Detection (has change_count been incremented since last query)
     ##
 
     def Changed(self): self.change_count += 1
@@ -907,62 +907,71 @@ class Windowgram():
     def HasChanged_SenseOnly(self): return True if self.change_count == self.change_query else False
     def HasChanged(self): flag = self.HasChanged_SenseOnly() ; NoChange() ; return flag
 
+    ##
+    ## Pane / Panes
+    ##
+
+    def Panes_GetUsedUnused(self): # used, unused
+        # Mutually exclusive list of pane ids for given windowgram ... Always true: ( used + unused ) == PANE_CHARACTERS
+        windowgram_lines = Windowgram_Convert.String_To_Lines( self.windowgram_string )
+        used = "".join( sorted( list(set(list("".join(windowgram_lines)))), key=lambda x: PANE_CHARACTERS.find(x) ) )
+        unused = "".join( [ paneid for paneid in PANE_CHARACTERS if paneid not in used ] )
+        return used, unused
+
+    def Panes_GetNewPaneId(self, preferred=None): # newpaneid, error
+        # Input preferred: None == First available pane / paneid == Specified if valid
+        used, unused = self.Panes_GetUsedUnused()
+        if not unused: return None, "All pane identifiers have been used"
+        if preferred is None: return unused[0], None
+        if preferred not in PANE_CHARACTERS: return None, "Invalid pane identifier"
+        if preferred not in unused: return None, "Pane id `" + preferred + "` is in use"
+        return preferred, None
+
+    def Panes_HasPane(self, pane):
+        for line in Windowgram_Convert.String_To_Lines( self.windowgram_string ):
+            for ch in line:
+                if ch == pane: return True
+        return False
+
+    def Panes_PaneXYXY(self, pane): # x1, y1, x2, y2
+        if not self.Panes_HasPane( pane ): return 0, 0, 0, 0
+        windowgram_lines = Windowgram_Convert.String_To_Lines( self.windowgram_string )
+        x2 = y2 = -1
+        x1 = len(windowgram_lines[0])
+        y1 = len(windowgram_lines)
+        for y, line in enumerate(windowgram_lines):
+            for x, char in enumerate(line):
+                if char == pane:
+                    if x < x1: x1 = x
+                    if x > x2: x2 = x
+                    if y < y1: y1 = y
+                    if y > y2: y2 = y
+        return x1+1, y1+1, x2+1, y2+1
+
+    def Panes_PaneXYWH(self, pane): # x, y, w, h
+        if not self.Panes_HasPane( pane ): return 0, 0, 0, 0
+        x1, y1, x2, y2 = self.Panes_PaneXYXY( pane )
+        return x1, y1, x2-x1+1, y2-y1+1
+
 ##
-## TODO: After migration is complete, Windowgram_Convert should not be used outside of the Windowgram class
+## Pane List Functions ... Pane lists are produced by wg.Panes_GetUsedUnused()
 ##
 
-def Windowgram_OrderedUniques(windowgram):
-    paneids = set(list("".join(windowgram.split("\n"))))
-    return "".join([ paneid for paneid in PANE_CHARACTERS if paneid in paneids ])
-def Windowgram_LostPanes(windowgram1, windowgram2):
-    return Windowgram_OrderedUniques( # Additionally useful in this context
-        "".join(list(set(Windowgram_OrderedUniques(windowgram1)) - set(Windowgram_OrderedUniques(windowgram2)))) )
-def Windowgram_PaneListPair(windowgram): # available, unavailable
-    # Mutually exclusive list of pane ids for given window ( PANE_CHARACTERS == available + unavailable )
-    windowgram_lines = Windowgram_Convert.String_To_Lines( Windowgram_Convert.Purify( windowgram ) )
-    unavailable = "".join(sorted( list(set(list("".join(windowgram_lines)))),
-        key=lambda x: PANE_CHARACTERS.find(x) ))
-    available = "".join(sorted( [ ch for ch in PANE_CHARACTERS if ch not in unavailable ],
-        key=lambda x: PANE_CHARACTERS.find(x) ))
-    return available, unavailable
-def Windowgram_PaneListPair_Move(fr, to, batch): # fr, to
-    for pane in list(batch):
-        if pane in PANE_CHARACTERS and (pane in fr or pane not in to):
-            # Assert ordering every pass, in some situations the batch is expected to be unsorted
-            fr = "".join([ch for ch in PANE_CHARACTERS if ch in fr and ch != pane])
-            to = "".join([ch for ch in PANE_CHARACTERS if ch in to or ch == pane])
-    return fr, to
-def Windowgram_PaneDimensions(windowgram, pane): # x1, y1, x2, y2
-    windowgram_lines = Windowgram_Convert.String_To_Lines( Windowgram_Convert.Purify( windowgram ) )
-    x2 = y2 = -1
-    x1 = len(windowgram_lines[0])
-    y1 = len(windowgram_lines)
-    for y, line in enumerate(windowgram_lines):
-        for x, char in enumerate(line):
-            if char == pane:
-                if x < x1: x1 = x
-                if x > x2: x2 = x
-                if y < y1: y1 = y
-                if y > y2: y2 = y
-    return x1+1, y1+1, x2+1, y2+1
-def Windowgram_PaneXYWH(windowgram, pane): # w, h
-    if not Windowgram_HasPane( windowgram, pane ): return 0, 0, 0, 0
-    x1, y1, x2, y2 = Windowgram_PaneDimensions(windowgram, pane)
-    w, h = x2 - x1 + 1, y2 - y1 + 1
-    return x1, y1, w, h
-def Windowgram_HasPane(windowgram, pane):
-    for line in Windowgram_Convert.String_To_Lines( windowgram ):
-        for ch in line:
-            if ch == pane: return True
-    return False
-def Windowgram_GetNewPaneId(windowgram, preferred=None): # newpaneid, error
-    # Input preferred: None == First available pane / paneid == Specified if valid
-    available, unavailable = Windowgram_PaneListPair(windowgram)
-    if not available: return None, "All pane identifiers have been used"
-    if preferred is None: return available[0], None
-    if preferred not in PANE_CHARACTERS: return None, "Invalid pane identifier"
-    if preferred not in available: return None, "Pane id `" + preferred + "` is in use"
-    return preferred, None
+def PaneList_DiffLost(this, that): # lostpanes
+    # Parameters are Windowgram instances, aka wg
+    used1, _ = this.Panes_GetUsedUnused()
+    used2, _ = that.Panes_GetUsedUnused()
+    lostpanes, _ = Windowgram( "".join( list(set(used1) - set(used2)) ) ).Panes_GetUsedUnused()
+    return lostpanes
+
+def PaneList_MovePanes(list1, list2, panes): # newlist1, newlist2
+    # Moves specified batch of panes (if present) from "list1" into "list2" ... Returns new lists in that order
+    for pane in list(panes):
+        if pane in PANE_CHARACTERS and (pane in list1 or pane not in list2):
+            # Assert ordering every pass, as in some situations the panes will be unsorted
+            list1 = "".join([ch for ch in PANE_CHARACTERS if ch in list1 and ch != pane])
+            list2 = "".join([ch for ch in PANE_CHARACTERS if ch in list2 or ch == pane])
+    return list1, list2
 
 
 
@@ -1270,6 +1279,9 @@ class SessionFile(object):
             return None, "Out of range"
         windowgram = Windowgram_Convert.Purify(self.windows[serial-1]['windowgram'])
         return windowgram
+    def Get_Wg(self, serial): # wg
+        windowgram = self.Get_Windowgram(serial)
+        return Windowgram(windowgram) if windowgram else None
     def Add_Windowgram(self, comments, name, windowgram):
         self.windows.append( Window() )
         serial = len(self.windows)
@@ -1778,7 +1790,7 @@ def scalecore(windowgram, w_chars, h_chars, retry=None):
     paneid = exp_w = exp_h = None
     if retry and type(retry) is tuple and len(retry) == 3:
         paneid, exp_w, exp_h = retry # retry == ( paneid, w, h )
-        if Windowgram_HasPane( windowgram, paneid ): retries = retries_max
+        if Windowgram( windowgram ).Panes_HasPane( paneid ): retries = retries_max
         else: paneid = None
     # Scale until satisfied; this loop is for pane measurement, since the windowgram should always scale on first try.
     if retries < 1: retries = 1
@@ -1786,7 +1798,7 @@ def scalecore(windowgram, w_chars, h_chars, retry=None):
     while retries:
         windowgram_scaled = scalecore_v2( windowgram, try_w, try_h ) # Use v2 for now, see notes elsewhere
         if paneid:
-            _, _, new_w, new_h = Windowgram_PaneXYWH( windowgram_scaled, paneid )
+            _, _, new_w, new_h = Windowgram( windowgram_scaled ).Panes_PaneXYWH( paneid )
             if new_w == exp_w and new_h == exp_h: break
             try_w += 1 if new_w < exp_w else -1 if new_w > exp_w else 0
             try_h += 1 if new_h < exp_h else -1 if new_h > exp_h else 0
@@ -2130,8 +2142,8 @@ def cmd_list():
         dimensions_int = flexmenu_session.Get_WindowgramDimensions_Int(serial) # Use this to avoid reinitialization
         dimensions_str = str(dimensions_int[0]) + "x" + str(dimensions_int[1])
         windowgram = flexmenu_session.Get_Windowgram( serial )
-        available, unavailable = Windowgram_PaneListPair( windowgram )
-        panecount = str(len(unavailable))
+        used, unused = Windowgram( windowgram ).Panes_GetUsedUnused()
+        panecount = str(len(used))
         list_lines.append( [ number_str, dimensions_str, panecount, name ] )
     if not list_lines:
         flexout("    There are no windows, create one with: new <name>")
@@ -2203,7 +2215,7 @@ def cmd_print():
     serial = flexmenu_index[0]
     if flexmenu_session.Serial_Is_Valid(serial):
         windowgram = flexmenu_session.Get_Windowgram( serial )
-        unused, used = Windowgram_PaneListPair( windowgram )
+        used, unused = Windowgram( windowgram ).Panes_GetUsedUnused()
         flexout("Windowgram for window #" + str(serial) + " (" + flexmenu_session.Get_Name(serial) + ") ..." + \
             " " + used + " < used panes unused > " + unused + "\n")
         flexout( "\n".join([ "    " + l for l in flexmenu_session.Get_Windowgram(serial).split("\n") ]) )
@@ -2265,7 +2277,7 @@ def cmd_scale_2(x_how, y_how):
             flexsense['warnings'].append( "*** Ignored *** Scale produced erroneous result" )
             return
         # Alert user to any panes lost
-        lost_panes = Windowgram_LostPanes( windowgram_before, windowgram_after )
+        lost_panes = PaneList_DiffLost( Windowgram(windowgram_before), Windowgram(windowgram_after) )
         if len(lost_panes):
             flexsense['warnings'].append( "Lost " + str( len(lost_panes) ) + " panes: " + lost_panes )
         # Update the windowgram
@@ -2287,7 +2299,7 @@ def cmd_add(edge, size, newpane=None):
     serial = flexmenu_index[0]
     if flexmenu_session.Serial_Is_Valid(serial):
         windowgram = flexmenu_session.Get_Windowgram(serial)
-        newpane, error = Windowgram_GetNewPaneId( windowgram, newpane )
+        newpane, error = Windowgram( windowgram ).Panes_GetNewPaneId( newpane )
         if error:
             flexout("Unable to secure a new pane id: " + error + "\n")
             return
@@ -2331,12 +2343,12 @@ def cmd_break(pane, grid, newpanes=None):
         # windowgram constituent panes, while simultaneously providing a grid of even sizes.  The problem is that common
         # use cases would result in massive sizes to accommodate; though accurate, it would not be very practical.
         windowgram = flexmenu_session.Get_Windowgram( serial )
-        available, unavailable = Windowgram_PaneListPair( windowgram )
+        used, unused = Windowgram( windowgram ).Panes_GetUsedUnused()
         if pane not in PANE_CHARACTERS:
             flexout("The pane you specified is invalid\n")
-        elif pane in available:
+        elif pane in unused:
             flexout("The pane you specified does not exist\n")
-        else: # if pane in available:
+        else: # if pane in unused:
             # Grid analysis and validity check
             gw = gh = panes = 0
             reason = ""
@@ -2345,20 +2357,20 @@ def cmd_break(pane, grid, newpanes=None):
                 if gw.isdigit() and gh.isdigit():
                     gw, gh = int(gw), int(gh)
                     panes = gw * gh
-                    len_available = len(available) + 1 # The +1 accounts for the target pane that becomes available
+                    len_unused = len(unused) + 1 # The +1 accounts for the target pane that becomes available
                     if not panes:
                         reason = ": Grid you specified results in no panes"
                     elif panes > len(PANE_CHARACTERS):
                         reason = ": Grid is " + str(panes) + " panes, exceeding max of " + str(len(PANE_CHARACTERS))
-                    elif panes > len_available:
-                        reason = ": Grid is " + str(panes) + " panes, only " + str(len_available) + " will be available"
+                    elif panes > len_unused:
+                        reason = ": Grid is " + str(panes) + " panes, only " + str(len_unused) + " will be available"
                     else:
                         reason = None
             if reason is not None:
                 return flexout("The grid you specified is invalid" + reason + "\n")
             # Extract the dimensions of the pane to determine requisite scale (if any)
             wg_w, wg_h = Windowgram( windowgram ).Analyze_WidthHeight()
-            px, py, pw, ph = Windowgram_PaneXYWH( windowgram, pane )
+            px, py, pw, ph = Windowgram( windowgram ).Panes_PaneXYWH( pane )
             # Perform a scale if needed
             scale_to = lambda r1, r2: (((float(int(r1/r2))+1.0)*r2) if (r1 % r2) else r1) if (r1 > r2) else r2
             scale_to_pane_w = int( scale_to( float(pw), float(gw) ) ) # Pane target x
@@ -2367,7 +2379,7 @@ def cmd_break(pane, grid, newpanes=None):
             stw_h = int(float(wg_h) * float(scale_to_pane_h) / float(ph)) # Window target y
             # Scale
             windowgram_new = scalecore( windowgram, stw_w, stw_h, ( pane, scale_to_pane_w, scale_to_pane_h ) )
-            _, _, npw, nph = Windowgram_PaneXYWH( windowgram_new, pane )
+            _, _, npw, nph = Windowgram( windowgram_new ).Panes_PaneXYWH( pane )
             # Validate
             if (npw != scale_to_pane_w or nph != scale_to_pane_h):
                 return flexout("The resulting windowgram does not have the expected pane size\n")
@@ -2376,31 +2388,31 @@ def cmd_break(pane, grid, newpanes=None):
             flexmenu_session.Replace_Windowgram( serial, windowgram )
             # Dimensions must be reloaded in the event that the windowgram was scaled
             wg_w, wg_h = Windowgram( windowgram ).Analyze_WidthHeight()
-            px, py, pw, ph = Windowgram_PaneXYWH( windowgram, pane )
+            px, py, pw, ph = Windowgram( windowgram ).Panes_PaneXYWH( pane )
             # Manually move availability of pane so it may be reused
-            unavailable, available = Windowgram_PaneListPair_Move( unavailable, available, pane )
-            # Set starting panes.  By default this starts at the lowest available pane id and iterates forward.  However
+            used, unused = PaneList_MovePanes( used, unused, pane )
+            # Set starting panes.  By default this starts at the lowest unused pane id and iterates forward.  However
             # the user may specify a pane to start the iteration at, for example if it's a 3x2 grid (6 panes produced):
             #   specified == (None)    produces == 012345
             #                A                     ABCDEF
             #                BLN                   BLNOPQ
             #                BLN1                  BLN123
             if newpanes:
-                work, available = available, ""
+                work, unused = unused, ""
                 lastpaneid = ""
                 for paneid in list(newpanes):
                     if paneid in PANE_CHARACTERS: lastpaneid = paneid # Last valid paneid
-                    if paneid in work and paneid not in unavailable: available += paneid # Ignore invalid panes
-                work, unavailable = Windowgram_PaneListPair_Move( work, unavailable, available )
+                    if paneid in work and paneid not in used: unused += paneid # Ignore invalid panes
+                work, used = PaneList_MovePanes( work, used, unused )
                 # Combine by next highest match
                 ix = 0 # In case of empty set
                 for chkix, paneid in enumerate(list(work)):
                     if PANE_CHARACTERS.find(paneid) >= PANE_CHARACTERS.find(lastpaneid): ix = chkix ; break
-                available += work[ix:] + work[:ix]
+                unused += work[ix:] + work[:ix]
             # Replace pane with grid
             windowgram_lines = Windowgram_Convert.String_To_Lines(windowgram)
             windowgram = Windowgram_Convert.Lines_To_String( [
-                "".join( [ ch if ch != pane else available[int((iy-py+1)*gh/ph)*gw+int((ix-px+1)*gw/pw)] \
+                "".join( [ ch if ch != pane else unused[int((iy-py+1)*gh/ph)*gw+int((ix-px+1)*gw/pw)] \
                     for ix, ch in enumerate(list(line)) ] ) for iy, line in enumerate(windowgram_lines)
             ] )
             # Replace windowgram
