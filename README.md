@@ -93,7 +93,7 @@ What I actually have in mind for pane `0` looks like this:
 
 There are two ways to do this; one uses `split` and `break`, the other uses `break` and `join`.  Let's go with the latter, since we'll be using `split` in a moment.
 
-First we `break` the new pane `0` into a grid, `3` panes wide by `5` panes high -- this reflects the envisioned shape above.  We'll also make use of the optional parameter, forcing new panes to start at `A` for readability.
+First we `break` the new pane `0` into a grid, `3` panes wide by `5` panes high -- this reflects the envisioned shape above.  For readability, we'll make use of the optional parameter so that new panes to start at `A`.
 
 	flex> break 0 3x5 A
 

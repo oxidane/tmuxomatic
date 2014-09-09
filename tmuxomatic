@@ -63,7 +63,10 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DESCRIPTION = "An altogether better way to do session management with tmux" # TODO: Need a better description for 2.x
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
-VERSION = "2.2"                                     # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.3"                                     # x.y: x = Major feature, y = Minor feature or bug fix
+##
+##  2.3     TBD         New flex command: join
+##                      Switched to scale core v1 for more accurate scale results
 ##
 ##  2.2     2014-09-08  New flex command: break
 ##                      Optional window specification with filename when using flex
@@ -1716,59 +1719,71 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Scale core ... Temporary location
+## Flex cores
+##
+## These functions are shared by multiple flex commands.
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
+##
+## Scale core ... Scales a windowgram
+##
+## Used by ... scale, break
+##
+
 def scalecore_v1(windowgram, w_chars, h_chars):
-    # Example of discrepancy between v1 and v2: "n 1 ; b 1 2x2 ; s 3x3 ; s 2x2" ... v2 loses 3 panes, v1 does not
-    # TODO: Reimplement v1, investigate problem, decide which to use.
-    """
-    if ARGS.scale and int(ARGS.scale[0]) == window_serial:
-        def scale_one( element, multiplier ):
-            # Scale element using integer rounding, multiplier must be float
-            q, r = math.modf( float(element - 1) * multiplier )
-            if q >= .5: r += 1
-            return int(r) + 1
-        def scale_windowgram( list_panes, sx, sy ):
-            # Scales the windowgram
-            # Because text is low resolution, fractional scaling may produce unsatisfactory results
-            ax, ay = float(sx), float(sy)
-            lost = 0
-            for pane in list_panes:
-                if ax: pane['w'] = scale_one( pane['x'] + pane['w'], sx )
-                if ay: pane['h'] = scale_one( pane['y'] + pane['h'], sy )
-                if ax: pane['x'] = scale_one( pane['x'], sx )
-                if ay: pane['y'] = scale_one( pane['y'], sy )
-                if ax: pane['w'] -= pane['x']
-                if ay: pane['h'] -= pane['y']
-                if not pane['x'] or not pane['y'] or not pane['w'] or not pane['h']: lost += 1
-            return lost
-        def render_windowgram( list_panes ):
-            # Prints the windowgram
-            windowgram = []
-            for pane in list_panes:
-                for y in range( pane['y'], pane['y'] + pane['h'] ):
-                    for x in range( pane['x'], pane['x'] + pane['w'] ):
-                        ix = int(x) - 1
-                        iy = int(y) - 1
-                        while len(windowgram) <= iy: windowgram.append([])
-                        while len(windowgram[iy]) <= ix: windowgram[iy].append([])
-                        windowgram[iy][ix] = pane['n']
-            windowgram_str = ""
-            for line in windowgram:
-                windowgram_str += "".join(line) + "\n"
-            return windowgram_str
-        # Extract the multiplier
-        ax, dx = [ 1.0, 1.0 ] # Set this
-        # Perform the scale
-        list_panes_scaled = copy.deepcopy( list_panes )
-        lost = scale_windowgram( list_panes_scaled, ax, ay )
-        wincfg_scaled = render_windowgram( list_panes_scaled ) # Used either way
-    """
-    pass
+    ##
+    ## Original scale code used in tmuxomatic 1.x
+    ##
+    def scale_one(element, multiplier):
+        # Scale element using integer rounding, multiplier must be float
+        q, r = math.modf( float(element - 1) * multiplier )
+        if q >= .5: r += 1
+        return int(r) + 1
+    def scale_windowgram(list_panes, ax, ay):
+        # Scales the windowgram
+        lost = 0
+        for paneid in list_panes.keys():
+            pane = list_panes[paneid]
+            if ax: pane['w'] = scale_one( pane['x'] + pane['w'], ax )
+            if ay: pane['h'] = scale_one( pane['y'] + pane['h'], ay )
+            if ax: pane['x'] = scale_one( pane['x'], ax )
+            if ay: pane['y'] = scale_one( pane['y'], ay )
+            if ax: pane['w'] -= pane['x']
+            if ay: pane['h'] -= pane['y']
+            if not pane['x'] or not pane['y'] or not pane['w'] or not pane['h']: lost += 1
+        return lost
+    def render_windowgram(list_panes):
+        # Prints the windowgram
+        windowgram = []
+        for paneid in list_panes.keys():
+            pane = list_panes[paneid]
+            for y in range( pane['y'], pane['y'] + pane['h'] ):
+                for x in range( pane['x'], pane['x'] + pane['w'] ):
+                    ix = int(x) - 1
+                    iy = int(y) - 1
+                    while len(windowgram) <= iy: windowgram.append([])
+                    while len(windowgram[iy]) <= ix: windowgram[iy].append([])
+                    windowgram[iy][ix] = pane['n']
+        windowgram_str = ""
+        for line in windowgram:
+            windowgram_str += "".join(line) + "\n"
+        return windowgram_str
+    # Get pane list
+    list_panes = Windowgram(windowgram).Export_Parsed()
+    # Set the multipliers
+    ww, wh = Windowgram(windowgram).Analyze_WidthHeight()
+    ax, ay = float(w_chars) / float(ww), float(h_chars) / float(wh)
+    # Perform the scale
+    list_panes_scaled = copy.deepcopy( list_panes )
+    lost = scale_windowgram( list_panes_scaled, ax, ay )
+    windowgram_new = render_windowgram( list_panes_scaled )
+    return windowgram_new
 
 def scalecore_v2(windowgram, w_chars, h_chars):
+    ##
+    ## Simpler but less accurate scale code added in tmuxomatic 2.0
+    ##
     from_w, from_h = Windowgram(windowgram).Analyze_WidthHeight()
     x_mul = float(w_chars) / float(from_w)
     y_mul = float(h_chars) / float(from_h)
@@ -1781,8 +1796,10 @@ def scalecore_v2(windowgram, w_chars, h_chars):
     return windowgram_new
 
 def scalecore(windowgram, w_chars, h_chars, retry=None):
-    # Scope, and clone in case of error
-    windowgram_scaled = windowgram
+    ##
+    ## Main entry for all scale functions
+    ##
+    windowgram_scaled = windowgram # Scope, and clone in case of error
     # Retry with necessary increment and/or decrement until desired pane dimensions are reached.  This is required for
     # commands like "break", which need to scale to a specific pane size.  There's likely a way to derive these metrics
     # reliably, but this works too.  Verify that two resizes are necessary with: "n 1 ; s 42x42 ; b 1 6x6 ; b 1 3x3"
@@ -1797,7 +1814,8 @@ def scalecore(windowgram, w_chars, h_chars, retry=None):
     if retries < 1: retries = 1
     try_w, try_h = w_chars, h_chars
     while retries:
-        windowgram_scaled = scalecore_v2( windowgram, try_w, try_h ) # Use v2 for now, see notes elsewhere
+        # Scale core discrepancy example ... "n 1 ; b 1 2x2 ; s 3x3 ; s 2x2" ... Note: v2 loses 3 panes, v1 does not
+        windowgram_scaled = scalecore_v1( windowgram, try_w, try_h ) # Preliminarily using v1 as of 2.3
         if paneid:
             _, _, new_w, new_h = Windowgram( windowgram_scaled ).Panes_PaneXYWH( paneid )
             if new_w == exp_w and new_h == exp_h: break
@@ -2287,7 +2305,7 @@ def cmd_scale_2(x_how, y_how):
 @flex(
     command     = "add",
     examples    = [ "add right 50% A", "add b 3", "add l .5x" ],
-    description = "Append pane to a windowgram edge.  Edge is identified by name (e.g., right), or a variety of " + \
+    description = "Append pane to windowgram edge.  Edge is identified by name (e.g., right), or a variety of " + \
                   "abbreviations (e.g., r, rt).  The size of the pane may be defined as an exact character size, " + \
                   "a percentage (%), or a multiplier (x).  If a pane id is not specified, lowest available will " + \
                   "be used.",
@@ -2419,6 +2437,19 @@ def cmd_break(pane, grid, newpanes=None):
             # Replace windowgram
             flexmenu_session.Replace_Windowgram( serial, windowgram )
             # Break complete
+
+@flex(
+    command     = "join",
+    examples    = [ "join abcd efgh", "join abcd.x efgh.y" ],
+    description = "Join a contiguous group of panes into a single pane.  Multiple joins are supported.  By default " + \
+                  "the joined pane is named after the first pane specified.  Optionally, you may rename the joined " + \
+                  "pane by adding `.` followed by pane id (see examples).",
+    aliases     = [ ["j", "join "], ["group", "join "], ["merge", "join "], ],
+)
+def cmd_join(*groups_REQUIRED):
+    serial = flexmenu_index[0]
+    if flexmenu_session.Serial_Is_Valid(serial):
+        flexout("TODO")
 
 @flex(
     command     = "mirror",
