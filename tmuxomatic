@@ -1824,6 +1824,25 @@ def scalecore(windowgram, w_chars, h_chars, retry=None):
         retries -= 1
     return windowgram_scaled
 
+##
+## Group core ... Tests group of panes for contiguity, returns group capability, if panes are missing it suggests them
+##
+## Used by ... join
+## Expect .... drag (if scaling?), split (???), swap, insert, delete, flip (group), mirror (group)
+##
+
+class GroupStatus:
+    Success = 1
+    Invalid_Panes = 2
+    Insufficient_Panes = 3
+
+def group(windowgram, panes): # flag_groupstatus, string_suggestions
+    ##
+    ## Attempts to group the specified panes and returns the status in flag_groupable.  If the panes are valid, but
+    ## there are gaps in the group, then it recursively detects which panes need to be added to complete the group.
+    ##
+    pass
+
 
 
 ##----------------------------------------------------------------------------------------------------------------------
@@ -2248,29 +2267,29 @@ flexgroup = "modifiers"
 @flex(
     command     = "scale",
     examples    = [ "scale 25", "scale 500%", "scale 2x", "scale 64:36" ],
-    description = "Scale a windowgram.  Valid parameters are multipliers (x), percentages (%), exact character " + \
+    description = "Scale the windowgram.  Valid parameters are multipliers (x), percentages (%), exact character " + \
                   "dimensions, or any combination thereof.  Use a space ( ), colon (:), or times (x) to separate " + \
                   "the x and y axis.  If only one axis is specified then the value will be applied to both x and y.",
     aliases     = [ ["s", "scale "], ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"],
                     ["wider", "scale 200%:100%"], ["thinner", "scale 50%:100%"], ["taller", "scale 100%:200%"],
                     ["shorter", "scale 100%:50%"], ["higher", "scale 100%:200%"], ["lower", "scale 100%:50%"], ],
 )
-def cmd_scale_1(xy_how):
+def cmd_scale_combo(xy_how):
     # Split directives like "64:36" and "64x36" into "64 36", also works using percentages "200%:50%", or using
     # multipliers "2x:2x" as long as ":" is used instead of "x" as there would be a conflict with the multiplier
     # TODO: This could be more flexible to cover cases like "2xx2" and "2x2x" by using regex
     xy_spl = None
     if xy_how.count("x") == 1 and xy_how[-1:] != "x": xy_spl = xy_how.split("x")
     elif xy_how.count(":") == 1: xy_spl = xy_how.split(":")
-    if xy_spl and len(xy_spl) == 2: return cmd_scale_2( *xy_spl )
+    if xy_spl and len(xy_spl) == 2: return cmd_scale_split( *xy_spl )
     # Others are simply cloned like "2x" into "2x 2x"
-    return cmd_scale_2( xy_how, xy_how )
+    return cmd_scale_split( xy_how, xy_how )
 
 @flex(
     command     = "scale",
     examples    = [ "scale 25 15", "scale 200% 50%", "scale 2x .5x" ],
 )
-def cmd_scale_2(x_how, y_how):
+def cmd_scale_split(x_how, y_how):
     # Because text is inherently low resolution, fractional scaling may produce unsatisfactory results
     serial = flexmenu_index[0]
     if flexmenu_session.Serial_Is_Valid(serial):
@@ -2447,9 +2466,51 @@ def cmd_break(pane, grid, newpanes=None):
     aliases     = [ ["j", "join "], ["group", "join "], ["merge", "join "], ],
 )
 def cmd_join(*groups_REQUIRED):
+    groups = groups_REQUIRED # Readability
+    argument = lambda ix: str(ix+1) + " (\"" + groups_REQUIRED[ix] + "\")" # Show group the user specified
     serial = flexmenu_index[0]
-    if flexmenu_session.Serial_Is_Valid(serial):
-        flexout("TODO")
+    if flexmenu_session.Serial_Is_Valid( serial ):
+        wg = flexmenu_session.Get_Wg( serial )
+        # Repackage groups so all have the rename element
+        work, groups = groups, []
+        for group in work: groups.append( group if "." in group else (group + "." + group[0]) )
+        # Walk all groups and build join lists
+        panes_clipped = ""
+        for ix, group in enumerate(groups):
+            try:
+                # Make sure group is superficially valid
+                if group.count(".") > 1: raise Exception("Argument contains more than one rename delimiter")
+                invalids = "".join([ ch for ch in set(group) if ch not in PANE_CHARACTERS and ch != "." ])
+                if invalids: raise Exception("Group contains invalid characters: " + invalids)
+                # Verify rename and quietly strip duplicate panes
+                group_l, group_r = group.split(".")
+                if len(group_r) == 0: raise Exception("Rename delimiter used but subsequent pane unspecified")
+                if len(group_r) > 1: raise Exception("Only one pane should be specified after the rename delimiter")
+                group = "".join( [ ch for ch in sorted(set(group_l), key=lambda x: group.find(x)) ] ) + "." + group_r
+                # Build group, simulate clip, test presence
+                notfound = ""
+                for ch in [ ch for ch in PANE_CHARACTERS if ch in set(group.split(".")[0]) ]: # Ordered set
+                    if ch in panes_clipped: raise Exception("Pane \"" + ch + "\" was already used by a previous group")
+                    if not wg.Panes_HasPane( ch ): notfound += ch
+                    else: panes_clipped += ch
+                if notfound:
+                    raise Exception("Windowgram does not have pane" + ("(s) " if len(notfound)-1 else " ") + notfound)
+            except Exception as error:
+                return flexout("Error with argument " + argument(ix) + ": " + str(error))
+        # Test the duplication of target panes by matching them against availability adjusted for panes clipped
+        used, unused = wg.Panes_GetUsedUnused()
+        used = "".join(list(set(used) - set(panes_clipped)))
+        unused = "".join( [ ch for ch in PANE_CHARACTERS if ch in (unused + panes_clipped) ] )
+        for ix, group in enumerate(groups):
+            try:
+                group_l, group_r = group.split(".")
+                if group_r in used:
+                    raise Exception("Attempting to rename to pane " + group_r + " when it's in use")
+                used += group_r
+            except Exception as error:
+                return flexout("Error with argument " + argument(ix) + ": " + str(error))
+        # Perform the joins, and detect pane gaps in the group
+        flexout("Join is still in development")
 
 @flex(
     command     = "mirror",
