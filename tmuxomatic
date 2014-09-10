@@ -975,6 +975,13 @@ class Windowgram():
         x1, y1, x2, y2 = self.Panes_PaneXYXY( pane )
         return x1, y1, x2-x1+1, y2-y1+1
 
+    def Panes_Renamer(self, panes, pane):
+        # Supports multiple panes renaming, use only when you know the results will be valid
+        new_lines = []
+        for line in Windowgram_Convert.String_To_Lines( self.windowgram_string ):
+            new_lines.append( "".join( [ (ch if ch not in panes else pane) for ch in line ] ) )
+        self.Import_Lines( new_lines )
+
 ##
 ## Windowgram Masking Functions
 ##
@@ -2447,6 +2454,11 @@ def cmd_add(edge, size, newpane=None):
                     ["shatter", "break "], ["fragment", "break "], ["crush", "break "], ],
 )
 def cmd_break(pane, grid, newpanes=None):
+    # As an example of avoiding unnecessary complexity: It's easy to incorporate support for group as target.  Such an
+    # algorithm would break all panes in group equally and apply newpanes linearly.  But a minor complication arises.
+    # The need to find the most efficient break sequence, or common divisors, in order to minimize windowgram size
+    # explosions.  It seems easily managed by the user of flex; simply break them one by one in a sequence that yields
+    # personally satisfactory results.  Because it's already possible with flex, this would only add some complexity.
     serial = flexmenu_index[0]
     if flexmenu_session.Serial_Is_Valid(serial):
         # In order to produce a break of even proportions, we have to scale this windowgram up to next best fit.  It
@@ -2582,7 +2594,8 @@ def cmd_join(*groups_REQUIRED):
                 used += group_r
             except Exception as error:
                 return flexout("Error with argument " + argument(ix) + ": " + str(error))
-        # Perform the joins, and detect pane gaps in the group
+        # Perform the joins, detecting pane gaps in the group, resulting windowgram is paired for later merging
+        renames = []
         for group in groups:
             # Join preprocessing
             group_l, group_r = group.split(".")
@@ -2592,7 +2605,25 @@ def cmd_join(*groups_REQUIRED):
             if result is GroupStatus.Insufficient_Panes:
                 return flexout("The group " + argument(ix) + " isn't whole, but it would be if you add: " + suggestions)
             # Join ... By now the group is fully vetted: entirely valid, rectangularly whole
-            flexout("Join is still in development")
+            pair_w = Windowgram( wg.Export_String() )
+            pair_m = Windowgram_Mask_Generate( pair_w, group_l )
+            pair_w.Panes_Renamer( group_l, group_r )
+            renames.append( [ pair_w, pair_m ] )
+        # A separate merge step is required to prevent name conflicts where the user makes use of the rename option.
+        # Almost made this wg.Import_Mosaic(*renames), but I don't see a need for it elsewhere at the moment.
+        # There is probably a more pythonic way to do this, but this works too.
+        s_l = wg.Export_Lines() # Source
+        for w, m in renames:
+            t_l = w.Export_Lines() # Target
+            m_l = m.Export_Lines() # Mask
+            w_l, s_l = s_l, [] # Work
+            for iy in range(len(w_l)):
+                line = ""
+                for ix in range(len(w_l[iy])): line += w_l[iy][ix] if m_l[iy][ix] != MASKPANE_1 else t_l[iy][ix]
+                s_l.append(line)
+        wg.Import_Lines( s_l )
+        # Update windowgram now that all joins have been completed successfully
+        flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
 
 @flex(
     command     = "mirror",

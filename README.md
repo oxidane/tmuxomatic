@@ -108,6 +108,21 @@ First we `break` the new pane `0` into a grid, `3` panes wide by `5` panes high 
 	1111111111111111111111111MMMMNNNNOOOO
 	1111111111111111111111111MMMMNNNNOOOO
 
+Using one `join` command, we complete the envisioned layout described above.  Join takes each parameter as a group of multiple panes to be joined together.  By default, the joined pane is named after the first pane in the group.  But we'll be using the optional rename, by appending `.` followed by the new pane id.
+
+	flex> join ABC.z DG.B EH.L FI.N JM.b KN.l LO.n
+
+	1111111111111111111111111zzzzzzzzzzzz
+	1111111111111111111111111zzzzzzzzzzzz
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111bbbbllllnnnn
+	1111111111111111111111111bbbbllllnnnn
+	1111111111111111111111111bbbbllllnnnn
+	1111111111111111111111111bbbbllllnnnn
+
 **TODO: join, split, rename, swap, mirror, drag, delete, insert**
 
 
