@@ -108,7 +108,7 @@ First we `break` the new pane `0` into a grid, `3` panes wide by `5` panes high 
 	1111111111111111111111111MMMMNNNNOOOO
 	1111111111111111111111111MMMMNNNNOOOO
 
-**TODO: join, split, rename, swap, mirror, drag**
+**TODO: join, split, rename, swap, mirror, drag, delete, insert**
 
 
 

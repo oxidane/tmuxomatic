@@ -255,10 +255,20 @@ DEBUG_SCANLINE  = False                 # Shows the clean break scanline in acti
 
 # Fixed Settings (requires source update)
 
-PANE_CHARACTERS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" # Official order "[0-9a-zA-Z]"
 MINIMUM_TMUX    = "1.8"                 # Minimum supported tmux version (1.8 is required for absolute sizing)
 VERBOSE_MAX     = 4                     # 0 = quiet, 1 = summary, 2 = inputs, 3 = fitting, 4 = commands
+
+# Panes Primary
+
+PANE_CHARACTERS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" # Official order "[0-9a-zA-Z]"
 MAXIMUM_PANES   = len(PANE_CHARACTERS)  # 62 maximum panes (not windows)
+
+# Panes Extended (other than transparency, these are of transitory use and never saved to file)
+
+PANE_RESERVED   = ".@:"                 # Recognized for special purposes ... Reminder: "#" and " " cannot be used
+MASKPANE_X      = "."                   # Transparency pane id
+MASKPANE_1      = "@"                   # Mask character: One
+MASKPANE_0      = ":"                   # Mask character: Zero
 
 # Aliases for flexible directions
 
@@ -746,6 +756,13 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 linestrip = lambda line: (line[:line.find("#")] if line.find("#") >= 0 else line).strip()
 
 ##
+## To support masking, an extended set of pseudo-panes must be recognized as valid within windowgram class methods
+##
+
+def ValidPane(ch, extend=False): return True if (ch in PANE_CHARACTERS or (extend and ch in PANE_RESERVED)) else False
+def ValidPanes(extend=False): return (PANE_CHARACTERS + PANE_RESERVED) if extend else PANE_CHARACTERS
+
+##
 ## Windowgram Convert
 ##
 ## These are windowgram conversion macros as static methods
@@ -757,12 +774,10 @@ class Windowgram_Convert():
 
     @staticmethod
     def String_To_Lines(windowgram):
-        # No blank lines
-        return [ linestrip(line) for line in list(filter(None, (windowgram+"\n").split("\n"))) ]
+        return [ linestrip(line) for line in list(filter(None, (windowgram+"\n").split("\n"))) ] # No blank lines
     @staticmethod
     def Lines_To_String(windowgram_lines):
-        # Each line has one \n
-        return "\n".join([ line for line in windowgram_lines ]) + "\n"
+        return "\n".join([ line for line in windowgram_lines ]) + "\n" # Each line has one \n
 
     ## String <-> Chars
 
@@ -777,8 +792,7 @@ class Windowgram_Convert():
     ## String -> Parsed ... Reversibility not needed at the moment, but may be implemented in a future version
 
     @staticmethod
-    def String_To_Parsed(windowgram):
-        # This function returns: windowgram_parsed, error_string, error_line
+    def String_To_Parsed(windowgram, extend=False): # windowgram_parsed, error_string, error_line
         windowgram_lines = Windowgram_Convert.String_To_Lines(windowgram)
         windowgram_parsed = {} # Indexed by pane: { 'Q': { 'n': 'Q', 'x': 1, 'y': 1, 'w': 1, 'h': 1  }, ... }
         panes_y = 0 # Line number
@@ -789,7 +803,7 @@ class Windowgram_Convert():
                 panes_y += 1
                 panes_x = 0
                 for ch in line:
-                    if ch not in PANE_CHARACTERS:
+                    if not ValidPane(ch, extend):
                         raise Exception("Windowgram must contain valid identifiers: [0-9a-zA-Z]")
                 if panes_y > 1 and len(line) != width:
                     raise Exception("Windowgram width does not match previous lines")
@@ -797,8 +811,7 @@ class Windowgram_Convert():
                     if width == 0: width = len(line)
                     for ch in line:
                         panes_x += 1
-                        if ch not in PANE_CHARACTERS:
-                            # Outside of valid pane identifier range
+                        if not ValidPane(ch, extend):
                             raise Exception("Windowgram must contain valid identifiers: [0-9a-zA-Z]")
                         # Builds "bounding box" around pane for easy error detection through overlap algorithm
                         if not ch in windowgram_parsed:
@@ -836,7 +849,8 @@ class Windowgram_Convert():
 
 class Windowgram():
 
-    def __init__(self, windowgram_raw):
+    def __init__(self, windowgram_raw, extend=False):
+        self.extend = extend # For masking
         self.change_count = 0
         self.change_query = 0
         self.Import_Raw(windowgram_raw)
@@ -865,12 +879,14 @@ class Windowgram():
 
     def Import_Raw(self, windowgram_raw):
         self.Reset()
-        self.windowgram_string = Windowgram_Convert.Purify( windowgram_raw ) # Strip all comments and whitespace
+        self.windowgram_string = Windowgram_Convert.Purify( windowgram_raw ) # Strip comments and whitespace
         self.Analyze()
         self.Changed()
-    def Import_String(self, windowgram_string): return Import_Raw( windowgram_string )
-    def Import_Lines(self, windowgram_lines): return Import_Raw( Windowgram_Convert.Lines_To_String(windowgram_lines) )
-    def Import_Chars(self, windowgram_chars): return Import_Raw( Windowgram_Convert.Chars_To_String(windowgram_chars) )
+    def Import_String(self, windowgram_string): return self.Import_Raw( windowgram_string )
+    def Import_Lines(self, windowgram_lines):
+        return self.Import_Raw( Windowgram_Convert.Lines_To_String(windowgram_lines) )
+    def Import_Chars(self, windowgram_chars):
+        return self.Import_Raw( Windowgram_Convert.Chars_To_String(windowgram_chars) )
     def Import_Parsed(self, windowgram_parsed): # Generates error
         self.error = "Parsed format is not supported as an import method"
 
@@ -882,7 +898,8 @@ class Windowgram():
     def Export_Lines(self): return Windowgram_Convert.String_To_Lines( self.windowgram_string )
     def Export_Chars(self): return Windowgram_Convert.String_To_Chars( self.windowgram_string )
     def Export_Parsed(self): # Generates error
-        windowgram_parsed, error_string, error_line = Windowgram_Convert.String_To_Parsed( self.windowgram_string )
+        windowgram_parsed, error_string, error_line = \
+            Windowgram_Convert.String_To_Parsed( self.windowgram_string, self.extend )
         if error_string:
             windowgram_parsed = {}
             self.error_string = error_string
@@ -916,10 +933,11 @@ class Windowgram():
     ##
 
     def Panes_GetUsedUnused(self): # used, unused
-        # Mutually exclusive list of pane ids for given windowgram ... Always true: ( used + unused ) == PANE_CHARACTERS
+        # Mutually exclusive list of pane ids for given windowgram
         windowgram_lines = Windowgram_Convert.String_To_Lines( self.windowgram_string )
-        used = "".join( sorted( list(set(list("".join(windowgram_lines)))), key=lambda x: PANE_CHARACTERS.find(x) ) )
-        unused = "".join( [ paneid for paneid in PANE_CHARACTERS if paneid not in used ] )
+        used = "".join( sorted( list(set(list("".join(windowgram_lines)))), 
+            key=lambda x: ValidPanes(self.extend).find(x) ) )
+        unused = "".join( [ paneid for paneid in ValidPanes(self.extend) if paneid not in used ] )
         return used, unused
 
     def Panes_GetNewPaneId(self, preferred=None): # newpaneid, error
@@ -927,7 +945,7 @@ class Windowgram():
         used, unused = self.Panes_GetUsedUnused()
         if not unused: return None, "All pane identifiers have been used"
         if preferred is None: return unused[0], None
-        if preferred not in PANE_CHARACTERS: return None, "Invalid pane identifier"
+        if preferred not in ValidPanes(self.extend): return None, "Invalid pane identifier"
         if preferred not in unused: return None, "Pane id `" + preferred + "` is in use"
         return preferred, None
 
@@ -958,7 +976,28 @@ class Windowgram():
         return x1, y1, x2-x1+1, y2-y1+1
 
 ##
-## Pane List Functions ... Pane lists are produced by wg.Panes_GetUsedUnused()
+## Windowgram Masking Functions
+##
+
+def Windowgram_Mask_Generate(wg, panes): # wg_mask
+    # Returns a windowgram with non-standard panes for use with masking: "." for zero, ":" for one
+    windowgram_parsed = wg.Export_Parsed()
+    width, height = wg.Analyze_WidthHeight()
+    # Produce mask
+    mask_windowgram_chars = []
+    while len(mask_windowgram_chars) < height: mask_windowgram_chars.append( list(MASKPANE_0 * width) )
+    for key in list(panes):
+        pane = windowgram_parsed[key]
+        for y in range( pane['y'], pane['y'] + pane['h'] ):
+            for x in range( pane['x'], pane['x'] + pane['w'] ):
+                mask_windowgram_chars[y-1][x-1] = MASKPANE_1
+    # Return mask as wg instance
+    wg_mask = Windowgram("", True) # Create a windowgram for masking
+    wg_mask.Import_Chars( mask_windowgram_chars )
+    return wg_mask
+
+##
+## Pane List Functions
 ##
 
 def PaneList_DiffLost(this, that): # lostpanes
@@ -971,11 +1010,14 @@ def PaneList_DiffLost(this, that): # lostpanes
 def PaneList_MovePanes(list1, list2, panes): # newlist1, newlist2
     # Moves specified batch of panes (if present) from "list1" into "list2" ... Returns new lists in that order
     for pane in list(panes):
-        if pane in PANE_CHARACTERS and (pane in list1 or pane not in list2):
+        if pane in ValidPanes() and (pane in list1 or pane not in list2):
             # Assert ordering every pass, as in some situations the panes will be unsorted
-            list1 = "".join([ch for ch in PANE_CHARACTERS if ch in list1 and ch != pane])
-            list2 = "".join([ch for ch in PANE_CHARACTERS if ch in list2 or ch == pane])
+            list1 = "".join([ch for ch in ValidPanes() if ch in list1 and ch != pane])
+            list2 = "".join([ch for ch in ValidPanes() if ch in list2 or ch == pane])
     return list1, list2
+
+def PaneList_AssimilatedSorted(this, that): # this_plus_that_assimilated_and_sorted
+    return "".join( sorted( set( this + that ), key=lambda x: ValidPanes().find(x) ) )
 
 
 
@@ -1828,7 +1870,7 @@ def scalecore(windowgram, w_chars, h_chars, retry=None):
 ## Group core ... Tests group of panes for contiguity, returns group capability, if panes are missing it suggests them
 ##
 ## Used by ... join
-## Expect .... drag (if scaling?), split (???), swap, insert, delete, flip (group), mirror (group)
+## Anticipating ... drag (if scaling?), split (???), swap, insert, delete, flip (group), mirror (group)
 ##
 
 class GroupStatus:
@@ -1836,12 +1878,43 @@ class GroupStatus:
     Invalid_Panes = 2
     Insufficient_Panes = 3
 
-def group(windowgram, panes): # flag_groupstatus, string_suggestions
+def groupcore(wg, panes): # flag_groupstatus, string_suggestions
     ##
-    ## Attempts to group the specified panes and returns the status in flag_groupable.  If the panes are valid, but
-    ## there are gaps in the group, then it recursively detects which panes need to be added to complete the group.
+    ## Groups the specified panes and returns the findings.  If the panes are valid, but there are gaps in the group,
+    ## it recursively detects which panes need to be added to complete the group.  If a group is determined to be valid,
+    ## the windowgram may be trivially updated by the user using a simple search and replace.
     ##
-    pass
+    used, unused = wg.Panes_GetUsedUnused()
+    # Pane validity
+    for pane in set(panes):
+        if pane not in used or pane in unused:
+            return GroupStatus.Invalid_Panes, None
+    # Function for assembly of panes detected within any gaps of the mask
+    def pane_deficit_detection(wg_win, x1, y1, x2, y2, panes):
+        # Parameters: windowgram, rectangular bounds of mask, valid panes
+        deficient_panes = ""
+        wgw_windowgram_chars = wg_win.Export_Chars()
+        wgm_windowgram_chars = wg_msk.Export_Chars()
+        for y in range( len(wgw_windowgram_chars) ):
+            for x in range( len(wgw_windowgram_chars[y]) ):
+                w, m = wgw_windowgram_chars[y][x], wgm_windowgram_chars[y][x]
+                if x >= x1-1 and x <= x2-1 and y >= y1-1 and y <= y2-1 and w not in set(panes):
+                    deficient_panes += w
+        return deficient_panes
+    # Run deficit detection until none remain (e.g., mask == windowgram)
+    suggestions = ""
+    while True:
+        # Draw mask and yield rectangular bounds
+        wg_msk = Windowgram_Mask_Generate( wg, panes )
+        x1, y1, x2, y2 = wg_msk.Panes_PaneXYXY( MASKPANE_1 )
+        # Find pane content of any existing gaps
+        deficient_panes = pane_deficit_detection( wg, x1, y1, x2, y2, panes )
+        if not deficient_panes: break
+        panes = PaneList_AssimilatedSorted( panes, deficient_panes )
+        suggestions = PaneList_AssimilatedSorted( suggestions, deficient_panes )
+    # Result by now will be either of these
+    if not suggestions: return GroupStatus.Success, ""
+    return GroupStatus.Insufficient_Panes, suggestions
 
 
 
@@ -2510,7 +2583,16 @@ def cmd_join(*groups_REQUIRED):
             except Exception as error:
                 return flexout("Error with argument " + argument(ix) + ": " + str(error))
         # Perform the joins, and detect pane gaps in the group
-        flexout("Join is still in development")
+        for group in groups:
+            # Join preprocessing
+            group_l, group_r = group.split(".")
+            result, suggestions = groupcore(wg, group_l)
+            if result is GroupStatus.Invalid_Panes: # Occurs if groupcore() panes parameter is invalid
+                return flexout("Argument " + argument(ix) + " contains invalid panes.")
+            if result is GroupStatus.Insufficient_Panes:
+                return flexout("The group " + argument(ix) + " isn't whole, but it would be if you add: " + suggestions)
+            # Join ... By now the group is fully vetted: entirely valid, rectangularly whole
+            flexout("Join is still in development")
 
 @flex(
     command     = "mirror",
