@@ -63,7 +63,10 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DESCRIPTION = "An altogether better way to do session management with tmux" # TODO: Need a better description for 2.x
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
-VERSION = "2.3"                                     # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.4"                                     # x.y: x = Major feature, y = Minor feature or bug fix
+##
+##  2.4     TBD         New flex command: split
+##                      Improved flex introduction
 ##
 ##  2.3     2014-09-10  New flex command: join
 ##                      Switched to scale core v1 for more accurate scale results
@@ -2693,7 +2696,7 @@ def flex_shell(rows, session, serial=0):
     flexout("")
     flexout("___ _   ___ _ _")
     flexout("__  _   __   _     Flex for tmuxomatic " + VERSION)
-    flexout("_   ___ ___ _ _    Modify windowgrams with visually expressive commands")
+    flexout("_   ___ ___ _ _    The object-oriented windowgram editor")
     flexout("")
     ##
     ## Show list of windows, or assign selected window
