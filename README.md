@@ -39,17 +39,17 @@ Introduced in tmuxomatic 2.0, flex aims to automate the windowgram.
 
 Flex is an object-oriented windowgram editor.  Its commands are visually expressive, naturally worded, logically ordered, and minimally documented.  This simple command set can be used to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who want detailed windowgrams without the tedium of manual entry.
 
-There are five key concepts behind the flex command set:
+The key concepts behind the flex command set:
 
-* **Pane** -- Single character pane identifier representing one pane in a windowgram
-* **Group** -- String of one or more panes that together form a full rectange without gaps
-* **Edge** -- String of only those panes that border an edge (an imaginary line between panes)
-* **Size** -- Sizes are expressed in exact characters, or contextually as percentages or multipliers
-* **Direction** -- Cardinal directions (up, down, left, right), also used for windowgram and group edges
+* **Pane**: Single character pane identifier representing one pane in a windowgram
+* **Group**: String of one or more panes that together form a full rectangle (normally without gaps)
+* **Edge**: String of panes that border an edge (the imaginary line between panes)
+* **Size**: Sizes are expressed in exact characters, or contextually as percentages or multipliers
+* **Direction**: Cardinal directions (up, down, left, right), also used for windowgram and group edges
 
-Most of the flex commands combine one or more of these concepts to convey a visual expression.  Take a look at the tutorial to see how these commands and concepts are used to easily manipulate a windowgram.
+Most flex commands combine one or more of these concepts to convey a visual expression.  Take a look at the tutorial to see how these are used to easily manipulate a windowgram.
 
-# Flex Tutorial
+### Flex Tutorial
 
 Let's use flex to build a windowgram that previously required a lot of typing.  Begin by opening the flex console on the session file `session_flexample`.  Note that flex will create the file for you if it does not already exist.
 
@@ -120,7 +120,7 @@ First we `break` the new pane `0` into a grid, `3` panes wide by `5` panes high 
 	1111111111111111111111111MMMMNNNNOOOO
 	1111111111111111111111111MMMMNNNNOOOO
 
-Using one `join` command, we complete the envisioned layout.  Join takes each parameter as a group of multiple panes to be joined together.  By default, the joined pane is named after the first pane in the group.  But we'll be using the optional rename, by appending `.` followed by the new pane id.
+Using one `join` command, we complete the envisioned layout.  Join takes each parameter as a group of panes to be joined together.  By default, the joined pane is named after the first pane in the group.  But we'll be using the optional rename, by appending `.` followed by the new pane id.
 
 	flex> join ABC.z DG.B EH.L FI.N JM.b KN.l LO.n
 
@@ -135,7 +135,8 @@ Using one `join` command, we complete the envisioned layout.  Join takes each pa
 	1111111111111111111111111bbbbllllnnnn
 	1111111111111111111111111bbbbllllnnnn
 
-**Flex is in development, and this tutorial is a work in progress**
+**NOTE: Flex is in development, and this tutorial is a work in progress**
+
 **TODO: split, rename, swap, mirror, drag, delete, insert**
 
 
