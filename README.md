@@ -42,8 +42,8 @@ Flex is an object-oriented windowgram editor.  Its commands are visually express
 The key concepts behind the flex command set:
 
 * **Pane**: Single character pane identifier representing one pane in a windowgram
-* **Group**: String of one or more panes that together form a full rectangle (normally without gaps)
-* **Edge**: String of panes that border an edge (the imaginary line between panes)
+* **Group**: String of one or more panes (usually in the form of a rectangle without gaps)
+* **Edge**: String of panes that together border one or more edges (the imaginary line between panes)
 * **Size**: Sizes are expressed in exact characters, or contextually as percentages or multipliers
 * **Direction**: Cardinal directions (up, down, left, right), also used for windowgram and group edges
 
