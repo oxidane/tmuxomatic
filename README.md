@@ -37,7 +37,7 @@ Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a wind
 
 Introduced in tmuxomatic 2.0, flex aims to automate the windowgram itself.
 
-Flex is an object-oriented windowgram editor shell that is visually expressive, naturally worded, logically ordered, minimal, and powerful.  The command set is short and simple, but can be combined to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who want detailed windowgrams without the tedium of manual entry.
+Flex is an object-oriented windowgram editor that is visually expressive, naturally worded, logically ordered, minimal, and powerful.  The simple command set can be combined to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who want detailed windowgrams without the tedium of manual entry.
 
 Key concepts used by the flex command set:
 
@@ -49,7 +49,7 @@ Key concepts used by the flex command set:
 
 Flex commands use these and other basic concepts to expand, contract, or otherwise modify a windowgram.
 
-### Flex Tutorial
+### Flex: Windowgram Creation Demo
 
 Let's use flex to build a windowgram that previously required a lot of typing.  Begin by opening the flex console on the session file `session_flexample`.  Note that flex will create the file for you if it does not already exist.
 
@@ -59,13 +59,15 @@ Let's use flex to build a windowgram that previously required a lot of typing.  
 
 For brevity, the flex console is represented by a `flex>` prompt.  Like tmuxomatic, flex is simple but powerful.  For a full list of commands, type `help` at any time.
 
-Let's start with a new window named `wallets`.
+We'll be creating a layout for cryptocurrency nodes, specifically Bitcoin, Litecoin, and Namecoin.  We'll have panes for an installation shell (`1`), a disk monitor (`z`).  And for each currency, a title and crash loop on top (`BLN`), and currency statistics on bottom (`bln`).
+
+Begin by creating a new window named `wallets`.
 
 	flex> new wallets
 
 	1
 
-The default is a single character windowgram.  Let's `scale` this windowgram to `25` characters wide, by `10` characters tall.  Many flex parameters are flexible, and we could use multipliers or percentages instead of characters.
+To make it easier to follow, let's `scale` this windowgram to `25` characters wide, by `10` characters tall.  Many flex parameters are flexible; instead of characters we could have used multipliers or percentages.
 
 	flex> scale 25x10
 
@@ -103,7 +105,7 @@ What I actually have in mind for pane `0` looks like this:
 	bln
 	bln
 
-There are two ways to do this; one uses `split` and `break`, the other uses `break` and `join`.  Let's go with the latter, since we'll be using `split` in a moment.
+There are two ways to do this; one uses `split` and `break`, the other uses `break` and `join`.  We'll use the latter.
 
 First we `break` the new pane `0` into a grid, `3` panes wide by `5` panes high -- this reflects the envisioned shape above.  For readability, we'll make use of the optional parameter so that new panes to start at `A`.
 
@@ -137,7 +139,17 @@ Each `join` parameter is a group of panes to be joined together.  By default, th
 
 **NOTE: Flex is in development, and this tutorial is a work in progress**
 
-**TODO: split, rename, swap, mirror, drag, delete, insert**
+**TODO: rename, drag**
+
+### Flex: Windowgram Modification Demo
+
+**TODO: swap, clone, delete, mirror, flip**
+
+### Flex: Other Commands
+
+**TODO: Outline other commands not covered here: split, rotate, insert**
+
+**TODO: Or perhaps add these somewhere in the above, so the demos cover all commands**
 
 
 

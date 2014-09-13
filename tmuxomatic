@@ -66,7 +66,7 @@ HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE a
 VERSION = "2.4"                                     # x.y: x = Major feature, y = Minor feature or bug fix
 ##
 ##  2.4     TBD         New flex command: split
-##                      Multiple flex commands on one line, just like a unix shell
+##                      Multiple flex commands on one line, like a unix shell
 ##
 ##  2.3     2014-09-10  New flex command: join
 ##                      Switched to scale core v1 for more accurate scale results
@@ -2096,25 +2096,63 @@ def table(output, markers, marklines, title, contents):
 arg_is_multiplier = lambda how: True if how[-1:] == "x" or how[-1:] == "X" or how[-1:] == "*" else False
 arg_is_percentage = lambda how: True if how[-1:] == "%" else False
 
-def how_to_characters(arg, base_characters):
+def size_GetType(arg):
+    # Return type or None if invalid
     try:
-        if arg_is_multiplier(arg[-1:]): return int(float(base_characters) * float(arg[:-1]))
-        elif arg_is_percentage(arg[-1:]): return int(float(base_characters) * (float(arg[:-1]) / 100.0))
-        return int(arg)
+        if arg_is_multiplier(arg): return "multiplier"
+        if arg_is_percentage(arg): return "percentage"
+        _ = int(arg)
+        return "characters"
     except ValueError:
         return None
 
+def size_GreaterOrEqualToBaseCharacters(arg, base_characters):
+    # If the parameter is greater or equal to 100%, 1x, or base_characters
+    if size_GetType(arg) is None: return None
+    if arg_is_multiplier(arg): return True if float(arg[:-1]) >= 1.0 else False
+    if arg_is_percentage(arg): return True if float(arg[:-1]) >= 100.0 else False
+    return True if int(arg) >= base_characters else False
+
+def size_ConvertToCharacters(arg, base_characters):
+    if size_GetType(arg) is None: return None
+    if arg_is_multiplier(arg): return int(float(base_characters) * float(arg[:-1]))
+    elif arg_is_percentage(arg): return int(float(base_characters) * (float(arg[:-1]) / 100.0))
+    return int(arg)
+
 ##
-## Flex: Valid expressions of direction
+## Flex: Expressions ... See actual usage for examples
 ##
 
-# Recognized directions: 0123 == TBRL == NSEW
-valid_directions = [
+valid_directions = [ # Recognized directions: 0123 == TBRL == NSEW
     [ "top", "t", "tp",     "north", "n",   "up", "u", "over", "above",     ],
     [ "bottom", "b", "bt",  "south", "s",   "down", "d", "under", "below",  ],
     [ "right", "r", "rt",   "east", "e"                                     ],
     [ "left", "l", "lt",    "west", "w"                                     ],
 ]
+
+is_axis_vert = lambda axis: True if axis in [ "v", "vertical", "vert" ] else False
+
+is_axis_horz = lambda axis: True if axis in [ "h", "horizontal", "horz" ] else False
+
+##
+## Flex: Handling of newpanes parameter
+##
+
+def newpanes_RebuildPaneListsInPreferentialOrder(used, unused, newpanes):
+    # Identify last valid pane in list while rebuilding unused pane list in a preferential order
+    work, unused = unused, ""
+    lastpaneid = ""
+    for paneid in list(newpanes):
+        if paneid in PANE_CHARACTERS: lastpaneid = paneid # Last valid paneid
+        if paneid in work and paneid not in used: unused += paneid # Ignore invalid panes
+    work, used = PaneList_MovePanes( work, used, unused )
+    # Combine by next highest match
+    ix = 0 # In case of empty set
+    for chkix, paneid in enumerate(list(work)):
+        if PANE_CHARACTERS.find(paneid) >= PANE_CHARACTERS.find(lastpaneid): ix = chkix ; break
+    unused += work[ix:] + work[:ix] # Ordered by assignment availability, rooted by lastpaneid
+    # Return both (note only unused is preferentially reordered)
+    return used, unused
 
 ##
 ## Decorator for building flex commands
@@ -2379,7 +2417,7 @@ flexgroup = "modifiers"
     description = "Scale the windowgram.  Valid parameters are multipliers (x), percentages (%), exact character " + \
                   "dimensions, or any combination thereof.  Use a space ( ), colon (:), or times (x) to separate " + \
                   "the x and y axis.  If only one axis is specified then the value will be applied to both x and y.",
-    aliases     = [ ["s", "scale "], ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"],
+    aliases     = [ ["sc", "scale "], ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"],
                     ["wider", "scale 200%:100%"], ["thinner", "scale 50%:100%"], ["taller", "scale 100%:200%"],
                     ["shorter", "scale 100%:50%"], ["higher", "scale 100%:200%"], ["lower", "scale 100%:50%"], ],
 )
@@ -2408,7 +2446,7 @@ def cmd_scale_2(x_how, y_how): # 2 parameters
         # Convert to common float multipliers for easy scaling
         args = [ dim_before[0], dim_before[1] ] # Default to no scale on error
         for ix, arg in enumerate([x_how, y_how]):
-            args[ix] = how_to_characters(arg, dim_before[ix])
+            args[ix] = size_ConvertToCharacters(arg, dim_before[ix])
             if args[ix] is None:
                 return flexsense['warnings'].append( FlexWarning( 1, "Invalid size parameter: " + arg ) )
         w_chars, h_chars = args
@@ -2424,7 +2462,7 @@ def cmd_scale_2(x_how, y_how): # 2 parameters
         lost_panes = PaneList_DiffLost( wg_before, wg_after )
         if len(lost_panes):
             flexsense['warnings'].append( FlexWarning( 0, "Lost " + str( len(lost_panes) ) + " panes: " + lost_panes ) )
-        # Update the windowgram
+        # Replace windowgram
         flexmenu_session.Replace_Windowgram( serial, wg_after.Export_String() )
 
 @flex(
@@ -2453,7 +2491,7 @@ def cmd_add(edge, size, newpane=None):
                 windowgram_lines = wg.Export_Lines()
                 axis_length = len(windowgram_lines) if (ix == 0 or ix == 1) else len(windowgram_lines[0])
                 axis_width = len(windowgram_lines) if (ix == 2 or ix == 3) else len(windowgram_lines[0])
-                size_chars = how_to_characters( size, axis_length )
+                size_chars = size_ConvertToCharacters( size, axis_length )
                 if size_chars is None:
                     return flexsense['warnings'].append( FlexWarning( 1, "Invalid size parameter: " + size ) )
                 if ix == 0: # Top
@@ -2470,8 +2508,9 @@ def cmd_add(edge, size, newpane=None):
                 wg_compare_after = wg.Export_String()
                 if wg_compare_before == wg_compare_after:
                     return flexsense['warnings'].append( FlexWarning( 0, "Addition was too small to register" ) )
-                # Replace and return
+                # Replace windowgram
                 flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+                # Done
                 return
         # Edge not found
         return flexsense['warnings'].append( FlexWarning( 1,
@@ -2504,85 +2543,73 @@ def cmd_break(pane, grid, newpanes=None):
             return flexsense['warnings'].append( FlexWarning( 1, "The pane you specified is invalid" ) )
         elif pane in unused:
             return flexsense['warnings'].append( FlexWarning( 1, "The pane you specified does not exist" ) )
-        else: # if pane in unused:
-            # Grid analysis and validity check
-            gw = gh = panes = 0
-            reason = "Grid parameter is invalid: " + grid
-            if grid.count("x") == 1:
-                gw, gh = grid.split("x")
-                if gw.isdigit() and gh.isdigit():
-                    gw, gh = int(gw), int(gh)
-                    panes = gw * gh
-                    len_unused = len(unused) + 1 # The +1 accounts for the target pane that becomes available
-                    if not panes:
-                        reason = "Grid you specified results in no panes"
-                    elif panes > len(PANE_CHARACTERS):
-                        reason = "Grid is " + str(panes) + " panes, exceeding max of " + str(len(PANE_CHARACTERS))
-                    elif panes > len_unused:
-                        reason = "Grid is " + str(panes) + " panes, only " + str(len_unused) + " will be available"
-                    else:
-                        reason = None # No error
-            if reason is not None:
-                return flexsense['warnings'].append( FlexWarning( 1, reason ) )
-            # Extract the dimensions of the pane to determine requisite scale (if any)
-            wg_w, wg_h = wg.Analyze_WidthHeight()
-            px, py, pw, ph = wg.Panes_PaneXYWH( pane )
-            # Perform a scale if needed
-            scale_to = lambda r1, r2: (((float(int(r1/r2))+1.0)*r2) if (r1 % r2) else r1) if (r1 > r2) else r2
-            scale_to_pane_w = int( scale_to( float(pw), float(gw) ) ) # Pane target x
-            scale_to_pane_h = int( scale_to( float(ph), float(gh) ) ) # Pane target y
-            stw_w = int(float(wg_w) * float(scale_to_pane_w) / float(pw)) # Window target x
-            stw_h = int(float(wg_h) * float(scale_to_pane_h) / float(ph)) # Window target y
-            # Scale
-            wg_new = Windowgram( scalecore(
-                wg.Export_String(), stw_w, stw_h, ( pane, scale_to_pane_w, scale_to_pane_h ) ) )
-            _, _, npw, nph = wg_new.Panes_PaneXYWH( pane )
-            # Validate
-            if (npw != scale_to_pane_w or nph != scale_to_pane_h):
-                return flexsense['warnings'].append( FlexWarning( 1, "The result is not the expected pane size" ) )
-            # Replace windowgram
-            wg = wg_new
-            flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
-            # Dimensions must be reloaded in the event that the windowgram was scaled
-            wg_w, wg_h = wg.Analyze_WidthHeight()
-            px, py, pw, ph = wg.Panes_PaneXYWH( pane )
-            # Manually move availability of pane so it may be reused
-            used, unused = PaneList_MovePanes( used, unused, pane )
-            # Set starting panes.  By default this starts at the lowest unused pane id and iterates forward.  However
-            # the user may specify a pane to start the iteration at, for example if it's a 3x2 grid (6 panes produced):
-            #   specified == (None)    produces == 012345
-            #                A                     ABCDEF
-            #                BLN                   BLNOPQ
-            #                BLN1                  BLN123
-            if newpanes:
-                work, unused = unused, ""
-                lastpaneid = ""
-                for paneid in list(newpanes):
-                    if paneid in PANE_CHARACTERS: lastpaneid = paneid # Last valid paneid
-                    if paneid in work and paneid not in used: unused += paneid # Ignore invalid panes
-                work, used = PaneList_MovePanes( work, used, unused )
-                # Combine by next highest match
-                ix = 0 # In case of empty set
-                for chkix, paneid in enumerate(list(work)):
-                    if PANE_CHARACTERS.find(paneid) >= PANE_CHARACTERS.find(lastpaneid): ix = chkix ; break
-                unused += work[ix:] + work[:ix]
-            # Replace pane with grid
-            windowgram_lines = wg.Export_Lines()
-            wg.Import_Lines( [
-                "".join( [ ch if ch != pane else unused[int((iy-py+1)*gh/ph)*gw+int((ix-px+1)*gw/pw)] \
-                    for ix, ch in enumerate(list(line)) ] ) for iy, line in enumerate(windowgram_lines)
-            ] )
-            # Replace windowgram
-            flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
-            # Break complete
+        # Grid analysis and validity check
+        gw = gh = panes = 0
+        reason = "Grid parameter is invalid: " + grid
+        if grid.count("x") == 1:
+            gw, gh = grid.split("x")
+            if gw.isdigit() and gh.isdigit():
+                gw, gh = int(gw), int(gh)
+                panes = gw * gh
+                len_unused = len(unused) + 1 # The +1 accounts for the target pane that becomes available
+                if not panes:
+                    reason = "Grid you specified results in no panes"
+                elif panes > len(PANE_CHARACTERS):
+                    reason = "Grid is " + str(panes) + " panes, exceeding max of " + str(len(PANE_CHARACTERS))
+                elif panes > len_unused:
+                    reason = "Grid is " + str(panes) + " panes, only " + str(len_unused) + " will be available"
+                else:
+                    reason = None # No error
+        if reason is not None:
+            return flexsense['warnings'].append( FlexWarning( 1, reason ) )
+        # Extract the dimensions of the pane to determine requisite scale (if any)
+        wg_w, wg_h = wg.Analyze_WidthHeight()
+        px, py, pw, ph = wg.Panes_PaneXYWH( pane )
+        # Perform a scale if needed
+        scale_to = lambda r1, r2: (((float(int(r1/r2))+1.0)*r2) if (r1 % r2) else r1) if (r1 > r2) else r2
+        scale_to_pane_w = int( scale_to( float(pw), float(gw) ) ) # Pane target x
+        scale_to_pane_h = int( scale_to( float(ph), float(gh) ) ) # Pane target y
+        stw_w = int(float(wg_w) * float(scale_to_pane_w) / float(pw)) # Window target x
+        stw_h = int(float(wg_h) * float(scale_to_pane_h) / float(ph)) # Window target y
+        # Scale
+        wg_new = Windowgram( scalecore(
+            wg.Export_String(), stw_w, stw_h, ( pane, scale_to_pane_w, scale_to_pane_h ) ) )
+        _, _, npw, nph = wg_new.Panes_PaneXYWH( pane )
+        # Validate
+        if (npw != scale_to_pane_w or nph != scale_to_pane_h):
+            return flexsense['warnings'].append( FlexWarning( 1, "The result is not the expected pane size" ) )
+        # Replace windowgram
+        wg = wg_new
+        flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+        # Dimensions must be reloaded in the event that the windowgram was scaled
+        wg_w, wg_h = wg.Analyze_WidthHeight()
+        px, py, pw, ph = wg.Panes_PaneXYWH( pane )
+        # Manually move availability of pane so it may be reused
+        used, unused = PaneList_MovePanes( used, unused, pane )
+        # Set starting panes.  By default this starts at the lowest unused pane id and iterates forward.  However
+        # the user may specify a pane to start the iteration at, for example if it's a 3x2 grid (6 panes produced):
+        #   specified == (None)    produces == 012345
+        #                A                     ABCDEF
+        #                BLN                   BLNOPQ
+        #                BLN1                  BLN123
+        if newpanes:
+            used, unused = newpanes_RebuildPaneListsInPreferentialOrder( used, unused, newpanes )
+        # Replace pane with grid
+        windowgram_lines = wg.Export_Lines()
+        wg.Import_Lines( [
+            "".join( [ ch if ch != pane else unused[int((iy-py+1)*gh/ph)*gw+int((ix-px+1)*gw/pw)] \
+                for ix, ch in enumerate(list(line)) ] ) for iy, line in enumerate(windowgram_lines)
+        ] )
+        # Replace windowgram
+        flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
 
 @flex(
     command     = "join",
     examples    = [ "join abcd efgh", "join abcd.x efgh.y" ],
-    description = "Join a contiguous group of panes into a single pane.  Multiple joins are supported.  By default " + \
-                  "the joined pane is named after the first pane specified.  Optionally, you may rename the joined " + \
-                  "pane by adding `.` followed by pane id (see examples).",
-    aliases     = [ ["j", "join "], ["group", "join "], ["merge", "join "], ],
+    description = "Join a contiguous group of panes into a single pane.  Multiple joins are supported.  The joined " + \
+                  "pane is named after the first pane specified, but can be renamed by adding dot (.) followed by " + \
+                  "the pane id.",
+    aliases     = [ ["j", "join "], ["group", "join "], ["merge", "join "], ["glue", "join "], ],
 )
 def cmd_join(*groups_REQUIRED):
     groups = groups_REQUIRED # Readability
@@ -2660,7 +2687,77 @@ def cmd_join(*groups_REQUIRED):
                 for ix in range(len(w_l[iy])): line += w_l[iy][ix] if m_l[iy][ix] != MASKPANE_1 else t_l[iy][ix]
                 s_l.append(line)
         wg.Import_Lines( s_l )
-        # Update windowgram now that all joins have been completed successfully
+        # Replace windowgram
+        flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+
+@flex(
+    command     = "split",
+    examples    = [ "split 1 vertical 3", "split 1 v -3", "split 0 h 25% LR" ],
+    description = "Splits a pane on an axis of given size.  Size negation will inverse the split.  Optional " + \
+                  "newpanes renames the ensuing pair in English order: top to bottom, left to right.",
+    aliases     = [ ["sp", "split "], ],
+)
+def cmd_split(pane, axis, size, newpanes=None):
+    serial = flexmenu_index[0]
+    if flexmenu_session.Serial_Is_Valid( serial ):
+        wg = flexmenu_session.Get_Wg( serial )
+        used, unused = wg.Panes_GetUsedUnused()
+        # Verify pane
+        if pane not in PANE_CHARACTERS:
+            return flexsense['warnings'].append( FlexWarning( 1, "The pane you specified is invalid" ) )
+        elif pane in unused:
+            return flexsense['warnings'].append( FlexWarning( 1, "The pane you specified does not exist" ) )
+        # Verify axis ... Reduce to "v" or "h" for use in code
+        if is_axis_vert(axis): axis = "v"
+        elif is_axis_horz(axis): axis = "h"
+        else: return flexsense['warnings'].append( FlexWarning( 1, "The axis you specified is invalid" ) )
+        # Get axis_length
+        px, py, pw, ph = wg.Panes_PaneXYWH(pane)
+        axis_length = pw if axis == "h" else ph
+        # Verify size
+        inverse = True if size and size[0] == "-" else False
+        while size and size[0] == "-": size = size[1:]
+        size_type = size_GetType( size )
+        if size_type is None:
+            return flexsense['warnings'].append( FlexWarning( 1, "Invalid size parameter: " + size ) )
+        if size_GreaterOrEqualToBaseCharacters( size, axis_length ):
+            size_type = size_GetType( size )
+            rep = "-" if inverse else ""
+            if size_type == "characters": rep = "axis length (" + str(axis_length) + ")"
+            if size_type == "percentage": rep += "100%"
+            if size_type == "multiplier": rep += "1x"
+            return flexsense['warnings'].append( FlexWarning( 1, "Specified size (" + size + \
+                ") is greater or equal to the limit of range (" + rep + ") of this function" ) )
+        size_chars = size_ConvertToCharacters( size, axis_length )
+        if size_chars >= axis_length: # Shouldn't happen by now, but if it does
+            return flexsense['warnings'].append( FlexWarning( 1, "Resulting size (" + str(size_chars) + \
+                ") is greater or equal to the axis length (" + str(axis_length) + ")" ) )
+        if inverse: size_chars = axis_length - size_chars # Flip
+        # For renaming, reclaim the pane we're going to split
+        used, unused = PaneList_MovePanes( used, unused, pane )
+        # Verify newpanes ... Set to first available if not specified
+        if len(unused) < 1: return flexsense['warnings'].append( FlexWarning( 1,
+            "There are insufficient panes available for this command" ) )
+        if not newpanes: newpanes = ""
+        if len(newpanes) > 2: return flexsense['warnings'].append( FlexWarning( 1,
+            "Parameter newpanes exceeds the function maximum of two panes" ) )
+        for ch in set(newpanes):
+            if not ch in PANE_CHARACTERS: return flexsense['warnings'].append( FlexWarning( 1,
+                "Invalid pane in newpanes parameter: " + ch ) )
+        used, unused = newpanes_RebuildPaneListsInPreferentialOrder( used, unused, newpanes )
+        # Set newpanes to first two available in preferentially ordered unused list
+        newpanes = unused[:2]
+        # Perform the split
+        src_lines, dst_lines = wg.Export_Lines(), []
+        sx, sy = px + size_chars if axis == "h" else 0, py + size_chars if axis == "v" else 0
+        for iy, line in enumerate(src_lines):
+            if axis == "v": line = "".join( [ newpanes[0 if iy < sy-1 else 1] if ch == pane else ch \
+                for ch in list(line) ] )
+            if axis == "h": line = "".join( [ newpanes[0 if ix < sx-1 else 1] if ch == pane else ch \
+                for ix, ch in enumerate(list(line)) ] )
+            dst_lines.append( line )
+        wg.Import_Lines( dst_lines )
+        # Replace windowgram
         flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
 
 @flex(
