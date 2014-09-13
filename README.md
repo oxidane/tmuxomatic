@@ -35,11 +35,11 @@ For additional features, see `tmuxomatic --help`.
 
 Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a windowgram is typed up quickly.  But if you need one with more detail, you may find yourself doing a lot of ASCII art.
 
-Introduced in tmuxomatic 2.0, flex aims to automate the windowgram.
+Introduced in tmuxomatic 2.0, flex aims to automate the windowgram itself.
 
-Flex is an object-oriented windowgram editor.  Its commands are visually expressive, naturally worded, logically ordered, and minimally documented.  This simple command set can be used to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who want detailed windowgrams without the tedium of manual entry.
+Flex is an object-oriented windowgram editor shell that is visually expressive, naturally worded, logically ordered, minimal, and powerful.  The command set is short and simple, but can be combined to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who want detailed windowgrams without the tedium of manual entry.
 
-The key concepts behind the flex command set:
+Key concepts used by the flex command set:
 
 * **Pane**: Single character pane identifier representing one pane in a windowgram
 * **Group**: String of one or more panes (usually in the form of a rectangle without gaps)
@@ -47,7 +47,7 @@ The key concepts behind the flex command set:
 * **Size**: Sizes are expressed in exact characters, or contextually as percentages or multipliers
 * **Direction**: Cardinal directions (up, down, left, right), also used for windowgram and group edges
 
-Most flex commands combine one or more of these concepts to convey a visual expression.  Take a look at the tutorial to see how these are used to easily manipulate a windowgram.
+Flex commands use these and other basic concepts to expand, contract, or otherwise modify a windowgram.
 
 ### Flex Tutorial
 
@@ -80,7 +80,7 @@ The default is a single character windowgram.  Let's `scale` this windowgram to 
 	1111111111111111111111111
 	1111111111111111111111111
 
-It's easy to append new panes to a windowgram.  Let's `add` a new pane on the `right` edge, and make it `50%` of the size of the original windowgram, or `12` characters, whichever you prefer.
+Now let's `add` a new pane on the `right` edge, and make it `50%` of the size of the original windowgram, or `12` characters, whichever you prefer.
 
 	flex> add right 50%
 
@@ -120,7 +120,7 @@ First we `break` the new pane `0` into a grid, `3` panes wide by `5` panes high 
 	1111111111111111111111111MMMMNNNNOOOO
 	1111111111111111111111111MMMMNNNNOOOO
 
-Using one `join` command, we complete the envisioned layout.  Join takes each parameter as a group of panes to be joined together.  By default, the joined pane is named after the first pane in the group.  But we'll be using the optional rename, by appending `.` followed by the new pane id.
+Each `join` parameter is a group of panes to be joined together.  By default, the joined pane is named after the first pane in the group.  But we'll be using the optional rename, by appending `.` followed by the new pane id.  We may now complete the envisioned layout using just one join command.
 
 	flex> join ABC.z DG.B EH.L FI.N JM.b KN.l LO.n
 
