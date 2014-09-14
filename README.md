@@ -33,13 +33,11 @@ For additional features, see `tmuxomatic --help`.
 
 ## Flex your windowgrams
 
-Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a windowgram is typed up quickly.  But if you need one with more detail, you may find yourself doing a lot of ASCII art.
-
-Introduced in tmuxomatic 2.0, flex aims to automate the windowgram itself.
+Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a windowgram is typed up quickly.  But if you need more detail, you may find yourself doing a lot of ASCII art.  In tmuxomatic 2, flex was added to automate windowgram manipulation.
 
 Flex is an object-oriented windowgram editor that is visually expressive, naturally worded, logically ordered, minimal, and powerful.  The simple command set can be combined to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who want detailed windowgrams without the tedium of manual entry.
 
-Key concepts used by the flex command set:
+Key concepts used by flex commands:
 
 * **Pane**: Single character pane identifier representing one pane in a windowgram
 * **Group**: String of one or more panes (usually in the form of a rectangle without gaps)
@@ -47,19 +45,21 @@ Key concepts used by the flex command set:
 * **Size**: Sizes are expressed in exact characters, or contextually as percentages or multipliers
 * **Direction**: Cardinal directions (up, down, left, right), also used for windowgram and group edges
 
-Flex commands use these and other basic concepts to expand, contract, or otherwise modify a windowgram.
+For more information, see the list of flex commands, or follow the demonstrations below.
 
-### Flex: Windowgram Creation Demo
 
-Let's use flex to build a windowgram that previously required a lot of typing.  Begin by opening the flex console on the session file `session_flexample`.  Note that flex will create the file for you if it does not already exist.
+
+#### Flex demonstration #1 -- Create a windowgram from scratch
+
+Let's use flex to build a windowgram that previously required a lot of typing.  Begin by opening the flex shell on the session file `session_flexample`.  Note that flex will create the file for you if it does not already exist.
 
 	% tmuxomatic session_flexample --flex
 
 	flex>
 
-For brevity, the flex console is represented by a `flex>` prompt.  Like tmuxomatic, flex is simple but powerful.  For a full list of commands, type `help` at any time.
+The flex shell is represented here by a `flex>` prompt.  Like tmuxomatic, flex is simple but powerful.  For a full list of commands, type `help` at any time.
 
-We'll be creating a layout for cryptocurrency nodes, specifically Bitcoin, Litecoin, and Namecoin.  We'll have panes for an installation shell (`1`), a disk monitor (`z`).  And for each currency, a title and crash loop on top (`BLN`), and currency statistics on bottom (`bln`).
+We'll be creating a layout for cryptocurrency nodes, specifically bitcoin, litecoin, and namecoin.  We'll have panes for an installation shell (`1`), a disk monitor (`z`), and for each currency: a title with crash loop on top (`B`, `L`, `N`), and blockchain information on bottom (`b`, `l`, `n`).
 
 Begin by creating a new window named `wallets`.
 
@@ -67,7 +67,7 @@ Begin by creating a new window named `wallets`.
 
 	1
 
-To make it easier to follow, let's `scale` this windowgram to `25` characters wide, by `10` characters tall.  Many flex parameters are flexible; instead of characters we could have used multipliers or percentages.
+First let's `scale` this windowgram to `25` characters wide, by `10` characters tall, so it's easier to see.  Many flex parameters are flexible; instead of characters we could have used multipliers or percentages.
 
 	flex> scale 25x10
 
@@ -97,7 +97,7 @@ Now let's `add` a new pane on the `right` edge, and make it `50%` of the size of
 	1111111111111111111111111000000000000
 	1111111111111111111111111000000000000
 
-What I actually have in mind for pane `0` looks like this:
+What I have in mind for pane `0` looks like this:
 
 	zzz
 	BLN
@@ -122,7 +122,7 @@ First we `break` the new pane `0` into a grid, `3` panes wide by `5` panes high 
 	1111111111111111111111111MMMMNNNNOOOO
 	1111111111111111111111111MMMMNNNNOOOO
 
-Each `join` parameter is a group of panes to be joined together.  By default, the joined pane is named after the first pane in the group.  But we'll be using the optional rename, by appending `.` followed by the new pane id.  We may now complete the envisioned layout using just one join command.
+Now we complete the envisioned layout using just one join command.  Each `join` parameter is a group of panes to be joined together.  By default, the joined pane is named after the first pane in the group.  But we'll be using the optional rename, by appending `.` followed by the new pane id.
 
 	flex> join ABC.z DG.B EH.L FI.N JM.b KN.l LO.n
 
@@ -137,19 +137,32 @@ Each `join` parameter is a group of panes to be joined together.  By default, th
 	1111111111111111111111111bbbbllllnnnn
 	1111111111111111111111111bbbbllllnnnn
 
-**NOTE: Flex is in development, and this tutorial is a work in progress**
+Our windowgram is ready for use.  Now all that's left to do is to add the related directions to the session file.  The directions specify run commands, home directories, and focus state.  For more information on directions, see the general introduction to tmuxomatic at the start of this readme.
 
-**TODO: rename, drag**
 
-### Flex: Windowgram Modification Demo
 
-**TODO: swap, clone, delete, mirror, flip**
+#### Flex demonstration #2 -- Modify an existing windowgram
 
-### Flex: Other Commands
+In this demonstration -- presented in summary form -- we'll use the other flex commands to fine-tune the windowgram we created in the previous one.
 
-**TODO: Outline other commands not covered here: split, rotate, insert**
+> At the bottom of pane `1`, Add pane `3` characters high, rename the affected panes `s` and `1`
 
-**TODO: Or perhaps add these somewhere in the above, so the demos cover all commands**
+	flex> split 1 vertical -3 s1
+
+	ssssssssssssssssssssssssszzzzzzzzzzzz
+	ssssssssssssssssssssssssszzzzzzzzzzzz
+	sssssssssssssssssssssssssBBBBLLLLNNNN
+	sssssssssssssssssssssssssBBBBLLLLNNNN
+	sssssssssssssssssssssssssBBBBLLLLNNNN
+	sssssssssssssssssssssssssBBBBLLLLNNNN
+	sssssssssssssssssssssssssbbbbllllnnnn
+	1111111111111111111111111bbbbllllnnnn
+	1111111111111111111111111bbbbllllnnnn
+	1111111111111111111111111bbbbllllnnnn
+
+**NOTE: Flex is still in development, more will be added in future releases**
+
+**TODO: rename, drag, swap, insert, clone, delete, mirror, flip**
 
 
 

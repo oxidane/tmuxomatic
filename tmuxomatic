@@ -61,11 +61,11 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##     Revisions     |
 ##-------------------+
 ##
-DESCRIPTION = "An altogether better way to do session management with tmux" # TODO: Need a better description for 2.x
+DESCRIPTION = "Intelligent tmux session management" # TODO: Need a better description for 2.x
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
 VERSION = "2.4"                                     # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.4     TBD         New flex command: split
+##  2.4     2014-09-14  New flex command: split
 ##                      Multiple flex commands on one line, like a unix shell
 ##
 ##  2.3     2014-09-10  New flex command: join
@@ -76,10 +76,10 @@ VERSION = "2.4"                                     # x.y: x = Major feature, y 
 ##                      Fixed scale core to resolve accuracy problems in scale and break commands
 ##                      Moved windowgram functions into a Windowgram class
 ##
-##  2.1     2014-09-01  Cleared revision history for 1.x, added link in case it's needed
+##  2.1     2014-09-01  New flex command: add
+##                      Cleared revision history for 1.x, added link in case it's needed
 ##                      If specified session file does not exist when using flex, it is created
 ##                      Improved the window list, shares the table printer code with the help menu
-##                      New flex command: add
 ##
 ##  2.0     2014-08-28  Began tmuxomatic --flex, commands will be added over the next few releases
 ##                      Fixed the readme to fit the recent github style changes
@@ -142,12 +142,21 @@ VERSION = "2.4"                                     # x.y: x = Major feature, y 
 ##      few short lines at the top of the session file that are easily cut and pasted into another.  A prototype of this
 ##      concept was done in early development, though it had a slightly different design, so it's best rewritten.
 ##
+##      Pane view toggle in flex.  With the command "pane <pane>", only the pane is shown with "." for other panes, and
+##      information about the pane is shown, width and height, along with lines to all the possible axial divisions, so
+##      a user could easily find the exact value they need to achieve a precise split, for example.  These values are
+##      shown as positive and negative, characters and percentages, e.g., "+6 | +75% | -2 | -25%".
+##
+##      Maybe unit testing for windowgram parser, and flex commands.
+##
 ## Major:
 ##
 ##      Session Binding: A mode that keeps the session file and its running session synchronized.  Some things won't be
 ##      easy to do.  Changing the name of a window is easy, but changing windowgram may not be (without unique
 ##      identifiers in tmux).  Use threading to keep them in sync.  Error handling could be shown in a created error
 ##      window, which would be destroyed on next session load if there was no error.
+##
+##      Touch screen interface using flex commands.  Select edges with tap, then drag them as a group, for example.
 ##
 ## Possible:
 ##
@@ -689,6 +698,66 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
     if v: print("(3) " + idstr(bx, by, bw, bh) + ": No match found, unsupported layout")
     return
 
+##
+## Related
+##
+
+def SortPanes(layout): # list_panes, layout
+    # Sort top to bottom, left to right, move into list (layout[] -> list_panes[])
+    list_panes = [] # List of user defined panes (derived from windowgram)
+    while len(layout):
+        pane = ""
+        for it in layout:
+            if not pane: pane = it
+            elif layout[it]['y'] < layout[pane]['y']: pane = it
+            elif layout[it]['y'] == layout[pane]['y'] and layout[it]['x'] < layout[pane]['x']: pane = it
+        list_panes.append(layout[pane].copy())  # Add to list
+        del layout[pane]                        # Remove from dict
+    return list_panes, layout
+
+def PaneOverlap(list_panes): # overlap_pane1, overlap_pane2
+    # Finds the first overlap and returns it
+    for pane1 in list_panes:
+        for pane2 in list_panes:
+            if pane1 != pane2:
+                # Readability
+                p1x1 = pane1['x']
+                p1x2 = p1x1 + pane1['w']
+                p1y1 = pane1['y']
+                p1y2 = p1y1 + pane1['h']
+                p2x1 = pane2['x']
+                p2x2 = p2x1 + pane2['w']
+                p2y1 = pane2['y']
+                p2y2 = p2y1 + pane2['h']
+                # Overlap detection
+                if p1x1 < p2x2 and p1x2 > p2x1 and p1y1 < p2y2 and p1y2 > p2y1:
+                    return pane1['n'], pane2['n']
+    return None, None
+
+def SplitProcessor( interactive, wg, iw, ih, list_panes ): # list_split, list_links
+    #
+    # Split window into panes
+    #
+    # TODO: Need to use interactive when doing the build, instead of the verbose flag, so it won't conflict with flex
+    #
+    linkid = [ 1001 ]   # Incrementing number for cross-referencing (0 is reserved)
+    # The linkid number is a unique identifier used to track the tmux panes and cross-reference them when the
+    # window is fully divided to get the final pane index for a particular pane.  This is an essential link
+    # because panes are renumbered as splits occur, and before they're assigned to tmuxomatic pane ids.
+    # Note: 'inst_w' and 'inst_h' are the dimensions when split, the first pane uses full dimensions.
+    # Note: The first pane does not use the entires 'split' or 'tmux'.
+    list_split = [ { 'linkid': linkid[0], 'split': "", 'tmux': 65536, 'inst_w': iw, 'inst_h': ih, 'per': "100.0" } ]
+    list_links = [ ( linkid[0], 0 ) ]   # List of cross-references (linkid, pane_tmux)
+    # Run the recursive splitter
+    windowgram_w, windowgram_h = wg.Analyze_WidthHeight() # TODO: Clean up remaining wg inlines
+    dim = {}
+    dim['win'] = [ windowgram_w, windowgram_h ]
+    dim['scr'] = [ iw, ih ]
+    tmuxomatic_filler_recursive( \
+        dim, linkid, list_split, list_links, list_panes, linkid[0], 1, 1, windowgram_w, windowgram_h )
+    # Return useful elements
+    return list_split, list_links
+
 
 
 ##----------------------------------------------------------------------------------------------------------------------
@@ -700,6 +769,7 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
 ## TODO:
 ##
 ##          Update all uses of windowgram to use a wg instance, instead of instantiating to use a method
+##          Move splitter code into this library, it's used for windowgram compatibility detection
 ##          Move flex commands into this class, or an accompanying class, free of shell interface concerns
 ##          Move this class into a library for use in other applications
 ##
@@ -869,7 +939,6 @@ class Windowgram():
         self.metrics_width = None
         self.metrics_height = None
         self.analysis_layers = 0
-        self.analysis_type = None
         self.error_string = None
         self.error_line = 0
         self.change_count += 1
@@ -923,9 +992,45 @@ class Windowgram():
         self.metrics_width = max( [ len(line) for line in windowgram_lines ] ) if windowgram_lines else 0
         self.metrics_height = len( windowgram_lines )
         self.analysis_layers = 1        # Fixed for now
-        self.analysis_type = "split"    # Fixed for now
     def Analyze_WidthHeight(self): return [ self.metrics_width, self.metrics_height ]
     def Analyze_IsBlank(self): return True if not max(self.Analyze_WidthHeight()) else False
+    def Analyze_Type(self):
+        # Determine compatibility (split, tiled, layered)
+        analysis_type = ""
+        while True:
+            # Detect layered
+            windowgram_parsed, error, _ = Windowgram_Convert.String_To_Parsed( self.windowgram_string )
+            if error:
+                analysis_type = "ERROR"
+                break
+            list_panes, windowgram_parsed = SortPanes( windowgram_parsed )
+            overlap_pane1, overlap_pane2 = PaneOverlap( list_panes )
+            if overlap_pane1 or overlap_pane2:
+                analysis_type = "layered" # Implicit
+                break
+            # Detect split
+            list_split, list_links = SplitProcessor( False, self, 1024, 1024, list_panes ) # Avoid layout errors here
+            splityes = True
+            for split in list_split:
+                #
+                # Readability
+                #
+                list_split_linkid = split['linkid']     # 1234          This is for cross-referencing
+                ent_panes = ''
+                for i in list_panes:
+                    if 'l' in i and i['l'] == split['linkid']:
+                        ent_panes = i
+                        break
+                if not ent_panes:
+                    splityes = False
+                    break
+            if splityes:
+                analysis_type = "split"
+                break
+            # Assume tiled
+            analysis_type = "tiled"
+            break
+        return analysis_type
 
     ##
     ## Change Detection (has change_count been incremented since last query)
@@ -1307,17 +1412,17 @@ class SessionFile(object):
         return "\n" * count
     def Replace_TitleComments(self, serial, comments):
         if serial < 1 or serial > self.Count_Windows(): return
-        padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["title_comments"], 1)
-        self.windows[serial-1]["title_comments"] = comments + padding
+        padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]['title_comments'], 1)
+        self.windows[serial-1]['title_comments'] = comments + padding
         self.modified = True
     def Replace_Title(self, serial, name):
         if serial < 1 or serial > self.Count_Windows(): return
-        padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]["title"], 1)
-        self.windows[serial-1]["title"] = "window " + name + padding
+        padding = self.Duplicate_Trailing_Padding(self.windows[serial-1]['title'], 1)
+        self.windows[serial-1]['title'] = "window " + name + padding
         self.modified = True
     def Replace_Windowgram(self, serial, windowgram_string): # TODO: Replace by wg
         if serial < 1 or serial > self.Count_Windows(): return
-        self.windows[serial-1]["windowgram"] = Windowgram( windowgram_string ).Export_String() # Clean via class
+        self.windows[serial-1]['windowgram'] = Windowgram( windowgram_string ).Export_String() # Clean via class
         self.modified = True
     def Modified(self): # See flag use for limitations
         return self.modified
@@ -1349,14 +1454,14 @@ class SessionFile(object):
         # Transfer footer to title comments for new window
         while len(self.footer) > 1 and not self.footer.endswith("\n\n"): self.footer += "\n"
         if not self.footer: self.footer = "\n"
-        self.windows[serial-1]["title_comments"] = self.footer
+        self.windows[serial-1]['title_comments'] = self.footer
         self.footer = ""
         # Build window
-        self.windows[serial-1]["title_comments"] += comments if comments[-1:] == "\n" else comments + "\n"
+        self.windows[serial-1]['title_comments'] += comments if comments[-1:] == "\n" else comments + "\n"
         name = "window " + name # Make a declaration
-        self.windows[serial-1]["title"] = name if name[-1:] == "\n" else name + "\n"
-        self.windows[serial-1]["windowgram_comments"] = "\n"
-        self.windows[serial-1]["windowgram"] = \
+        self.windows[serial-1]['title'] = name if name[-1:] == "\n" else name + "\n"
+        self.windows[serial-1]['windowgram_comments'] = "\n"
+        self.windows[serial-1]['windowgram'] = \
             windowgram_string if windowgram_string[-1:] == "\n" else windowgram_string + "\n"
         # Modified
         self.modified = True
@@ -1460,6 +1565,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
         #
         windowgram_lines = window.SplitCleanByKey('windowgram')
         windowgram = Windowgram_Convert.Lines_To_String( windowgram_lines )
+        wg = Windowgram(windowgram)
         if ARGS.verbose >= 2:
             print( "\n".join([ "(2) Windowgram: " + line for line in windowgram_lines if line ]) )
         layout, error, linenumber = Windowgram_Convert.String_To_Parsed(windowgram)
@@ -1476,35 +1582,14 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
         #
         # 3.1) Sort top to bottom, left to right, move into list (layout[] -> list_panes[])
         #
-        panes_x = panes_y = 1
-        list_panes = [] # List of user defined panes (derived from windowgram)
-        while len(layout):
-            pane = ""
-            for it in layout:
-                if not pane: pane = it
-                elif layout[it]['y'] < layout[pane]['y']: pane = it
-                elif layout[it]['y'] == layout[pane]['y'] and layout[it]['x'] < layout[pane]['x']: pane = it
-            list_panes.append(layout[pane].copy())  # Add to list
-            del layout[pane]                        # Remove from dict
+        list_panes, layout = SortPanes( layout )
 
         #
         # 3.2) Now check for overlaps
         #
-        for pane1 in list_panes:
-            for pane2 in list_panes:
-                if pane1 != pane2:
-                    # Readability
-                    p1x1 = pane1['x']
-                    p1x2 = p1x1 + pane1['w']
-                    p1y1 = pane1['y']
-                    p1y2 = p1y1 + pane1['h']
-                    p2x1 = pane2['x']
-                    p2x2 = p2x1 + pane2['w']
-                    p2y1 = pane2['y']
-                    p2y2 = p2y1 + pane2['h']
-                    # Overlap detection
-                    if p1x1 < p2x2 and p1x2 > p2x1 and p1y1 < p2y2 and p1y2 > p2y1:
-                        synerr(errpkg, "Overlapping panes: " + pane1['n'] + " and " + pane2['n'])
+        overlap_pane1, overlap_pane2 = PaneOverlap( list_panes )
+        if overlap_pane1 or overlap_pane2:
+            synerr(errpkg, "Overlapping panes: " + overlap_pane1 + " and " + overlap_pane2)
 
         #
         # 4) Directions parser
@@ -1602,28 +1687,11 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
         #
         # 5.2) Split window into panes
         #
-        linkid = [ 1001 ]   # Incrementing number for cross-referencing (0 is reserved)
-        # The linkid number is a unique identifier used to track the tmux panes and cross-reference them when the
-        # window is fully divided to get the final pane index for a particular pane.  This is an essential link
-        # because panes are renumbered as splits occur, and before they're assigned to tmuxomatic pane ids.
-        # Note: 'inst_w' and 'inst_h' are the dimensions when split, the first pane uses full dimensions.
-        # Note: The first pane does not use the entires 'split' or 'tmux'.
-        iw = user_wh[0]
-        ih = user_wh[1]
-        list_split = [ { 'linkid': linkid[0], 'split': "", 'tmux': 65536, 'inst_w': iw, 'inst_h': ih, 'per': "100.0" } ]
-        list_links = [ ( linkid[0], 0 ) ]   # List of cross-references (linkid, pane_tmux)
-        # Verbose
+        interactive = True if ARGS.verbose >= 3 else False
         if ARGS.verbose >= 3:
             print("")
             print("(3) Fitting panes = {")
-        # Run the recursive splitter
-        windowgram_w, windowgram_h = Windowgram(windowgram).Analyze_WidthHeight()
-        dim = {}
-        dim['win'] = [ windowgram_w, windowgram_h ]
-        dim['scr'] = [ user_wh[0], user_wh[1] ]
-        tmuxomatic_filler_recursive( \
-            dim, linkid, list_split, list_links, list_panes, linkid[0], 1, 1, windowgram_w, windowgram_h )
-        # Verbose
+        list_split, list_links = SplitProcessor( interactive, wg, user_wh[0], user_wh[1], list_panes )
         if ARGS.verbose >= 3:
             print("(3) }")
 
@@ -1652,11 +1720,13 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
                     ent_panes = i
                     break
             if not ent_panes:
+                SetLineNumber( window.GetLines('windowgram'), 0 )
                 synerr(errpkg,
-                    "Unable to fully cross-link, probably because of an unsupported window layout.  " + \
-                    "Please see the included example file session_unsupported for more information on what " + \
-                    "layouts are and are not possible in tmux.  Use flex to generate windowgrams that are " + \
-                    "always valid.")
+                    "Unable to fully cross-link.  This is because of an unsupported window layout.  See the " + \
+                    "included example file `session_unsupported` for more information on what layouts are and " + \
+                    "aren't possible in tmux.  If you use flex to generate windowgrams, it will notify you as soon " + \
+                    "as you create a pane layout that is not supported by tmux.  For more information, look up the " + \
+                    "clean split rule in the tmuxomatic documentation.")
             list_panes_dir = ent_panes['dir']       # "/tmp"        Directory of pane
             if list_panes_dir: adddir = " -c " + list_panes_dir
             else: adddir = ""
@@ -1982,6 +2052,8 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##
 ##      Any modification of the windowgram outside of flex will result in a "manual" entry in flex stack
 ##
+##      All ordering is in English order: front -> back, top -> bottom, left -> right
+##
 ## Stack Sketch:
 ##
 ##      new                 base
@@ -2023,10 +2095,16 @@ usage_triplets = lambda cmd_dict: [ cmd_dict['usage'][ix:ix+3] for ix in range( 
 ## Output controls ... Only flex helpers and selectors should use this directly, others should use warnings queue
 ##
 
-class FlexWarning:
+class FlexNotice(object):
     def __init__(self, level, message): self.level = level ; self.message = message
     def GetLvl(self): return self.level
     def GetMsg(self): return self.message
+
+class FlexWarning(FlexNotice):
+    def __init__(self, message): super( FlexWarning, self ).__init__( 0, message )
+
+class FlexError(FlexNotice):
+    def __init__(self, message): super( FlexError, self ).__init__( 1, message )
 
 ##
 ## Lists of commands ... Commands are ordered by appearance in source
@@ -2048,7 +2126,7 @@ flexsense = {
     'restore': False,               # User exit: Restore original
     'execute': False,               # User exit: Run session
     'output': [],                   # Command output
-    'warnings': [],                 # Command warnings: Print and continue
+    'notices': [],                  # Command notices: Print and continue (FlexWarning, FlexError)
     'errors': [],                   # Command errors: Print and exit
 }
 flexsense_reset = copy.deepcopy( flexsense )
@@ -2356,8 +2434,7 @@ def cmd_use(*name_or_serial_REQUIRED):
         if wg.Analyze_IsBlank():
             flexmenu_session.Replace_Windowgram(serial, "1")
             wg = flexmenu_session.Get_Wg(serial)
-            return flexsense['warnings'].append( FlexWarning( 0, \
-                "The windowgram was blank and required initialization" ) )
+            return flexsense['notices'].append( FlexWarning( "The windowgram was blank and required initialization" ) )
     if name_or_serial.isdigit():
         serial = int(name_or_serial)
         if flexmenu_session.Serial_Is_Valid(serial): return using(serial)               # Serial match
@@ -2369,10 +2446,10 @@ def cmd_use(*name_or_serial_REQUIRED):
             matched = serial ; matches += 1
     if matches == 1: return using(matched)                                              # Starting string match
     if matches:
-        return flexsense['warnings'].append( FlexWarning( 1, "The name \"" + \
+        return flexsense['notices'].append( FlexError( "The name \"" + \
             name_or_serial + "\" is ambiguous (" + str(matches) + " matches)" ) )       # Name ambiguous
     else:
-        return flexsense['warnings'].append( FlexWarning( 1, \
+        return flexsense['notices'].append( FlexError( \
             "This name or serial is invalid: " + name_or_serial ) )                     # No match
     flexsense['output'].append( "" )
 
@@ -2386,13 +2463,19 @@ def cmd_new(*window_name_REQUIRED):
     name = " ".join(window_name_REQUIRED)
     for serial in range(1, flexmenu_session.Count_Windows()+1):
         if name == flexmenu_session.Get_Name(serial):
-            return flexsense['warnings'].append( FlexWarning( 1, \
+            return flexsense['notices'].append( FlexError( \
                 "The name \"" + name + "\" is already in use, try another" ) )
     # Create window
     comments = "## Window added by tmuxomatic flex " + VERSION + "\n\n"
     serial = flexmenu_session.Add_Windowgram( comments, name, "1" )
     # Use it
     cmd_use(*[str(serial)])
+
+##
+## Commands: Informers ... Mainly a pseudo-group to keep print out of the quick menus
+##
+
+flexgroup = "informers"
 
 @flex(
     command     = "print",
@@ -2448,20 +2531,20 @@ def cmd_scale_2(x_how, y_how): # 2 parameters
         for ix, arg in enumerate([x_how, y_how]):
             args[ix] = size_ConvertToCharacters(arg, dim_before[ix])
             if args[ix] is None:
-                return flexsense['warnings'].append( FlexWarning( 1, "Invalid size parameter: " + arg ) )
+                return flexsense['notices'].append( FlexError( "Invalid size parameter: " + arg ) )
         w_chars, h_chars = args
         # Scale the windowgram
         wg_after = Windowgram( scalecore( wg_before.Export_String(), w_chars, h_chars ) )
         # Verify new windowgram (in case of scale error)
         dim_result = wg_after.Analyze_WidthHeight()
         if not dim_result[0] or not dim_result[1]:
-            return flexsense['warnings'].append( FlexWarning( 1, "Scale produced a blank windowgram, skipping" ) )
+            return flexsense['notices'].append( FlexError( "Scale produced a blank windowgram, skipping" ) )
         if dim_result[0] != w_chars or dim_result[1] != h_chars:
-            return flexsense['warnings'].append( FlexWarning( 1, "Scale produced erroneous result, skipping" ) )
+            return flexsense['notices'].append( FlexError( "Scale produced erroneous result, skipping" ) )
         # Alert user to any panes lost
         lost_panes = PaneList_DiffLost( wg_before, wg_after )
         if len(lost_panes):
-            flexsense['warnings'].append( FlexWarning( 0, "Lost " + str( len(lost_panes) ) + " panes: " + lost_panes ) )
+            flexsense['notices'].append( FlexWarning( "Lost " + str( len(lost_panes) ) + " panes: " + lost_panes ) )
         # Replace windowgram
         flexmenu_session.Replace_Windowgram( serial, wg_after.Export_String() )
 
@@ -2484,7 +2567,7 @@ def cmd_add(edge, size, newpane=None):
         wg = flexmenu_session.Get_Wg(serial)
         newpane, error = wg.Panes_GetNewPaneId( newpane )
         if error:
-            return flexsense['warnings'].append( FlexWarning( 1, "Unable to secure a new pane id: " + error ) )
+            return flexsense['notices'].append( FlexError( "Unable to secure a new pane id: " + error ) )
         for ix, directions_ent in enumerate(valid_directions):
             if edge in directions_ent:
                 # ix = 0123 == TBRL | NSEW
@@ -2493,7 +2576,7 @@ def cmd_add(edge, size, newpane=None):
                 axis_width = len(windowgram_lines) if (ix == 2 or ix == 3) else len(windowgram_lines[0])
                 size_chars = size_ConvertToCharacters( size, axis_length )
                 if size_chars is None:
-                    return flexsense['warnings'].append( FlexWarning( 1, "Invalid size parameter: " + size ) )
+                    return flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
                 if ix == 0: # Top
                     for _ in range( size_chars ): windowgram_lines.insert( 0, newpane * axis_width )
                 elif ix == 1: # Bottom
@@ -2507,13 +2590,13 @@ def cmd_add(edge, size, newpane=None):
                 wg.Import_Lines( windowgram_lines )
                 wg_compare_after = wg.Export_String()
                 if wg_compare_before == wg_compare_after:
-                    return flexsense['warnings'].append( FlexWarning( 0, "Addition was too small to register" ) )
+                    return flexsense['notices'].append( FlexWarning( "Addition was too small to register" ) )
                 # Replace windowgram
                 flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
                 # Done
                 return
         # Edge not found
-        return flexsense['warnings'].append( FlexWarning( 1,
+        return flexsense['notices'].append( FlexError(
             "The edge you specified is invalid, please specify either: top, bottom, left, or right" ) )
 
 @flex(
@@ -2540,9 +2623,9 @@ def cmd_break(pane, grid, newpanes=None):
         wg = flexmenu_session.Get_Wg( serial )
         used, unused = wg.Panes_GetUsedUnused()
         if pane not in PANE_CHARACTERS:
-            return flexsense['warnings'].append( FlexWarning( 1, "The pane you specified is invalid" ) )
+            return flexsense['notices'].append( FlexError( "The pane you specified is invalid" ) )
         elif pane in unused:
-            return flexsense['warnings'].append( FlexWarning( 1, "The pane you specified does not exist" ) )
+            return flexsense['notices'].append( FlexError( "The pane you specified does not exist" ) )
         # Grid analysis and validity check
         gw = gh = panes = 0
         reason = "Grid parameter is invalid: " + grid
@@ -2561,7 +2644,7 @@ def cmd_break(pane, grid, newpanes=None):
                 else:
                     reason = None # No error
         if reason is not None:
-            return flexsense['warnings'].append( FlexWarning( 1, reason ) )
+            return flexsense['notices'].append( FlexError( reason ) )
         # Extract the dimensions of the pane to determine requisite scale (if any)
         wg_w, wg_h = wg.Analyze_WidthHeight()
         px, py, pw, ph = wg.Panes_PaneXYWH( pane )
@@ -2577,7 +2660,7 @@ def cmd_break(pane, grid, newpanes=None):
         _, _, npw, nph = wg_new.Panes_PaneXYWH( pane )
         # Validate
         if (npw != scale_to_pane_w or nph != scale_to_pane_h):
-            return flexsense['warnings'].append( FlexWarning( 1, "The result is not the expected pane size" ) )
+            return flexsense['notices'].append( FlexError( "The result is not the expected pane size" ) )
         # Replace windowgram
         wg = wg_new
         flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
@@ -2642,7 +2725,7 @@ def cmd_join(*groups_REQUIRED):
                 if notfound:
                     raise Exception("Windowgram does not have pane" + ("(s) " if len(notfound)-1 else " ") + notfound)
             except Exception as error:
-                return flexsense['warnings'].append( FlexWarning( 1,
+                return flexsense['notices'].append( FlexError(
                     "Error with argument " + argument(ix) + ": " + str(error) ) )
         # Test the duplication of target panes by matching them against availability adjusted for panes clipped
         used, unused = wg.Panes_GetUsedUnused()
@@ -2655,7 +2738,7 @@ def cmd_join(*groups_REQUIRED):
                     raise Exception("Attempting to rename to pane " + group_r + " when it's in use")
                 used += group_r
             except Exception as error:
-                return flexsense['warnings'].append( FlexWarning( 1,
+                return flexsense['notices'].append( FlexError(
                     "Error with argument " + argument(ix) + ": " + str(error) ) )
         # Perform the joins, detecting pane gaps in the group, resulting windowgram is paired for later merging
         renames = []
@@ -2664,11 +2747,11 @@ def cmd_join(*groups_REQUIRED):
             group_l, group_r = group.split(".")
             result, suggestions = groupcore(wg, group_l)
             if result is GroupStatus.Invalid_Panes: # Occurs if groupcore() panes parameter is invalid
-                return flexsense['warnings'].append( FlexWarning( 1,
-                    "Argument " + argument(ix) + " contains invalid panes" ) )
+                return flexsense['notices'].append( FlexError(
+                    "Group #" + argument(ix) + " contains invalid panes" ) )
             if result is GroupStatus.Insufficient_Panes:
-                return flexsense['warnings'].append( FlexWarning( 1,
-                    "The group " + argument(ix) + " isn't whole, but it would be if you add: " + suggestions ) )
+                return flexsense['notices'].append( FlexError(
+                    "Group #" + argument(ix) + " isn't whole, but it would be if you add: " + suggestions ) )
             # Join ... By now the group is fully vetted: entirely valid, rectangularly whole
             pair_w = Windowgram( wg.Export_String() )
             pair_m = Windowgram_Mask_Generate( pair_w, group_l )
@@ -2704,45 +2787,50 @@ def cmd_split(pane, axis, size, newpanes=None):
         used, unused = wg.Panes_GetUsedUnused()
         # Verify pane
         if pane not in PANE_CHARACTERS:
-            return flexsense['warnings'].append( FlexWarning( 1, "The pane you specified is invalid" ) )
+            return flexsense['notices'].append( FlexError( "The pane you specified is invalid" ) )
         elif pane in unused:
-            return flexsense['warnings'].append( FlexWarning( 1, "The pane you specified does not exist" ) )
+            return flexsense['notices'].append( FlexError( "The pane you specified does not exist" ) )
         # Verify axis ... Reduce to "v" or "h" for use in code
         if is_axis_vert(axis): axis = "v"
         elif is_axis_horz(axis): axis = "h"
-        else: return flexsense['warnings'].append( FlexWarning( 1, "The axis you specified is invalid" ) )
+        else: return flexsense['notices'].append( FlexError( "The axis you specified is invalid" ) )
         # Get axis_length
         px, py, pw, ph = wg.Panes_PaneXYWH(pane)
         axis_length = pw if axis == "h" else ph
+        # Verify pane is large enough to split
+        if pw < 2 and ph < 2: # Single character pane
+            return flexsense['notices'].append( FlexError( "Pane is too small to be split" ) )
+        if axis_length < 2: # Single character on specified axis
+            return flexsense['notices'].append( FlexError( "Pane is too small to be split in that way" ) )
         # Verify size
         inverse = True if size and size[0] == "-" else False
         while size and size[0] == "-": size = size[1:]
         size_type = size_GetType( size )
         if size_type is None:
-            return flexsense['warnings'].append( FlexWarning( 1, "Invalid size parameter: " + size ) )
+            return flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
         if size_GreaterOrEqualToBaseCharacters( size, axis_length ):
             size_type = size_GetType( size )
             rep = "-" if inverse else ""
             if size_type == "characters": rep = "axis length (" + str(axis_length) + ")"
             if size_type == "percentage": rep += "100%"
             if size_type == "multiplier": rep += "1x"
-            return flexsense['warnings'].append( FlexWarning( 1, "Specified size (" + size + \
+            return flexsense['notices'].append( FlexError( "Specified size (" + size + \
                 ") is greater or equal to the limit of range (" + rep + ") of this function" ) )
         size_chars = size_ConvertToCharacters( size, axis_length )
         if size_chars >= axis_length: # Shouldn't happen by now, but if it does
-            return flexsense['warnings'].append( FlexWarning( 1, "Resulting size (" + str(size_chars) + \
+            return flexsense['notices'].append( FlexError( "Resulting size (" + str(size_chars) + \
                 ") is greater or equal to the axis length (" + str(axis_length) + ")" ) )
         if inverse: size_chars = axis_length - size_chars # Flip
-        # For renaming, reclaim the pane we're going to split
+        # For renaming purposes, reclaim the pane we're going to split
         used, unused = PaneList_MovePanes( used, unused, pane )
         # Verify newpanes ... Set to first available if not specified
-        if len(unused) < 1: return flexsense['warnings'].append( FlexWarning( 1,
+        if len(unused) < 1: return flexsense['notices'].append( FlexError(
             "There are insufficient panes available for this command" ) )
-        if not newpanes: newpanes = ""
-        if len(newpanes) > 2: return flexsense['warnings'].append( FlexWarning( 1,
+        if not newpanes: newpanes = pane # New pane is based on base pane unless otherwise specified
+        if len(newpanes) > 2: return flexsense['notices'].append( FlexError(
             "Parameter newpanes exceeds the function maximum of two panes" ) )
         for ch in set(newpanes):
-            if not ch in PANE_CHARACTERS: return flexsense['warnings'].append( FlexWarning( 1,
+            if not ch in PANE_CHARACTERS: return flexsense['notices'].append( FlexError(
                 "Invalid pane in newpanes parameter: " + ch ) )
         used, unused = newpanes_RebuildPaneListsInPreferentialOrder( used, unused, newpanes )
         # Set newpanes to first two available in preferentially ordered unused list
@@ -2819,15 +2907,24 @@ def cmd_exit():
 ## Flex Shell
 ##
 
-flexout = lambda lines: print("    " + str(lines)) if not '\n' in lines else [ flexout(l) for l in lines.split('\n') ]
-
 def flex_shell(user_wh, session, serial=0):
-    def flexout_clearscreen(): flexout( "\n" * user_wh[1] )
-    def flexout_divider(padsize): flexout( "-" * ( user_wh[0] - padsize ) )
+    ##
+    ## Print buffer
+    ##
+    leftgap = rightgap = 4
+    buf = []
+    def flexout(l):
+        if l is None: buf.append( None )
+        elif "\n" in l: return [ flexout(l) for l in l.split("\n") ]
+        else: buf.append( (" " * leftgap) + str(l) )
+    def flexout_divider():
+        flexout( "-" * ( user_wh[0] - (leftgap + rightgap) ) )
+    ##
+    ## Session setup
+    ##
     global flexmenu_session
     flexmenu_session = session
     session_original = copy.deepcopy(session) # Original copy
-    flexout_clearscreen()
     ##
     ## Show list of windows, or assign selected window
     ##
@@ -2842,6 +2939,9 @@ def flex_shell(user_wh, session, serial=0):
     warnings = []
     queue = ""
     lastcmd = ""
+    sc_support = None
+    sc_serial = 0
+    split_check = lambda: True if not sc_serial or session.Get_Wg(sc_serial).Analyze_Type() == "split" else False
     while True:
         global flexsense
         label_w = 12
@@ -2850,31 +2950,32 @@ def flex_shell(user_wh, session, serial=0):
         # Macros
         string_to_list = lambda string: [ x.strip() for x in string.strip().split() ]
         filter_input = lambda string: ( string_to_list( string ), " ".join( string_to_list( string ) ) )
-        # Prepare for new command
-        output = flexsense['output']
-        warnings += flexsense['warnings']
         # Multiple commands are expected to be without output
         if flexsense['output'] and queue:
-            flexsense['warnings'].append( FlexWarning( 1, "Command \"" + lastcmd + "\" had output, " + \
+            flexsense['notices'].append( FlexError( "Command \"" + lastcmd + "\" had output, " + \
             "commands with output interrupt multiple commands mode" ) )
+        # Prepare for new command
+        output = flexsense['output']
+        warnings += flexsense['notices']
         # Check errors
         errors = True if [ 1 for warn in warnings if warn.GetLvl() ] else False
         # Flush queue if an error occurred
         if errors and queue:
             pending = queue.count(";") + (1 if len(queue) else 0)
             # Append to warnings accumulator, note that although this generates an error, there already was one
-            warnings.append( FlexWarning( 1, "Errors occurred, dropping " + str(pending) + \
+            warnings.append( FlexError( "Errors occurred, dropping " + str(pending) + \
                 " pending command" + ("s" if pending-1 else "") ) )
             queue = ""
         # Shell header
-        # TODO: Precisely locate at top of window by buffering output into sections and padding accordingly
         if not queue:
+            flexout("")
             flexout("___ _   ___ _ _")
             flexout("__  _   __   _     Flex for tmuxomatic " + VERSION)
             flexout("_   ___ ___ _ _    The object-oriented windowgram editor")
             flexout("")
-            flexout_divider(8)
+            flexout_divider()
             flexout("")
+            flexout(None) # The fill marker used for later padding to keep header consistently on top
         # Always show windowgram as long as: the command produced no output, and no commands are enqueued
         if not flexsense['output'] and not queue:
             cmd_print()
@@ -2888,7 +2989,7 @@ def flex_shell(user_wh, session, serial=0):
                 flexout("") # Force extra line at end if it does not exist
         # Divider
         if not queue:
-            flexout_divider(8)
+            flexout_divider()
             flexout("")
         # Show warnings (only after queue is exhausted)
         if warnings and not queue:
@@ -2915,17 +3016,36 @@ def flex_shell(user_wh, session, serial=0):
                 flexout( labeler("Panes") + used + " < used " + str(len(used)) + " ... " + \
                     str(len(unused)) + " unused > " + unused )
             flexout("")
+        # If the windowgram is unsupportable by tmux, the user should know
+        # Example: "n unsupported ; b 1 3x3 1 ; j 12 36.2 98.3 74.4"
+        if not queue:
+            # If window changed, check the new window
+            if not flexmenu_index[0]:
+                sc_serial = 0
+                sc_support = True
+            elif sc_serial != flexmenu_index[0]:
+                sc_serial = flexmenu_index[0]
+                sc_support = split_check()
+            # Notify user if window is incompatible with tmux
+            if not sc_support:
+                flexout( labeler("ATTENTION") + "This windowgram is not compatible with the split mechanics of tmux" )
+                flexout("")
+        # Display output
+        if not queue:
+            padding = user_wh[1] - len(buf) # Account for prompt
+            if padding < 0: padding = 0
+            for l in buf:
+                if l is not None: print( l )
+                elif padding: print( "\n" * (padding - 1) ) # Ignore otherwise
+            buf = []
         # User input
         if not queue:
             try: thisinput_str = input("<<< tmuxomatic flex >>> ")
-            except EOFError as e: thisinput_str = "exit" ; flexout("")
+            except EOFError as e: thisinput_str = "exit" ; print("") # About to exit: print, not flexout
             if ";" in thisinput_str: queue = thisinput_str
-            flexout_clearscreen()
         if queue:
             thisinput_str, queue = queue.split(";", 1) if ";" in queue else (queue, "")
             queue = " ; ".join( [ cmd.strip() for cmd in queue.split(";") if cmd.strip() ] )
-        if not queue:
-            flexout("")
         thisinput_lst, thisinput_str = filter_input( thisinput_str )
         lastcmd = thisinput_lst[0] if len(thisinput_lst) else lastcmd
         # Prepare for new command
@@ -2956,7 +3076,7 @@ def flex_shell(user_wh, session, serial=0):
                             break
                     if not invoked:
                         # No invocation, could show available parameter counts, but showing help may be more useful
-                        flexsense['warnings'].append( FlexWarning( 1, "Parameter mismatch for valid command \"" + \
+                        flexsense['notices'].append( FlexError( "Parameter mismatch for valid command \"" + \
                             lastcmd + "\", displaying help instead" ) )
                         cmd_help_N( lastcmd )
                         invoked = True # Skips invalid command
@@ -2964,11 +3084,12 @@ def flex_shell(user_wh, session, serial=0):
             # Invalid command handler
             if not invoked:
                 # Throw it in the warnings queue as an error and it will flush the queue on the next pass
-                flexsense['warnings'].append( FlexWarning( 1, "Invalid command \"" + lastcmd + "\"" ) )
+                flexsense['notices'].append( FlexError( "Invalid command \"" + lastcmd + "\"" ) )
             # Save if session modified and print next pass
             if session.Modified():
                 # TODO: Add to stack if command resulted in a modification
                 session.Save()
+                sc_support = split_check()
             # Finish handler
             if flexsense['finished']:
                 if flexsense['restore']:
@@ -2977,7 +3098,9 @@ def flex_shell(user_wh, session, serial=0):
                 if flexsense['execute']:
                     return session # Return object in case of restore
                 exit()
-    # Not reached
+    ##
+    ## Not reached
+    ##
 
 
 
