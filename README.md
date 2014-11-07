@@ -2,9 +2,15 @@
 
 # tmuxomatic [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
-The other tmux session managers are doing it wrong.  From unnecessary options requiring pages of documentation, to windows defined by a complicated nesting of pane splits.  Instead, session management should be more flexible and more powerful, yet so easy that anybody could use it after just one example.
+Other tmux session managers define windows as a complicated nesting of pane splits and require pages of documentation.
 
-At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character grouping identifies the name, position, size, and shape of a pane.  It should take only one short example to demonstrate the flexibility and power of the windowgram.
+Instead, tmuxomatic is so easy that anyone could use it after just one example, yet it's more flexible and more powerful than other tmux session managers.
+
+At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character grouping identifies the name, position, size, and shape of a pane.  It should take only one example to demonstrate the flexibility and power of the windowgram.
+
+
+
+## Learn by example
 
 Compare this window from `session_example`, with its screenshot from `tmuxomatic session_example`:
 
@@ -27,15 +33,17 @@ Compare this window from `session_example`, with its screenshot from `tmuxomatic
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
 
-For additional features, see `tmuxomatic --help`.
+For a list of command line options, run `tmuxomatic --help`.
+
+For additional features, see the included example sessions.
 
 
 
 ## Flex your windowgrams
 
-Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a windowgram is typed up quickly.  But if you need more detail, you may find yourself doing a lot of ASCII art.  In tmuxomatic 2, flex was added to automate windowgram manipulation.
+Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a windowgram is typed up quickly.  But if you need detail, you may find yourself doing a lot of ASCII art.  In tmuxomatic 2, *flex* was added to automate windowgram manipulation.
 
-Flex is an object-oriented windowgram editor that is visually expressive, naturally worded, logically ordered, minimal, and powerful.  The simple command set can be combined to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who want detailed windowgrams without the tedium of manual entry.
+Flex is an object-oriented windowgram editor.  It is visually expressive, naturally worded, logically ordered, minimal, and powerful.  Its short command set may be combined to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who desire detailed windowgrams without the tedium of manual entry.
 
 Key concepts used by flex commands:
 
@@ -45,29 +53,46 @@ Key concepts used by flex commands:
 * **Size**: Sizes are expressed in exact characters, or contextually as percentages or multipliers
 * **Direction**: Cardinal directions (up, down, left, right), also used for windowgram and group edges
 
-For more information, see the list of flex commands, or follow the demonstrations below.
+In the following demonstrations, the flex shell is represented by a simpler `flex>` prompt.
+
+For a detailed list of commands, type `help` from the flex shell.
 
 
 
-#### Flex demonstration #1 -- Create a windowgram from scratch
+#### Flex demonstration #1 -- Create a new windowgram
 
-Let's use flex to build a windowgram that previously required a lot of typing.  Begin by opening the flex shell on the session file `session_flexample`.  Note that flex will create the file for you if it does not already exist.
+Let's use flex to build a windowgram that would otherwise require a lot of typing.
+
+This windowgram is intended for managing cryptocurrency nodes, specifically bitcoin, litecoin, and namecoin.  We'll have panes for: a general use shell (`1`), a disk monitor (`z`); and for each currency: a title with keep-alive loop on top (`B`, `L`, `N`), and blockchain information on bottom (`b`, `l`, `n`).
+
+This the windowgram we will be creating:
+
+	1111111111111111111111111zzzzzzzzzzzz
+	1111111111111111111111111zzzzzzzzzzzz
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111bbbbllllnnnn
+	1111111111111111111111111bbbbllllnnnn
+	1111111111111111111111111bbbbllllnnnn
+	1111111111111111111111111bbbbllllnnnn
+
+Begin by opening the flex shell on the session file `session_flexample`.  Flex will create the session file for you if it does not already exist.
 
 	% tmuxomatic session_flexample --flex
 
 	flex>
 
-The flex shell is represented here by a `flex>` prompt.  Like tmuxomatic, flex is simple but powerful.  For a full list of commands, type `help` at any time.
-
-We'll be creating a layout for cryptocurrency nodes, specifically bitcoin, litecoin, and namecoin.  We'll have panes for an installation shell (`1`), a disk monitor (`z`), and for each currency: a title with crash loop on top (`B`, `L`, `N`), and blockchain information on bottom (`b`, `l`, `n`).
-
-Begin by creating a new window named `wallets`.
+First use the `new` command to create a new window named `wallets`.  By default, it will create a single pane window represented by the single character `1`.
 
 	flex> new wallets
 
 	1
 
-First let's `scale` this windowgram to `25` characters wide, by `10` characters tall, so it's easier to see.  Many flex parameters are flexible; instead of characters we could have used multipliers or percentages.
+From here it takes only four flex commands to complete the envisioned windowgram.
+
+To make the window easier to work with, let's `scale` this windowgram to `25` characters wide, by `10` characters high.  Many flex parameters are flexible, instead of characters we could have used multipliers or percentages.
 
 	flex> scale 25x10
 
@@ -82,7 +107,7 @@ First let's `scale` this windowgram to `25` characters wide, by `10` characters 
 	1111111111111111111111111
 	1111111111111111111111111
 
-Now let's `add` a new pane on the `right` edge, and make it `50%` of the size of the original windowgram, or `12` characters, whichever you prefer.
+Now let's `add` a new pane on the `right` edge, and make it `50%` of the size of the base windowgram (or `12` characters, if you prefer).
 
 	flex> add right 50%
 
@@ -97,17 +122,9 @@ Now let's `add` a new pane on the `right` edge, and make it `50%` of the size of
 	1111111111111111111111111000000000000
 	1111111111111111111111111000000000000
 
-What I have in mind for pane `0` looks like this:
+There are only two commands left to complete this.  And two ways to do it: one uses `split` and `break`, the other uses `break` and `join`.  We'll use break and join, because split is shown in the second demonstration.
 
-	zzz
-	BLN
-	BLN
-	bln
-	bln
-
-There are two ways to do this; one uses `split` and `break`, the other uses `break` and `join`.  We'll use the latter.
-
-First we `break` the new pane `0` into a grid, `3` panes wide by `5` panes high -- this reflects the envisioned shape above.  For readability, we'll make use of the optional parameter so that new panes to start at `A`.
+So let's `break` pane `0` into a grid, `3` panes wide by `5` panes high.  For readability, we'll make use of the optional parameter so that new panes to start at `A`.
 
 	flex> break 0 3x5 A
 
@@ -122,7 +139,7 @@ First we `break` the new pane `0` into a grid, `3` panes wide by `5` panes high 
 	1111111111111111111111111MMMMNNNNOOOO
 	1111111111111111111111111MMMMNNNNOOOO
 
-Now we complete the envisioned layout using just one join command.  Each `join` parameter is a group of panes to be joined together.  By default, the joined pane is named after the first pane in the group.  But we'll be using the optional rename, by appending `.` followed by the new pane id.
+Finally we complete the envisioned layout using just one `join` command.  Each parameter represents a group of panes to be joined together.  By default, the joined name is that of the first pane in the group.  But we'll be using the optional rename, by appending `.` followed by the new pane id.
 
 	flex> join ABC.z DG.B EH.L FI.N JM.b KN.l LO.n
 
@@ -137,28 +154,45 @@ Now we complete the envisioned layout using just one join command.  Each `join` 
 	1111111111111111111111111bbbbllllnnnn
 	1111111111111111111111111bbbbllllnnnn
 
-Our windowgram is ready for use.  Now all that's left to do is to add the related directions to the session file.  The directions specify run commands, home directories, and focus state.  For more information on directions, see the general introduction to tmuxomatic at the start of this readme.
+That's it, our windowgram is ready for use.
+
+Either type `done` and flex will open this session file in tmux, or type `exit` add some directions to the session file.  The directions specify run commands, home directories, and focus state.  For more information on directions, see the example session at the introduction of this readme.
 
 
 
-#### Flex demonstration #2 -- Modify an existing windowgram
+#### Flex demonstration #2 -- Modify a windowgram
 
-In this demonstration -- presented in summary form -- we'll use the other flex commands to fine-tune the windowgram we created in the previous one.
+In this demonstration is presented in summary form.  It modifies the windowgram from the previous demonstration, using a different set of flex commands.
 
-> At the bottom of pane `1`, Add pane `3` characters high, rename the affected panes `s` and `1`
+> Open the windowgram that we created in the above demonstration
 
-	flex> split 1 vertical -3 s1
+	flex> use wallets
 
-	ssssssssssssssssssssssssszzzzzzzzzzzz
-	ssssssssssssssssssssssssszzzzzzzzzzzz
-	sssssssssssssssssssssssssBBBBLLLLNNNN
-	sssssssssssssssssssssssssBBBBLLLLNNNN
-	sssssssssssssssssssssssssBBBBLLLLNNNN
-	sssssssssssssssssssssssssBBBBLLLLNNNN
+	1111111111111111111111111zzzzzzzzzzzz
+	1111111111111111111111111zzzzzzzzzzzz
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111bbbbllllnnnn
+	1111111111111111111111111bbbbllllnnnn
+	1111111111111111111111111bbbbllllnnnn
+	1111111111111111111111111bbbbllllnnnn
+
+> On pane `1`, split along `vertical` axis, `3` characters from the bottom, name the new panes `1` and `s`
+
+	flex> split 1 vertical -3 1s
+
+	1111111111111111111111111zzzzzzzzzzzz
+	1111111111111111111111111zzzzzzzzzzzz
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111BBBBLLLLNNNN
+	1111111111111111111111111bbbbllllnnnn
 	sssssssssssssssssssssssssbbbbllllnnnn
-	1111111111111111111111111bbbbllllnnnn
-	1111111111111111111111111bbbbllllnnnn
-	1111111111111111111111111bbbbllllnnnn
+	sssssssssssssssssssssssssbbbbllllnnnn
+	sssssssssssssssssssssssssbbbbllllnnnn
 
 **NOTE: Flex is still in development, more will be added in future releases**
 
@@ -194,10 +228,10 @@ Verify that you have the current version installed: [![](http://img.shields.io/p
 
 * `tmuxomatic -V`
 
-On some systems pip will not upgrade properly, this might be fixable by clearing the pip cache prior to upgrade:
+On some systems pip may not upgrade properly, try clearing the pip cache prior to upgrade:
 
 * `rm -rf /tmp/pip-build-root/tmuxomatic`
-* `pip-python3 install --upgrade tmuxomatic`
+* `pip-python3 install tmuxomatic --upgrade --force`
 
 Optional packages:
 
