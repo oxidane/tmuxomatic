@@ -1471,382 +1471,6 @@ class SessionFile(object):
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Processing (session file -> tmux commands)
-##
-##----------------------------------------------------------------------------------------------------------------------
-
-def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
-    """
-
-    Parse session file, build commands, execute.
-
-    """
-
-    # Show configuration
-    if ARGS.verbose >= 1:
-        print( "" )
-        print( "(1) Session   : " + session_name )
-        print( "(1) Running   : " + full_cli )
-        print( "(1) Xterm     : " + str(user_wh[0]) + "x" + str(user_wh[1]) + " (WxH)" )
-        print( "(1) Filename  : " + ARGS.filename )
-        print( "(1) Verbose   : " + str(ARGS.verbose) + \
-            " (" + ", ".join([ 'summary', 'inputs', 'fitting', 'commands' ][:ARGS.verbose]) + ")" )
-        print( "(1) Recreate  : " + str(ARGS.recreate) )
-        print( "(1) Noexecute : " + str(ARGS.noexecute) )
-        print( "(1) Sizing    : " + [ "Absolute (characters)", "Relative (percentages)" ][ARGS.relative] )
-
-    # Initialize
-    list_execution = [] # List of tmux command lists for a session, only executed on successful parsing
-    list_build = [] # Separate list per window
-    window_serial = 0 # 1+
-    window_name = ""
-    window_names_seen = [] # Assert unique window names (related to issue #8)
-    focus_window_name = None # Use window name rather than window index (supports tmux option: base-index)
-    line = "" # Loaded line stored here
-
-    #
-    # Error reporting
-    #
-    errpkg = {}
-    errpkg['command'] = program_cli
-    errpkg['format'] = session.format
-    errpkg['line'] = 0
-
-    #
-    # Reporting line numbers
-    #
-    def SetLineNumber(linebase, lineoffset):
-        if errpkg['format'] == "shorthand":
-            errpkg['line'] = linebase + lineoffset # Exact line (shorthand)
-        else:
-            errpkg['line'] = linebase # Approximate line (yaml)
-
-    #
-    # Parse session file
-    #
-    #   Each window:
-    #
-    #       1 = Initialize window
-    #       2 = Windowgram parser
-    #       3 = Build list_panes
-    #       4 = Directions parser
-    #       5 = Generate tmux commands
-    #
-    eof = False
-    window = 0
-    line = 0
-    for window in session.windows:
-
-        #
-        # 1) Initialize window
-        #
-        title_lines = window.SplitCleanByKey('title')
-        line = title_lines[0] if len(title_lines) else ""
-        SetLineNumber( window.GetLines('title'), 0 )
-        if not line or not is_windowdeclaration(line):
-            synerr(errpkg, "Expecting a window section, found nothing")
-        window_serial += 1 # 1+
-        if window_serial > MAXIMUM_WINDOWS:
-            synerr(errpkg, "There's a maximum of " + str(MAXIMUM_WINDOWS) + " windows in this version")
-        window_process = line[6:].strip()
-        window_name = "" # Window name enclosed in double-quotes
-        window_name = "".join( [ ch if ch != '\"' else '\\"' for ch in window_process ] ) # Escape double-quotes
-        if not window_name:
-            synerr(errpkg, "Window serial " + str(window_serial) + " does not have a name")
-        for ix, seen_name in enumerate(window_names_seen):
-            if window_name == seen_name:
-                synerr(errpkg, "As of version 2.0, window names must be unique.  The duplicate name, \"" + \
-                    window_name + "\", for window " + str(window_serial) + ", already used by window " + str(1+ix))
-        window_names_seen.append( window_name )
-        if ARGS.verbose >= 2: print("")
-
-        #
-        # 2) Windowgram parser
-        #
-        windowgram_lines = window.SplitCleanByKey('windowgram')
-        windowgram = Windowgram_Convert.Lines_To_String( windowgram_lines )
-        wg = Windowgram(windowgram)
-        if ARGS.verbose >= 2:
-            print( "\n".join([ "(2) Windowgram: " + line for line in windowgram_lines if line ]) )
-        layout, error, linenumber = Windowgram_Convert.String_To_Parsed(windowgram)
-        if error:
-            SetLineNumber( window.GetLines('windowgram'), linenumber - 1 )
-            synerr(errpkg, "Windowgram parsing error for window serial " + str(window_serial) + ": " + error)
-        # For every pane, add an initialized 'l' key that's used later for linking
-        for pane in layout.keys(): layout[pane]['l'] = 0
-
-        #
-        # 3) Build list_panes
-        #
-
-        #
-        # 3.1) Sort top to bottom, left to right, move into list (layout[] -> list_panes[])
-        #
-        list_panes, layout = SortPanes( layout )
-
-        #
-        # 3.2) Now check for overlaps
-        #
-        overlap_pane1, overlap_pane2 = PaneOverlap( list_panes )
-        if overlap_pane1 or overlap_pane2:
-            synerr(errpkg, "Overlapping panes: " + overlap_pane1 + " and " + overlap_pane2)
-
-        #
-        # 4) Directions parser
-        #
-        default_directory = "" # Never set a default, assume the path that tmuxomatic was run from
-        first_pdl = False # Verbose only
-        for ix, line in enumerate(window.SplitCleanByKey('directions')):
-            SetLineNumber( window.GetLines('directions'), ix )
-            if not line: continue
-            if ARGS.verbose >= 2:
-                if not first_pdl: print("") ; first_pdl = True
-                print("(2) Directions: " + line)
-            if command_matches(line, "foc"):
-                # Window focus
-                focus_window_name = window_name
-                continue # Next line
-            if command_matches(line[:3], "dir"):
-                # Default directory
-                if ' ' in line or '\t' in line:
-                    # Set or change the default directory.  Applies to successive panes until changed again.
-                    values = line.split( None, 1 )
-                    default_directory = values[1]
-                continue # Next line
-            # Splits the line into easier to handle strings, there's probably a better way to do this
-            if not ' ' in line and not '\t' in line:
-                synerr(errpkg, "Directions line syntax error")
-            panedef_paneids, panedef_cmdplusargs = line.split( None, 1 )
-            if not ' ' in panedef_cmdplusargs and not '\t' in panedef_cmdplusargs:
-                panedef_cmd = panedef_cmdplusargs
-                panedef_args = ''
-            else:
-                panedef_cmd, panedef_args = panedef_cmdplusargs.split( None, 1 )
-            #
-            # Make the list of targets from the specified panes
-            #
-            panelist = list(panedef_paneids)
-            for paneid in panelist:
-                if not paneid in PANE_CHARACTERS:
-                    synerr(errpkg, "Directions pane id is outside of the supported range: [0-9a-zA-Z]")
-            def into(key, value, mode=0): # 0 = Set, 1 = Set or append if present, 2 = Set or skip if present
-                found = []
-                for pane in list_panes:
-                    if pane['n'] in panelist:
-                        if mode == 0:
-                            pane[key] = value
-                        if mode == 1:
-                            if key in pane: pane[key].append( value )
-                            else: pane[key] = [value]
-                        if mode == 2:
-                            if not key in pane or not pane[key]: pane[key] = value
-                        found.append( pane['n'] )
-                delta = list(set(panelist) - set(found))
-                if delta:
-                    synerr(errpkg, "Pane(s) '" + "".join(delta) + "' were not specified in the windowgram")
-            def all_panes_that_have_key(key):
-                found = []
-                for pane in list_panes:
-                    if pane['n'] in panelist:
-                        if key in pane:
-                            found += [ pane['n'] ]
-                return "".join(found)
-            #
-            # Target pane specified ... Set default directory if not already set for this pane
-            #
-            into('dir', default_directory, 2)
-            #
-            # Command handlers
-            #
-            if command_matches(panedef_cmd, "run"):
-                if not panedef_args: synerr(errpkg, "Directions command 'run' must have arguments")
-                into('run', panedef_args, 1)
-            elif command_matches(panedef_cmd, "dir"):
-                if not panedef_args: synerr(errpkg, "Directions command 'dir' must have arguments")
-                into('dir', panedef_args)
-            elif command_matches(panedef_cmd, "foc"):
-                if panedef_args: synerr(errpkg, "Directions command 'foc' must have no arguments")
-                panes = all_panes_that_have_key('foc')
-                if panes: synerr(errpkg, "Directions command 'foc' already specified for panes: " + panes)
-                into('foc', True)
-            else:
-                synerr(errpkg, "Unknown command '" + panedef_cmd + "'")
-
-        #
-        # 5) Generate tmux commands ... After splitting and cross-referencing
-        #
-
-        #
-        # 5.1) Refine list_panes so all expected variables are present for cleaner reference
-        #
-        for pane in list_panes:
-            if not 'dir' in pane: pane['dir'] = ""
-            if not 'run' in pane: pane['run'] = [ "" ]
-            if not 'foc' in pane: pane['foc'] = False
-
-        #
-        # 5.2) Split window into panes
-        #
-        interactive = True if ARGS.verbose >= 3 else False
-        if ARGS.verbose >= 3:
-            print("")
-            print("(3) Fitting panes = {")
-        list_split, list_links = SplitProcessor( interactive, wg, user_wh[0], user_wh[1], list_panes )
-        if ARGS.verbose >= 3:
-            print("(3) }")
-
-        #
-        # 5.3) Build the execution list for: a) creating windows, b) sizing panes, c) running commands
-        #
-        list_build = [] # Window is independently assembled
-
-        #
-        # 5.3a) Create window panes by splitting windows
-        #
-        first_pane = True
-        for split in list_split:
-            #
-            # Readability
-            #
-            list_split_linkid = split['linkid']     # 1234          This is for cross-referencing
-            list_split_orient = split['split']      # "v" / "h"     Successive: Split vertical or horizontal
-            list_split_paneid = split['tmux']       # 0             Successive: Pane split at time of split
-            list_split_inst_w = split['inst_w']     # w             Successive: Ensuing window size in chars
-            list_split_inst_h = split['inst_h']     # h             Successive: Ensuing window size in chars
-            list_split_percnt = split['per']        # 50.0          Successive: Percentage at time of split
-            ent_panes = ''
-            for i in list_panes:
-                if 'l' in i and i['l'] == list_split_linkid:
-                    ent_panes = i
-                    break
-            if not ent_panes:
-                SetLineNumber( window.GetLines('windowgram'), 0 )
-                synerr(errpkg,
-                    "Unable to fully cross-link.  This is because of an unsupported window layout.  See the " + \
-                    "included example file `session_unsupported` for more information on what layouts are and " + \
-                    "aren't possible in tmux.  If you use flex to generate windowgrams, it will notify you as soon " + \
-                    "as you create a pane layout that is not supported by tmux.  For more information, look up the " + \
-                    "clean split rule in the tmuxomatic documentation.")
-            list_panes_dir = ent_panes['dir']       # "/tmp"        Directory of pane
-            if list_panes_dir: adddir = " -c " + list_panes_dir
-            else: adddir = ""
-            #
-            # Add the commands for this split
-            #
-            if first_pane: # First
-                first_pane = False
-                if window_serial == 1:
-                    # First pane of first window
-                    # The shell's cwd must be set, the only other way to do this is to discard the
-                    # window that is automatically created when calling "new-session".
-                    cwd = "cd " + list_panes_dir + " ; " if list_panes_dir else ""
-                    list_build.append(
-                        cwd + EXE_TMUX + " new-session -d -s " + session_name + " -n \"" + window_name + "\"" )
-                    # Normally, tmux automatically renames windows based on whatever is running in the focused pane.
-                    # There are two ways to fix this.  1) Add "set-option -g allow-rename off" to your ".tmux.conf".
-                    # 2) Add "export DISABLE_AUTO_TITLE=true" to your shell's run commands file (e.g., ".bashrc").
-                    # Here we automatically do method 1 for the user, unless the user requests otherwise.
-                    list_build.append( EXE_TMUX + " set-option -t " + session_name + " quiet on" )
-                    renaming = [ "off", "on" ][ARGS.renaming]
-                    list_build.append( EXE_TMUX + " set-option -t " + session_name + " allow-rename " + renaming )
-                    list_build.append( EXE_TMUX + " set-option -t " + session_name + " automatic-rename " + renaming )
-                else:
-                    # First pane of successive window
-                    list_build.append( EXE_TMUX + " new-window -n \"" + window_name + "\"" + adddir )
-            else: # Successive
-                # Perform the split on this pane
-                list_build.append( EXE_TMUX + " select-pane -t " + str(list_split_paneid) )
-                # Pane sizing
-                if ARGS.relative:
-                    # Relative pane sizing (percentage)
-                    percentage = str( int( float( list_split_percnt ) ) ) # Integers are required by tmux 1.8
-                    list_build.append( EXE_TMUX + " split-window -" + list_split_orient + " -p " + percentage + adddir )
-                else:
-                    # Absolute pane sizing (characters)
-                    if list_split_orient == 'v': addaxis = " -y " + str( list_split_inst_h )
-                    else: addaxis = " -x " + str( list_split_inst_w )
-                    list_build.append( EXE_TMUX + " split-window -" + list_split_orient + adddir )
-                    list_build.append( EXE_TMUX + " resize-pane -t " + str(list_split_paneid + 1) + addaxis )
-
-        #
-        # 5.3b) Prepare shell commands ... This is done separately after the pane size has been established
-        #
-        for ent_panes in list_panes:
-            # Now that the tmux pane index correlates, cross-reference for easier lookups
-            list_panes_l = ent_panes['l']           # 1234          This is for cross-referencing
-            ent_panes['tmux'] = str([tup[1] for tup in list_links if tup[0] == list_panes_l][0])
-        focus_actual_tmux_pane_index = "0" # Default pane_index
-        for ent_panes in list_panes:
-            #
-            # Readability
-            #
-            list_panes_l = ent_panes['l']           # 1234          This is for cross-referencing
-            list_panes_run = ent_panes['run']       # ["cd", "ls"]  Commands to run on pane
-            list_panes_foc = ent_panes['foc']       # True          Determines if pane is in focus
-            list_panes_index = ent_panes['tmux']
-            #
-            # Run
-            #
-            if list_panes_run:
-                for run in list_panes_run:
-                    clean_run = re.sub(r'([\"])', r'\\\1', run) # Escape double-quotes
-                    if clean_run:
-                        list_build.append( EXE_TMUX + " select-pane -t " + list_panes_index )
-                        list_build.append( EXE_TMUX + " send-keys \"" + clean_run + "\" C-m" )
-            if not focus_actual_tmux_pane_index or list_panes_foc:
-                focus_actual_tmux_pane_index = list_panes_index
-        if focus_actual_tmux_pane_index:
-            list_build.append( EXE_TMUX + " select-pane -t " + focus_actual_tmux_pane_index )
-
-        #
-        # 5.4) Add this batch to the main execution list to be run later
-        #
-        list_execution.append( list_build )
-
-        #
-        # Done
-        #
-
-    #
-    # Set default window
-    #
-    if focus_window_name is not None:
-        list_build.append( EXE_TMUX + " select-window -t \"" + focus_window_name + "\"" )
-
-    #
-    # Notify user that tmux execution will begin and allow for time to break (ARGS.verbose >= 1)
-    #
-    if ARGS.verbose >= 1:
-        print("")
-        if VERBOSE_WAIT != 0:
-            print("(1) Waiting " + str(VERBOSE_WAIT) + " seconds before running tmux commands...")
-            time.sleep(VERBOSE_WAIT)
-        print("(1) Running tmux commands...")
-        print("")
-
-    #
-    # Run the tmux commands
-    #
-    for block in list_execution:
-        for command in block:
-            error = tmux_run(command)
-            if error:
-                if "pane too small" in error:
-                    errpkg['quiet'] = True
-                    msg = "Window splitting error (pane too small), make your window larger and try again"
-                else:
-                    msg = "An error occurred in tmux: " + error
-                synerr(errpkg, msg )
-
-    #
-    # Attach to the newly created session
-    #
-    tmux_run( EXE_TMUX + " attach-session -t " + session_name )
-
-
-
-##----------------------------------------------------------------------------------------------------------------------
-##
 ## Flex cores
 ##
 ## These functions are shared by multiple flex commands.
@@ -3101,6 +2725,382 @@ def flex_shell(user_wh, session, serial=0):
     ##
     ## Not reached
     ##
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Processing (session file -> tmux commands)
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
+    """
+
+    Parse session file, build commands, execute.
+
+    """
+
+    # Show configuration
+    if ARGS.verbose >= 1:
+        print( "" )
+        print( "(1) Session   : " + session_name )
+        print( "(1) Running   : " + full_cli )
+        print( "(1) Xterm     : " + str(user_wh[0]) + "x" + str(user_wh[1]) + " (WxH)" )
+        print( "(1) Filename  : " + ARGS.filename )
+        print( "(1) Verbose   : " + str(ARGS.verbose) + \
+            " (" + ", ".join([ 'summary', 'inputs', 'fitting', 'commands' ][:ARGS.verbose]) + ")" )
+        print( "(1) Recreate  : " + str(ARGS.recreate) )
+        print( "(1) Noexecute : " + str(ARGS.noexecute) )
+        print( "(1) Sizing    : " + [ "Absolute (characters)", "Relative (percentages)" ][ARGS.relative] )
+
+    # Initialize
+    list_execution = [] # List of tmux command lists for a session, only executed on successful parsing
+    list_build = [] # Separate list per window
+    window_serial = 0 # 1+
+    window_name = ""
+    window_names_seen = [] # Assert unique window names (related to issue #8)
+    focus_window_name = None # Use window name rather than window index (supports tmux option: base-index)
+    line = "" # Loaded line stored here
+
+    #
+    # Error reporting
+    #
+    errpkg = {}
+    errpkg['command'] = program_cli
+    errpkg['format'] = session.format
+    errpkg['line'] = 0
+
+    #
+    # Reporting line numbers
+    #
+    def SetLineNumber(linebase, lineoffset):
+        if errpkg['format'] == "shorthand":
+            errpkg['line'] = linebase + lineoffset # Exact line (shorthand)
+        else:
+            errpkg['line'] = linebase # Approximate line (yaml)
+
+    #
+    # Parse session file
+    #
+    #   Each window:
+    #
+    #       1 = Initialize window
+    #       2 = Windowgram parser
+    #       3 = Build list_panes
+    #       4 = Directions parser
+    #       5 = Generate tmux commands
+    #
+    eof = False
+    window = 0
+    line = 0
+    for window in session.windows:
+
+        #
+        # 1) Initialize window
+        #
+        title_lines = window.SplitCleanByKey('title')
+        line = title_lines[0] if len(title_lines) else ""
+        SetLineNumber( window.GetLines('title'), 0 )
+        if not line or not is_windowdeclaration(line):
+            synerr(errpkg, "Expecting a window section, found nothing")
+        window_serial += 1 # 1+
+        if window_serial > MAXIMUM_WINDOWS:
+            synerr(errpkg, "There's a maximum of " + str(MAXIMUM_WINDOWS) + " windows in this version")
+        window_process = line[6:].strip()
+        window_name = "" # Window name enclosed in double-quotes
+        window_name = "".join( [ ch if ch != '\"' else '\\"' for ch in window_process ] ) # Escape double-quotes
+        if not window_name:
+            synerr(errpkg, "Window serial " + str(window_serial) + " does not have a name")
+        for ix, seen_name in enumerate(window_names_seen):
+            if window_name == seen_name:
+                synerr(errpkg, "As of version 2.0, window names must be unique.  The duplicate name, \"" + \
+                    window_name + "\", for window " + str(window_serial) + ", already used by window " + str(1+ix))
+        window_names_seen.append( window_name )
+        if ARGS.verbose >= 2: print("")
+
+        #
+        # 2) Windowgram parser
+        #
+        windowgram_lines = window.SplitCleanByKey('windowgram')
+        windowgram = Windowgram_Convert.Lines_To_String( windowgram_lines )
+        wg = Windowgram(windowgram)
+        if ARGS.verbose >= 2:
+            print( "\n".join([ "(2) Windowgram: " + line for line in windowgram_lines if line ]) )
+        layout, error, linenumber = Windowgram_Convert.String_To_Parsed(windowgram)
+        if error:
+            SetLineNumber( window.GetLines('windowgram'), linenumber - 1 )
+            synerr(errpkg, "Windowgram parsing error for window serial " + str(window_serial) + ": " + error)
+        # For every pane, add an initialized 'l' key that's used later for linking
+        for pane in layout.keys(): layout[pane]['l'] = 0
+
+        #
+        # 3) Build list_panes
+        #
+
+        #
+        # 3.1) Sort top to bottom, left to right, move into list (layout[] -> list_panes[])
+        #
+        list_panes, layout = SortPanes( layout )
+
+        #
+        # 3.2) Now check for overlaps
+        #
+        overlap_pane1, overlap_pane2 = PaneOverlap( list_panes )
+        if overlap_pane1 or overlap_pane2:
+            synerr(errpkg, "Overlapping panes: " + overlap_pane1 + " and " + overlap_pane2)
+
+        #
+        # 4) Directions parser
+        #
+        default_directory = "" # Never set a default, assume the path that tmuxomatic was run from
+        first_pdl = False # Verbose only
+        for ix, line in enumerate(window.SplitCleanByKey('directions')):
+            SetLineNumber( window.GetLines('directions'), ix )
+            if not line: continue
+            if ARGS.verbose >= 2:
+                if not first_pdl: print("") ; first_pdl = True
+                print("(2) Directions: " + line)
+            if command_matches(line, "foc"):
+                # Window focus
+                focus_window_name = window_name
+                continue # Next line
+            if command_matches(line[:3], "dir"):
+                # Default directory
+                if ' ' in line or '\t' in line:
+                    # Set or change the default directory.  Applies to successive panes until changed again.
+                    values = line.split( None, 1 )
+                    default_directory = values[1]
+                continue # Next line
+            # Splits the line into easier to handle strings, there's probably a better way to do this
+            if not ' ' in line and not '\t' in line:
+                synerr(errpkg, "Directions line syntax error")
+            panedef_paneids, panedef_cmdplusargs = line.split( None, 1 )
+            if not ' ' in panedef_cmdplusargs and not '\t' in panedef_cmdplusargs:
+                panedef_cmd = panedef_cmdplusargs
+                panedef_args = ''
+            else:
+                panedef_cmd, panedef_args = panedef_cmdplusargs.split( None, 1 )
+            #
+            # Make the list of targets from the specified panes
+            #
+            panelist = list(panedef_paneids)
+            for paneid in panelist:
+                if not paneid in PANE_CHARACTERS:
+                    synerr(errpkg, "Directions pane id is outside of the supported range: [0-9a-zA-Z]")
+            def into(key, value, mode=0): # 0 = Set, 1 = Set or append if present, 2 = Set or skip if present
+                found = []
+                for pane in list_panes:
+                    if pane['n'] in panelist:
+                        if mode == 0:
+                            pane[key] = value
+                        if mode == 1:
+                            if key in pane: pane[key].append( value )
+                            else: pane[key] = [value]
+                        if mode == 2:
+                            if not key in pane or not pane[key]: pane[key] = value
+                        found.append( pane['n'] )
+                delta = list(set(panelist) - set(found))
+                if delta:
+                    synerr(errpkg, "Pane(s) '" + "".join(delta) + "' were not specified in the windowgram")
+            def all_panes_that_have_key(key):
+                found = []
+                for pane in list_panes:
+                    if pane['n'] in panelist:
+                        if key in pane:
+                            found += [ pane['n'] ]
+                return "".join(found)
+            #
+            # Target pane specified ... Set default directory if not already set for this pane
+            #
+            into('dir', default_directory, 2)
+            #
+            # Command handlers
+            #
+            if command_matches(panedef_cmd, "run"):
+                if not panedef_args: synerr(errpkg, "Directions command 'run' must have arguments")
+                into('run', panedef_args, 1)
+            elif command_matches(panedef_cmd, "dir"):
+                if not panedef_args: synerr(errpkg, "Directions command 'dir' must have arguments")
+                into('dir', panedef_args)
+            elif command_matches(panedef_cmd, "foc"):
+                if panedef_args: synerr(errpkg, "Directions command 'foc' must have no arguments")
+                panes = all_panes_that_have_key('foc')
+                if panes: synerr(errpkg, "Directions command 'foc' already specified for panes: " + panes)
+                into('foc', True)
+            else:
+                synerr(errpkg, "Unknown command '" + panedef_cmd + "'")
+
+        #
+        # 5) Generate tmux commands ... After splitting and cross-referencing
+        #
+
+        #
+        # 5.1) Refine list_panes so all expected variables are present for cleaner reference
+        #
+        for pane in list_panes:
+            if not 'dir' in pane: pane['dir'] = ""
+            if not 'run' in pane: pane['run'] = [ "" ]
+            if not 'foc' in pane: pane['foc'] = False
+
+        #
+        # 5.2) Split window into panes
+        #
+        interactive = True if ARGS.verbose >= 3 else False
+        if ARGS.verbose >= 3:
+            print("")
+            print("(3) Fitting panes = {")
+        list_split, list_links = SplitProcessor( interactive, wg, user_wh[0], user_wh[1], list_panes )
+        if ARGS.verbose >= 3:
+            print("(3) }")
+
+        #
+        # 5.3) Build the execution list for: a) creating windows, b) sizing panes, c) running commands
+        #
+        list_build = [] # Window is independently assembled
+
+        #
+        # 5.3a) Create window panes by splitting windows
+        #
+        first_pane = True
+        for split in list_split:
+            #
+            # Readability
+            #
+            list_split_linkid = split['linkid']     # 1234          This is for cross-referencing
+            list_split_orient = split['split']      # "v" / "h"     Successive: Split vertical or horizontal
+            list_split_paneid = split['tmux']       # 0             Successive: Pane split at time of split
+            list_split_inst_w = split['inst_w']     # w             Successive: Ensuing window size in chars
+            list_split_inst_h = split['inst_h']     # h             Successive: Ensuing window size in chars
+            list_split_percnt = split['per']        # 50.0          Successive: Percentage at time of split
+            ent_panes = ''
+            for i in list_panes:
+                if 'l' in i and i['l'] == list_split_linkid:
+                    ent_panes = i
+                    break
+            if not ent_panes:
+                SetLineNumber( window.GetLines('windowgram'), 0 )
+                synerr(errpkg,
+                    "Unable to fully cross-link.  This is because of an unsupported window layout.  See the " + \
+                    "included example file `session_unsupported` for more information on what layouts are and " + \
+                    "aren't possible in tmux.  If you use flex to generate windowgrams, it will notify you as soon " + \
+                    "as you create a pane layout that is not supported by tmux.  For more information, look up the " + \
+                    "clean split rule in the tmuxomatic documentation.")
+            list_panes_dir = ent_panes['dir']       # "/tmp"        Directory of pane
+            if list_panes_dir: adddir = " -c " + list_panes_dir
+            else: adddir = ""
+            #
+            # Add the commands for this split
+            #
+            if first_pane: # First
+                first_pane = False
+                if window_serial == 1:
+                    # First pane of first window
+                    # The shell's cwd must be set, the only other way to do this is to discard the
+                    # window that is automatically created when calling "new-session".
+                    cwd = "cd " + list_panes_dir + " ; " if list_panes_dir else ""
+                    list_build.append(
+                        cwd + EXE_TMUX + " new-session -d -s " + session_name + " -n \"" + window_name + "\"" )
+                    # Normally, tmux automatically renames windows based on whatever is running in the focused pane.
+                    # There are two ways to fix this.  1) Add "set-option -g allow-rename off" to your ".tmux.conf".
+                    # 2) Add "export DISABLE_AUTO_TITLE=true" to your shell's run commands file (e.g., ".bashrc").
+                    # Here we automatically do method 1 for the user, unless the user requests otherwise.
+                    list_build.append( EXE_TMUX + " set-option -t " + session_name + " quiet on" )
+                    renaming = [ "off", "on" ][ARGS.renaming]
+                    list_build.append( EXE_TMUX + " set-option -t " + session_name + " allow-rename " + renaming )
+                    list_build.append( EXE_TMUX + " set-option -t " + session_name + " automatic-rename " + renaming )
+                else:
+                    # First pane of successive window
+                    list_build.append( EXE_TMUX + " new-window -n \"" + window_name + "\"" + adddir )
+            else: # Successive
+                # Perform the split on this pane
+                list_build.append( EXE_TMUX + " select-pane -t " + str(list_split_paneid) )
+                # Pane sizing
+                if ARGS.relative:
+                    # Relative pane sizing (percentage)
+                    percentage = str( int( float( list_split_percnt ) ) ) # Integers are required by tmux 1.8
+                    list_build.append( EXE_TMUX + " split-window -" + list_split_orient + " -p " + percentage + adddir )
+                else:
+                    # Absolute pane sizing (characters)
+                    if list_split_orient == 'v': addaxis = " -y " + str( list_split_inst_h )
+                    else: addaxis = " -x " + str( list_split_inst_w )
+                    list_build.append( EXE_TMUX + " split-window -" + list_split_orient + adddir )
+                    list_build.append( EXE_TMUX + " resize-pane -t " + str(list_split_paneid + 1) + addaxis )
+
+        #
+        # 5.3b) Prepare shell commands ... This is done separately after the pane size has been established
+        #
+        for ent_panes in list_panes:
+            # Now that the tmux pane index correlates, cross-reference for easier lookups
+            list_panes_l = ent_panes['l']           # 1234          This is for cross-referencing
+            ent_panes['tmux'] = str([tup[1] for tup in list_links if tup[0] == list_panes_l][0])
+        focus_actual_tmux_pane_index = "0" # Default pane_index
+        for ent_panes in list_panes:
+            #
+            # Readability
+            #
+            list_panes_l = ent_panes['l']           # 1234          This is for cross-referencing
+            list_panes_run = ent_panes['run']       # ["cd", "ls"]  Commands to run on pane
+            list_panes_foc = ent_panes['foc']       # True          Determines if pane is in focus
+            list_panes_index = ent_panes['tmux']
+            #
+            # Run
+            #
+            if list_panes_run:
+                for run in list_panes_run:
+                    clean_run = re.sub(r'([\"])', r'\\\1', run) # Escape double-quotes
+                    if clean_run:
+                        list_build.append( EXE_TMUX + " select-pane -t " + list_panes_index )
+                        list_build.append( EXE_TMUX + " send-keys \"" + clean_run + "\" C-m" )
+            if not focus_actual_tmux_pane_index or list_panes_foc:
+                focus_actual_tmux_pane_index = list_panes_index
+        if focus_actual_tmux_pane_index:
+            list_build.append( EXE_TMUX + " select-pane -t " + focus_actual_tmux_pane_index )
+
+        #
+        # 5.4) Add this batch to the main execution list to be run later
+        #
+        list_execution.append( list_build )
+
+        #
+        # Done
+        #
+
+    #
+    # Set default window
+    #
+    if focus_window_name is not None:
+        list_build.append( EXE_TMUX + " select-window -t \"" + focus_window_name + "\"" )
+
+    #
+    # Notify user that tmux execution will begin and allow for time to break (ARGS.verbose >= 1)
+    #
+    if ARGS.verbose >= 1:
+        print("")
+        if VERBOSE_WAIT != 0:
+            print("(1) Waiting " + str(VERBOSE_WAIT) + " seconds before running tmux commands...")
+            time.sleep(VERBOSE_WAIT)
+        print("(1) Running tmux commands...")
+        print("")
+
+    #
+    # Run the tmux commands
+    #
+    for block in list_execution:
+        for command in block:
+            error = tmux_run(command)
+            if error:
+                if "pane too small" in error:
+                    errpkg['quiet'] = True
+                    msg = "Window splitting error (pane too small), make your window larger and try again"
+                else:
+                    msg = "An error occurred in tmux: " + error
+                synerr(errpkg, msg )
+
+    #
+    # Attach to the newly created session
+    #
+    tmux_run( EXE_TMUX + " attach-session -t " + session_name )
 
 
 
