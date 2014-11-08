@@ -2,7 +2,15 @@
 
 # tmuxomatic [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
-The other tmux session managers define windows as a complicated nesting of pane splits and require pages of documentation.  Instead, tmuxomatic is so easy that anyone could use it after just one example, yet it's more flexible and more powerful than other tmux session managers.
+
+
+A completely new type of tmux session manager.
+
+
+
+## Introduction
+
+Other tmux session managers require pages of documentation, and define windows as a complicated nesting of pane splits.  Instead, tmuxomatic is so easy that anyone could use it after just one example.  Yet tmuxomatic is more flexible and more powerful than other tmux session managers.
 
 At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character grouping identifies the name, position, size, and shape of a pane.  It should take only one example to demonstrate the flexibility and power of the windowgram.
 
@@ -31,7 +39,7 @@ Compare this window from `session_example`, with its screenshot from `tmuxomatic
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
 
-For a list of command line options, run `tmuxomatic --help`.
+For a list of command line arguments, run `tmuxomatic --help`.
 
 For additional features, see the included example sessions.
 
@@ -43,17 +51,21 @@ Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a wind
 
 Flex is an object-oriented windowgram editor.  It is visually expressive, naturally worded, logically ordered, minimal, and powerful.  Its short command set may be combined to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who desire detailed windowgrams without the tedium of manual entry.
 
-Key concepts used by flex commands:
 
-* **Pane**: Single character pane identifier representing one pane in a windowgram
-* **Group**: String of one or more panes (usually in the form of a rectangle without gaps)
-* **Edge**: String of panes that together border one or more edges (the imaginary line between panes)
-* **Size**: Sizes are expressed in exact characters, or contextually as percentages or multipliers
-* **Direction**: Cardinal directions (up, down, left, right), also used for windowgram and group edges
 
-In the following demonstrations, the flex shell is represented by a simpler `flex>` prompt.
+#### Flex demonstration introduction
 
-For a detailed list of commands, type `help` from the flex shell.
+Before proceeding with the flex demonstrations, take a moment to review these key concepts:
+
+  * **Pane**: Single character pane identifier representing one pane in a windowgram
+  * **Group**: String of one or more panes (usually in the form of a rectangle without gaps)
+  * **Edge**: String of panes that together border one or more edges (the imaginary line between panes)
+  * **Size**: Sizes are expressed in exact characters, or contextually as percentages or multipliers
+  * **Direction**: Cardinal directions (up, down, left, right), also used for windowgram and group edges
+
+The flex shell is represented in the demonstrations by a simpler `flex>` prompt.
+
+For a detailed list of all commands, type `help` from the flex shell.
 
 
 
@@ -61,9 +73,7 @@ For a detailed list of commands, type `help` from the flex shell.
 
 Let's use flex to build a windowgram that would otherwise require a lot of typing.
 
-This windowgram is intended for managing cryptocurrency nodes, specifically bitcoin, litecoin, and namecoin.  We'll have panes for: a general use shell (`1`), a disk monitor (`z`); and for each currency: a title with keep-alive loop on top (`B`, `L`, `N`), and blockchain information on bottom (`b`, `l`, `n`).
-
-This the windowgram we will be creating:
+The following windowgram is what we will be creating in this demonstration.  This windowgram is intended for managing cryptocurrency nodes, specifically bitcoin, litecoin, and namecoin.  There are panes for a general use shell (`1`), a disk monitor (`z`); and for each currency: a title with keep-alive loop on top (`B`, `L`, `N`), and blockchain information on bottom (`b`, `l`, `n`).
 
 	1111111111111111111111111zzzzzzzzzzzz
 	1111111111111111111111111zzzzzzzzzzzz
@@ -120,7 +130,7 @@ Now let's `add` a new pane on the `right` edge, and make it `50%` of the size of
 	1111111111111111111111111000000000000
 	1111111111111111111111111000000000000
 
-There are only two commands left to complete this.  And two ways to do it: one uses `split` and `break`, the other uses `break` and `join`.  We'll use break and join, because split is shown in the second demonstration.
+There are only two commands left to complete this.  And two ways to do it: one uses `split` and `break`, the other uses `break` and `join`.  We'll use break and join, because split is shown in the next demonstration.
 
 So let's `break` pane `0` into a grid, `3` panes wide by `5` panes high.  For readability, we'll make use of the optional parameter so that new panes to start at `A`.
 
@@ -154,13 +164,13 @@ Finally we complete the envisioned layout using just one `join` command.  Each p
 
 That's it, our windowgram is ready for use.
 
-Either type `done` and flex will open this session file in tmux, or type `exit` and add some directions to the session file.  The directions specify run commands, home directories, and focus state.  For more information on directions, see the example session at the introduction of this readme.
+Either type `done` and flex will open this session file in tmux, or type `exit` and add some directions to the session file.  The directions specify run commands, home directories, and focus state.  For more information on directions, see the example session at the start of this readme.
 
 
 
 #### Flex demonstration #2 -- Modify a windowgram
 
-In this demonstration is presented in summary form.  It modifies the windowgram from the previous demonstration, using a different set of flex commands.
+In this demonstration is presented in summary form.  Here we modify the windowgram from the previous demonstration, using a different set of flex commands.
 
 > Open the windowgram that we created in the above demonstration
 
@@ -202,8 +212,8 @@ In this demonstration is presented in summary form.  It modifies the windowgram 
 
 This application requires:
 
-* [Python 3](http://www.python.org/getit/) +
-* [tmux 1.8](http://tmux.sourceforge.net/) +
+  * [Python 3](http://www.python.org/getit/) +
+  * [tmux 1.8](http://tmux.sourceforge.net/) +
 
 There are three ways to install tmuxomatic, in order of convenience:
 
@@ -224,16 +234,16 @@ There are three ways to install tmuxomatic, in order of convenience:
 
 Verify that you have the current version installed: [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
-* `tmuxomatic -V`
+  * `tmuxomatic -V`
 
 On some systems pip may not upgrade properly, try clearing the pip cache prior to upgrade:
 
-* `rm -rf /tmp/pip-build-root/tmuxomatic`
-* `pip-python3 install tmuxomatic --upgrade --force`
+  * `rm -rf /tmp/pip-build-root/tmuxomatic`
+  * `pip-python3 install tmuxomatic --upgrade --force`
 
 Optional packages:
 
-* `pip-python3 install pyyaml` ... For YAML session file support
+  * `pip-python3 install pyyaml` ... For YAML session file support
 
 
 
