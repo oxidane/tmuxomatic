@@ -2,9 +2,7 @@
 
 # tmuxomatic [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
-Other tmux session managers define windows as a complicated nesting of pane splits and require pages of documentation.
-
-Instead, tmuxomatic is so easy that anyone could use it after just one example, yet it's more flexible and more powerful than other tmux session managers.
+The other tmux session managers define windows as a complicated nesting of pane splits and require pages of documentation.  Instead, tmuxomatic is so easy that anyone could use it after just one example, yet it's more flexible and more powerful than other tmux session managers.
 
 At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character grouping identifies the name, position, size, and shape of a pane.  It should take only one example to demonstrate the flexibility and power of the windowgram.
 
@@ -41,7 +39,7 @@ For additional features, see the included example sessions.
 
 ## Flex your windowgrams
 
-Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a windowgram is typed up quickly.  But if you need detail, you may find yourself doing a lot of ASCII art.  In tmuxomatic 2, *flex* was added to automate windowgram manipulation.
+Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a windowgram is typed up quickly.  But if you need detail, you may find yourself doing a lot of ASCII art.  In tmuxomatic 2, **flex** was added to automate the construction and modification of the windowgram itself.
 
 Flex is an object-oriented windowgram editor.  It is visually expressive, naturally worded, logically ordered, minimal, and powerful.  Its short command set may be combined to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who desire detailed windowgrams without the tedium of manual entry.
 
@@ -139,7 +137,7 @@ So let's `break` pane `0` into a grid, `3` panes wide by `5` panes high.  For re
 	1111111111111111111111111MMMMNNNNOOOO
 	1111111111111111111111111MMMMNNNNOOOO
 
-Finally we complete the envisioned layout using just one `join` command.  Each parameter represents a group of panes to be joined together.  By default, the joined name is that of the first pane in the group.  But we'll be using the optional rename, by appending `.` followed by the new pane id.
+Finally we complete the envisioned layout using just one `join` command.  Each parameter represents a group of panes to be joined together.  By default, the first pane in the group becomes the joined name.  But we'll be using the optional rename, by appending `.` followed by the new pane id.
 
 	flex> join ABC.z DG.B EH.L FI.N JM.b KN.l LO.n
 
@@ -156,7 +154,7 @@ Finally we complete the envisioned layout using just one `join` command.  Each p
 
 That's it, our windowgram is ready for use.
 
-Either type `done` and flex will open this session file in tmux, or type `exit` add some directions to the session file.  The directions specify run commands, home directories, and focus state.  For more information on directions, see the example session at the introduction of this readme.
+Either type `done` and flex will open this session file in tmux, or type `exit` and add some directions to the session file.  The directions specify run commands, home directories, and focus state.  For more information on directions, see the example session at the introduction of this readme.
 
 
 
