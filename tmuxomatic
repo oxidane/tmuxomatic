@@ -1825,15 +1825,23 @@ def size_ConvertToCharacters(arg, base_characters):
 ## Flex: Expressions ... See actual usage for examples
 ##
 
-valid_directions = [ # Recognized directions: 0123 == TBRL == NSEW
-    [ "top", "t", "tp",     "north", "n",   "up", "u", "over", "above",     ],
-    [ "bottom", "b", "bt",  "south", "s",   "down", "d", "under", "below",  ],
-    [ "right", "r", "rt",   "east", "e"                                     ],
-    [ "left", "l", "lt",    "west", "w"                                     ],
+valid_directions = [ # These directions are recongized, the list is ordered 0123 == TBRL || NSEW
+    [ "top", "t", "tp",     "north", "n",   "up", "u", "over", "above",     ],  # ix == 0 -> Vertical +
+    [ "bottom", "b", "bt",  "south", "s",   "down", "d", "under", "below",  ],  # ix == 1 -> Vertical -
+    [ "right", "r", "rt",   "east", "e"                                     ],  # ix == 2 -> Horizontal +
+    [ "left", "l", "lt",    "west", "w"                                     ],  # ix == 3 -> Horizontal -
 ]
 
-is_axis_vert = lambda axis: True if axis in [ "v", "vertical", "vert" ] else False
+def direction_to_axiswithflag(direction): # axis_as_vh, negate_flag | None, None
+    for ix, directions_ent in enumerate(valid_directions):
+        if True in [True if d.lower().strip() == direction.lower().strip() else False for d in directions_ent]:
+            if ix == 0: return "v", False
+            if ix == 1: return "v", True
+            if ix == 2: return "h", True
+            if ix == 3: return "h", False
+    return None, None
 
+is_axis_vert = lambda axis: True if axis in [ "v", "vertical", "vert" ] else False
 is_axis_horz = lambda axis: True if axis in [ "h", "horizontal", "horz" ] else False
 
 ##
@@ -2192,33 +2200,39 @@ def cmd_add(edge, size, newpane=None):
         newpane, error = wg.Panes_GetNewPaneId( newpane )
         if error:
             return flexsense['notices'].append( FlexError( "Unable to secure a new pane id: " + error ) )
-        for ix, directions_ent in enumerate(valid_directions):
-            if edge in directions_ent:
-                # ix = 0123 == TBRL | NSEW
-                windowgram_lines = wg.Export_Lines()
-                axis_length = len(windowgram_lines) if (ix == 0 or ix == 1) else len(windowgram_lines[0])
-                axis_width = len(windowgram_lines) if (ix == 2 or ix == 3) else len(windowgram_lines[0])
-                size_chars = size_ConvertToCharacters( size, axis_length )
-                if size_chars is None:
-                    return flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
-                if ix == 0: # Top
-                    for _ in range( size_chars ): windowgram_lines.insert( 0, newpane * axis_width )
-                elif ix == 1: # Bottom
-                    for _ in range( size_chars ): windowgram_lines.append( newpane * axis_width )
-                elif ix == 2: # Right
-                    windowgram_lines = [ line + (newpane * size_chars) for line in windowgram_lines ]
-                elif ix == 3: # Left
-                    windowgram_lines = [ (newpane * size_chars) + line for line in windowgram_lines ]
-                # Detect when addition doesn't register and notify user as warning
-                wg_compare_before = wg.Export_String()
-                wg.Import_Lines( windowgram_lines )
-                wg_compare_after = wg.Export_String()
-                if wg_compare_before == wg_compare_after:
-                    return flexsense['notices'].append( FlexWarning( "Addition was too small to register" ) )
-                # Replace windowgram
-                flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
-                # Done
-                return
+        axis_as_vh, negate_flag = direction_to_axiswithflag(edge)
+        ix = None # Convert axis-flag to ix to avoid rewrite
+        if axis_as_vh == "v" and negate_flag == False: ix = 0
+        elif axis_as_vh == "v" and negate_flag == True: ix = 1
+        elif axis_as_vh == "h" and negate_flag == False: ix = 2
+        elif axis_as_vh == "h" and negate_flag == True: ix = 3
+        # Process
+        if ix is not None:
+            # ix = 0123 == TBRL | NSEW
+            windowgram_lines = wg.Export_Lines()
+            axis_length = len(windowgram_lines) if (ix == 0 or ix == 1) else len(windowgram_lines[0])
+            axis_width = len(windowgram_lines) if (ix == 2 or ix == 3) else len(windowgram_lines[0])
+            size_chars = size_ConvertToCharacters( size, axis_length )
+            if size_chars is None:
+                return flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
+            if ix == 0: # Top
+                for _ in range( size_chars ): windowgram_lines.insert( 0, newpane * axis_width )
+            elif ix == 1: # Bottom
+                for _ in range( size_chars ): windowgram_lines.append( newpane * axis_width )
+            elif ix == 2: # Right
+                windowgram_lines = [ line + (newpane * size_chars) for line in windowgram_lines ]
+            elif ix == 3: # Left
+                windowgram_lines = [ (newpane * size_chars) + line for line in windowgram_lines ]
+            # Detect when addition doesn't register and notify user as warning
+            wg_compare_before = wg.Export_String()
+            wg.Import_Lines( windowgram_lines )
+            wg_compare_after = wg.Export_String()
+            if wg_compare_before == wg_compare_after:
+                return flexsense['notices'].append( FlexWarning( "Addition was too small to register" ) )
+            # Replace windowgram
+            flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+            # Done
+            return
         # Edge not found
         return flexsense['notices'].append( FlexError(
             "The edge you specified is invalid, please specify either: top, bottom, left, or right" ) )
@@ -2399,12 +2413,13 @@ def cmd_join(*groups_REQUIRED):
 
 @flex(
     command     = "split",
-    examples    = [ "split 1 vertical 3", "split 1 v -3", "split 0 h 25% LR" ],
-    description = "Splits a pane on an axis of given size.  Size negation will inverse the split.  Optional " + \
-                  "newpanes renames the ensuing pair in English order: top to bottom, left to right.",
+    examples    = [ "split 1 bottom 3", "split 1 vertical -3", "split 0 left 25% LR" ],
+    description = "Splits one pane on either: an axis (vert, horz), or from an edge (top, left).  For an axis, a " + \
+                  "negation of size inverses the split.  Size parameter is optional, the default is 50%.  Optional " + \
+                  "newpanes parameter will rename the panes in order of newest to oldest (2 panes maximum).",
     aliases     = [ ["sp", "split "], ],
 )
-def cmd_split(pane, axis, size, newpanes=None):
+def cmd_split(pane, axis, size=None, newpanes=None):
     serial = flexmenu_index[0]
     if flexmenu_session.Serial_Is_Valid( serial ):
         wg = flexmenu_session.Get_Wg( serial )
@@ -2415,20 +2430,27 @@ def cmd_split(pane, axis, size, newpanes=None):
         elif pane in unused:
             return flexsense['notices'].append( FlexError( "The pane you specified does not exist" ) )
         # Verify axis ... Reduce to "v" or "h" for use in code
-        if is_axis_vert(axis): axis = "v"
-        elif is_axis_horz(axis): axis = "h"
-        else: return flexsense['notices'].append( FlexError( "The axis you specified is invalid" ) )
+        if axis == "v" or axis == "h": negate_flag = None
+        else:
+            axis, negate_flag = direction_to_axiswithflag(axis)
+            if axis is None or negate_flag is None:
+                return flexsense['notices'].append( FlexError( "The axis you specified is invalid" ) )
         # Get axis_length
         px, py, pw, ph = wg.Panes_PaneXYWH(pane)
         axis_length = pw if axis == "h" else ph
+        # Default size
+        if size is None: size = "50%"
         # Verify pane is large enough to split
         if pw < 2 and ph < 2: # Single character pane
             return flexsense['notices'].append( FlexError( "Pane is too small to be split" ) )
         if axis_length < 2: # Single character on specified axis
             return flexsense['notices'].append( FlexError( "Pane is too small to be split in that way" ) )
         # Verify size
-        inverse = True if size and size[0] == "-" else False
-        while size and size[0] == "-": size = size[1:]
+        if negate_flag is not None:
+            inverse = negate_flag
+        else:
+            inverse = True if (size and size[0] == "-") or negate_flag else False
+        while size and size[0] == "-": size = size[1:] # Strip negation if present
         size_type = size_GetType( size )
         if size_type is None:
             return flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
@@ -2448,6 +2470,7 @@ def cmd_split(pane, axis, size, newpanes=None):
         # For renaming purposes, reclaim the pane we're going to split
         used, unused = PaneList_MovePanes( used, unused, pane )
         # Verify newpanes ... Set to first available if not specified
+        if newpanes: newpanes = newpanes[1::-1] # The code uses the reverse order (TODO: resolve this)
         if len(unused) < 1: return flexsense['notices'].append( FlexError(
             "There are insufficient panes available for this command" ) )
         if not newpanes: newpanes = pane # New pane is based on base pane unless otherwise specified
@@ -2458,7 +2481,7 @@ def cmd_split(pane, axis, size, newpanes=None):
                 "Invalid pane in newpanes parameter: " + ch ) )
         used, unused = newpanes_RebuildPaneListsInPreferentialOrder( used, unused, newpanes )
         # Set newpanes to first two available in preferentially ordered unused list
-        newpanes = unused[:2]
+        newpanes = unused[:2] if inverse else unused[1::-1]
         # Perform the split
         src_lines, dst_lines = wg.Export_Lines(), []
         sx, sy = px + size_chars if axis == "h" else 0, py + size_chars if axis == "v" else 0
