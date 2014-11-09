@@ -1828,8 +1828,8 @@ def size_ConvertToCharacters(arg, base_characters):
 valid_directions = [ # These directions are recongized, the list is ordered 0123 == TBRL || NSEW
     [ "top", "t", "tp",     "north", "n",   "up", "u", "over", "above",     ],  # ix == 0 -> Vertical +
     [ "bottom", "b", "bt",  "south", "s",   "down", "d", "under", "below",  ],  # ix == 1 -> Vertical -
-    [ "right", "r", "rt",   "east", "e"                                     ],  # ix == 2 -> Horizontal +
-    [ "left", "l", "lt",    "west", "w"                                     ],  # ix == 3 -> Horizontal -
+    [ "right", "r", "rt",   "east", "e"                                     ],  # ix == 2 -> Horizontal -
+    [ "left", "l", "lt",    "west", "w"                                     ],  # ix == 3 -> Horizontal +
 ]
 
 def direction_to_axiswithflag(direction): # axis_as_vh, negate_flag | None, None
@@ -2200,12 +2200,13 @@ def cmd_add(edge, size, newpane=None):
         newpane, error = wg.Panes_GetNewPaneId( newpane )
         if error:
             return flexsense['notices'].append( FlexError( "Unable to secure a new pane id: " + error ) )
+        # Convert axis-flag to ix to avoid rewrite
         axis_as_vh, negate_flag = direction_to_axiswithflag(edge)
-        ix = None # Convert axis-flag to ix to avoid rewrite
         if axis_as_vh == "v" and negate_flag == False: ix = 0
         elif axis_as_vh == "v" and negate_flag == True: ix = 1
-        elif axis_as_vh == "h" and negate_flag == False: ix = 2
-        elif axis_as_vh == "h" and negate_flag == True: ix = 3
+        elif axis_as_vh == "h" and negate_flag == True: ix = 2
+        elif axis_as_vh == "h" and negate_flag == False: ix = 3
+        else: ix = None
         # Process
         if ix is not None:
             # ix = 0123 == TBRL | NSEW
@@ -2420,6 +2421,12 @@ def cmd_join(*groups_REQUIRED):
     aliases     = [ ["sp", "split "], ],
 )
 def cmd_split(pane, axis, size=None, newpanes=None):
+    # Expectations (for testing):
+    #       If any of the specified newpanes are invalid, return error
+    #       A negative flag for edges (tblr) is ignored, but used for axis (vh)
+    # TODO:
+    #       Possible reordering detection, "split v h" (where "v" is the pane)
+    #           Senses reordering, e.g. "split horz v", and if unable to determine defaults to pane first
     serial = flexmenu_index[0]
     if flexmenu_session.Serial_Is_Valid( serial ):
         wg = flexmenu_session.Get_Wg( serial )
@@ -2467,21 +2474,23 @@ def cmd_split(pane, axis, size=None, newpanes=None):
             return flexsense['notices'].append( FlexError( "Resulting size (" + str(size_chars) + \
                 ") is greater or equal to the axis length (" + str(axis_length) + ")" ) )
         if inverse: size_chars = axis_length - size_chars # Flip
-        # For renaming purposes, reclaim the pane we're going to split
-        used, unused = PaneList_MovePanes( used, unused, pane )
         # Verify newpanes ... Set to first available if not specified
-        if newpanes: newpanes = newpanes[1::-1] # The code uses the reverse order (TODO: resolve this)
         if len(unused) < 1: return flexsense['notices'].append( FlexError(
             "There are insufficient panes available for this command" ) )
-        if not newpanes: newpanes = pane # New pane is based on base pane unless otherwise specified
+        if newpanes is None: newpanes = ""
+        if len(newpanes) == 0: newpanes += unused[0] # New pane is first available
+        if len(newpanes) == 1: newpanes += pane # Base pane
         if len(newpanes) > 2: return flexsense['notices'].append( FlexError(
             "Parameter newpanes exceeds the function maximum of two panes" ) )
         for ch in set(newpanes):
             if not ch in PANE_CHARACTERS: return flexsense['notices'].append( FlexError(
                 "Invalid pane in newpanes parameter: " + ch ) )
+        for ch in newpanes:
+            if ch not in unused and ch != pane:
+                return flexsense['notices'].append( FlexError( "Specified pane (" + ch + ") is already in use" ) )
         used, unused = newpanes_RebuildPaneListsInPreferentialOrder( used, unused, newpanes )
-        # Set newpanes to first two available in preferentially ordered unused list
-        newpanes = unused[:2] if inverse else unused[1::-1]
+        # Reorder the newpanes to match fill logic expectations
+        newpanes = newpanes[:2] if not inverse else newpanes[1::-1]
         # Perform the split
         src_lines, dst_lines = wg.Export_Lines(), []
         sx, sy = px + size_chars if axis == "h" else 0, py + size_chars if axis == "v" else 0
