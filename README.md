@@ -4,15 +4,15 @@
 
 
 
-A completely new type of tmux session manager.
+A completely different kind of tmux session manager.
 
 
 
 ## Introduction
 
-Other tmux session managers require pages of documentation, and define windows as a complicated nesting of pane splits.  Instead, tmuxomatic is so easy that anyone could use it after just one example.  Yet tmuxomatic is more flexible and more powerful than other tmux session managers.
+Other tmux session managers require pages of documentation to use, and define windows as a complicated nesting of pane splits.  Instead, tmuxomatic is so easy that anyone could use it after just one example.  Yet tmuxomatic is more flexible and more powerful than other tmux session managers.
 
-At the heart of tmuxomatic is the **windowgram**, a better way of defining tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character grouping identifies the name, position, size, and shape of a pane.  It should take only one example to demonstrate the flexibility and power of the windowgram.
+At the heart of tmuxomatic is the **windowgram**, a better way of arranging tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character grouping identifies the name, position, size, and shape of a pane.  It should take only one example to demonstrate the flexibility and power of the windowgram.
 
 
 
@@ -39,9 +39,7 @@ Compare this window from `session_example`, with its screenshot from `tmuxomatic
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
 
-For a list of command line arguments, run `tmuxomatic --help`.
-
-For additional features, see the included example sessions.
+For additional features, see the included example sessions.  Or for a list of command line arguments, run `tmuxomatic --help`.
 
 
 
@@ -55,17 +53,15 @@ Flex is an object-oriented windowgram editor.  It is visually expressive, natura
 
 #### Flex demonstration introduction
 
-Before proceeding with the flex demonstrations, take a moment to review these key concepts:
+Before proceeding with the flex demonstration, take a moment to review these key concepts:
 
   * **Pane**: Single character pane identifier representing one pane in a windowgram
   * **Group**: String of one or more panes (usually in the form of a rectangle without gaps)
   * **Edge**: String of panes that together border one or more edges (the imaginary line between panes)
   * **Size**: Sizes are expressed in exact characters, or contextually as percentages or multipliers
-  * **Direction**: Cardinal directions (up, down, left, right), also used for windowgram and group edges
+  * **Direction**: Cardinal directions (up, down, left, right) for movement or to specify object edge
 
-The flex shell is represented in the demonstrations by a simpler `flex>` prompt.
-
-For a detailed list of all commands, type `help` from the flex shell.
+For brevity, the flex shell is represented in this demonstration by a simple `flex>` prompt.  For a detailed list of all flex commands, type `help` from the shell at any time.
 
 
 
@@ -130,7 +126,7 @@ Now let's `add` a new pane on the `right` edge, and make it `50%` of the size of
 	1111111111111111111111111000000000000
 	1111111111111111111111111000000000000
 
-There are only two commands left to complete this.  And two ways to do it: one uses `split` and `break`, the other uses `break` and `join`.  We'll use break and join, because split is shown in the next demonstration.
+There are only two commands left to complete this, and two ways to do it.  One way uses `split` and `break`, the other uses `break` and `join`.  We'll use break and join, because split is shown in the next demonstration.
 
 So let's `break` pane `0` into a grid, `3` panes wide by `5` panes high.  For readability, we'll make use of the optional parameter so that new panes to start at `A`.
 
@@ -187,9 +183,9 @@ In this demonstration is presented in summary form.  Here we modify the windowgr
 	1111111111111111111111111bbbbllllnnnn
 	1111111111111111111111111bbbbllllnnnn
 
-> On pane `1`, split along `vertical` axis, `3` characters from the bottom, name the new panes `1` and `s`
+> On pane `1`, split along `bottom`, exactly `3` characters, name the new pane `s`
 
-	flex> split 1 vertical -3 1s
+	flex> split 1 bottom 3 s
 
 	1111111111111111111111111zzzzzzzzzzzz
 	1111111111111111111111111zzzzzzzzzzzz
