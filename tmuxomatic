@@ -65,7 +65,7 @@ DESCRIPTION = "Intelligent tmux session management" # TODO: Need a better descri
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
 VERSION = "2.5"                                     # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.5     TBD         TBD
+##  2.5     TBD         New flex command: rename
 ##                      Improved the split command
 ##
 ##  2.4     2014-09-14  New flex command: split
@@ -993,6 +993,19 @@ class Windowgram():
         return self.Import_Raw( Windowgram_Convert.Chars_To_String(windowgram_chars) )
     def Import_Parsed(self, windowgram_parsed):
         return self.Import_Raw( Windowgram_Convert.Parsed_To_String(windowgram_parsed) )
+    def Import_Mosaic(self, base_wg, *maskpairs):
+        # Takes base_wg, and merges pairs of [ wg_data, wg_mask ] onto it
+        # TODO: There is probably a more pythonic way to do this
+        s_l = base_wg.Export_Lines() # Source
+        for w, m in maskpairs:
+            t_l = w.Export_Lines() # Target
+            m_l = m.Export_Lines() # Mask
+            w_l, s_l = s_l, [] # Work
+            for iy in range(len(w_l)):
+                line = ""
+                for ix in range(len(w_l[iy])): line += w_l[iy][ix] if m_l[iy][ix] != MASKPANE_1 else t_l[iy][ix]
+                s_l.append(line)
+        self.Import_Lines( s_l )
 
     ##
     ## Exports ... The windowgram is only converted upon request
@@ -2444,7 +2457,7 @@ def cmd_join(*groups_REQUIRED):
             return flexsense['notices'].append( FlexError(
                 "Error with argument " + argument(ix) + ": " + str(error) ) )
     # Perform the joins, detecting pane gaps in the group, resulting windowgram is paired for later merging
-    renames = []
+    joins = []
     for group in groups:
         # Join preprocessing
         group_l, group_r = group.split(".")
@@ -2459,20 +2472,9 @@ def cmd_join(*groups_REQUIRED):
         pair_w = Windowgram( wg.Export_String() )
         pair_m = Windowgram_Mask_Generate( pair_w, group_l )
         pair_w.Panes_Renamer( group_l, group_r )
-        renames.append( [ pair_w, pair_m ] )
+        joins.append( [ pair_w, pair_m ] )
     # A separate merge step is required to prevent name conflicts where the user makes use of the rename option.
-    # Almost made this wg.Import_Mosaic(*renames), but I don't see a need for it elsewhere at the moment.
-    # There is probably a more pythonic way to do this, but this works too.
-    s_l = wg.Export_Lines() # Source
-    for w, m in renames:
-        t_l = w.Export_Lines() # Target
-        m_l = m.Export_Lines() # Mask
-        w_l, s_l = s_l, [] # Work
-        for iy in range(len(w_l)):
-            line = ""
-            for ix in range(len(w_l[iy])): line += w_l[iy][ix] if m_l[iy][ix] != MASKPANE_1 else t_l[iy][ix]
-            s_l.append(line)
-    wg.Import_Lines( s_l )
+    wg.Import_Mosaic( wg, *joins )
     # Replace windowgram
     flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
 
@@ -2570,6 +2572,80 @@ def cmd_split(pane, how, size=None, newpanes=None):
             for ix, ch in enumerate(list(line)) ] )
         dst_lines.append( line )
     wg.Import_Lines( dst_lines )
+    # Replace windowgram
+    flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+
+@flex(
+    command     = "rename",
+    examples    = [ "rename Ff Tt", "rename F T f t" ],
+    description = "Rename from one pane or group, to another pane or group, paired as <from> <to>.  Multiple " + \
+                  "pairs may be specified.",
+    aliases     = [ ["re", "rename "], ],
+)
+def cmd_rename(panes_from, *panes_to):
+    # Analogues:
+    #       Join may be used for rename: join <old>.<new>
+    #       Rename may be used for swap: rename <old><new> <new><old>
+    # Tests:
+    #       n rename.t1 ; br 1 3x2 ABCabc ; re AaBb BbAa
+    #       n rename.t2 ; br 1 3x2 ABCabc ; re Aa Bb Bb Cc Cc Aa
+    #       n rename.t3 ; br 1 2x2 1 ; re 12 21 34 43
+    #       n rename.t4 ; br 1 2x2 1 ; re 1 2 2 1 3 4 4 3
+    serial = flexmenu_index[0]
+    if not flexmenu_session.Serial_Is_Valid(serial):
+        return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+    # This command could have wrapped join, but a native implementation has been made to reduce overhead somewhat
+    wg = flexmenu_session.Get_Wg( serial )
+    used, unused = wg.Panes_GetUsedUnused()
+    pairs = [ panes_from ] + [ arg for arg in panes_to ]
+    if len(pairs)&1:
+        return flexsense['notices'].append( FlexError( "Insufficient data, every <from> must be followed by <to>" ) )
+    pairs = [ pairs[i*2:i*2+2] for i in range(len(pairs)>>1) ]
+    # Ends parsed separately to allow for any pair ordering, this parallel effect is also supported by the join command
+    def proc_list(which): # error or None
+        nonlocal save_f, save_t, work_f, work_t
+        pair = "1"
+        for f, t in pairs:
+            if len(f) != len(t):
+                return "Pair " + pair + " count error, both <from> and <to> pane counts must be identical"
+            fort = f if not which else t
+            # Iterate all panes in this argument and validate
+            for paneid in fort:
+                if not paneid in PANE_CHARACTERS:
+                    return "Invalid pane " + paneid + " in pair " + pair
+                if which == 0: # Only From
+                    if paneid in work_f: # The pane must not have been previously freed
+                        return "The <from> pane " + paneid + " in pair " + pair + " was already renamed by another pair"
+                    if not paneid in used: # The pane must already be in use
+                        return "The <from> pane " + paneid + " in pair " + pair + " is not being used"
+                if which == 1: # Only To
+                    if paneid in work_t: # The pane must not have been previously named
+                        return "The <to> pane " + paneid + " in pair " + pair + " was already named by another pair"
+                    if not paneid in unused + save_f: # The pane must be unavailable
+                        return "The <to> pane " + paneid + " in pair " + pair + " is already being used"
+            # Next
+            work_f += f
+            work_t += t
+            pair = str( int(pair) + 1 )
+        return None
+    # Validate pair lists in order of: from, to
+    work_f = work_t = save_f = save_t = ""
+    error = proc_list(0) # From
+    if error: return flexsense['notices'].append( FlexError( error ) )
+    save_f, save_t, work_f, work_t = work_f, work_t, "", "" # Retention required for second pass validation
+    error = proc_list(1) # To
+    if error: return flexsense['notices'].append( FlexError( error ) )
+    # Perform the renames independently, result is paired with a mask for later merging
+    renames = []
+    for f, t in pairs:
+        for pf, pt in zip(f, t):
+            # Rename ... By now fully vetted
+            pair_w = Windowgram( wg.Export_String() )
+            pair_m = Windowgram_Mask_Generate( pair_w, pf )
+            pair_w.Panes_Renamer( pf, pt )
+            renames.append( [ pair_w, pair_m ] )
+    # A separate merge step is required
+    wg.Import_Mosaic( wg, *renames )
     # Replace windowgram
     flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
 
