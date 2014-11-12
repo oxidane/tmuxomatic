@@ -63,7 +63,10 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DESCRIPTION = "Intelligent tmux session management" # TODO: Need a better description for 2.x
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
-VERSION = "2.4"                                     # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.5"                                     # x.y: x = Major feature, y = Minor feature or bug fix
+##
+##  2.5     TBD         TBD
+##                      Improved the split command
 ##
 ##  2.4     2014-09-14  New flex command: split
 ##                      Multiple flex commands on one line, like a unix shell
@@ -109,6 +112,8 @@ VERSION = "2.4"                                     # x.y: x = Major feature, y 
 ##      Definitely add ncurses or urwid.  The 8-bit background colors could be used to highlight panes.  This would be
 ##      quite awesome for usability, and makes demonstrations easier to follow.  A toggle for edge mode could show
 ##      background colors on neighboring panes to illustrate edges.  Maybe this could be an objective for 3.x.
+##      When ncurses support is added, the flex shell should highlight panes for relevant flex modifier parameters as
+##      they're being typed.
 ##
 ##      Video demonstration of tmuxomatic, including the "--scale" feature and how it's used for rapid development
 ##      and modification of windowgrams ("12\n34" -> 4x -> add small windows).  Keep it short, fast paced,
@@ -279,12 +284,16 @@ VERBOSE_MAX     = 4                     # 0 = quiet, 1 = summary, 2 = inputs, 3 
 PANE_CHARACTERS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" # Official order "[0-9a-zA-Z]"
 MAXIMUM_PANES   = len(PANE_CHARACTERS)  # 62 maximum panes (not windows)
 
-# Panes Extended (other than transparency, these are of transitory use and never saved to file)
+# Panes Extended (These are never saved to file... Remember that panes "#" and " " cannot be used)
 
-PANE_RESERVED   = ".@:"                 # Recognized for special purposes ... Reminder: "#" and " " cannot be used
 MASKPANE_X      = "."                   # Transparency pane id
 MASKPANE_1      = "@"                   # Mask character: One
 MASKPANE_0      = ":"                   # Mask character: Zero
+WGPANE          = "*"                   # Used as a windowgram reference in some flex commands
+
+# Reserved panes
+
+PANE_RESERVED   = MASKPANE_X + MASKPANE_1 + MASKPANE_0 + WGPANE
 
 # Aliases for flexible directions
 
@@ -866,7 +875,7 @@ class Windowgram_Convert():
     def Chars_To_String(windowgram_chars):
         return Windowgram_Convert.Lines_To_String( [ "".join(line_chars) for line_chars in windowgram_chars ] )
 
-    ## String -> Parsed ... Reversibility not needed at the moment, but may be implemented in a future version
+    ## String -> Parsed
 
     @staticmethod
     def String_To_Parsed(windowgram, extend=False): # windowgram_parsed, error_string, error_line
@@ -910,6 +919,23 @@ class Windowgram_Convert():
         except Exception as error:
             return None, str(error), panes_y
         return windowgram_parsed, None, None
+    @staticmethod
+    def Parsed_To_String(windowgram_parsed): # windowgram_string
+        # TODO: Probably should do error handling
+        windowgram_list = []
+        for paneid in windowgram_parsed.keys():
+            pane = windowgram_parsed[paneid]
+            for y in range( pane['y'], pane['y'] + pane['h'] ):
+                for x in range( pane['x'], pane['x'] + pane['w'] ):
+                    ix = int(x) - 1
+                    iy = int(y) - 1
+                    while len(windowgram_list) <= iy: windowgram_list.append([])
+                    while len(windowgram_list[iy]) <= ix: windowgram_list[iy].append([])
+                    windowgram_list[iy][ix] = pane['n']
+        windowgram_string = ""
+        for line in windowgram_list:
+            windowgram_string += "".join(line) + "\n"
+        return windowgram_string
 
     ## String -> Lines -> String ... Purifies the windowgram by stripping comments and whitespace
 
@@ -959,21 +985,25 @@ class Windowgram():
         self.windowgram_string = Windowgram_Convert.Purify( windowgram_raw ) # Strip comments and whitespace
         self.Analyze()
         self.Changed()
-    def Import_String(self, windowgram_string): return self.Import_Raw( windowgram_string )
+    def Import_String(self, windowgram_string):
+        return self.Import_Raw( windowgram_string )
     def Import_Lines(self, windowgram_lines):
         return self.Import_Raw( Windowgram_Convert.Lines_To_String(windowgram_lines) )
     def Import_Chars(self, windowgram_chars):
         return self.Import_Raw( Windowgram_Convert.Chars_To_String(windowgram_chars) )
-    def Import_Parsed(self, windowgram_parsed): # Generates error
-        self.error = "Parsed format is not supported as an import method"
+    def Import_Parsed(self, windowgram_parsed):
+        return self.Import_Raw( Windowgram_Convert.Parsed_To_String(windowgram_parsed) )
 
     ##
     ## Exports ... The windowgram is only converted upon request
     ##
 
-    def Export_String(self): return self.windowgram_string
-    def Export_Lines(self): return Windowgram_Convert.String_To_Lines( self.windowgram_string )
-    def Export_Chars(self): return Windowgram_Convert.String_To_Chars( self.windowgram_string )
+    def Export_String(self):
+        return self.windowgram_string
+    def Export_Lines(self):
+        return Windowgram_Convert.String_To_Lines( self.windowgram_string )
+    def Export_Chars(self):
+        return Windowgram_Convert.String_To_Chars( self.windowgram_string )
     def Export_Parsed(self): # Generates error
         windowgram_parsed, error_string, error_line = \
             Windowgram_Convert.String_To_Parsed( self.windowgram_string, self.extend )
@@ -992,8 +1022,10 @@ class Windowgram():
         self.metrics_width = max( [ len(line) for line in windowgram_lines ] ) if windowgram_lines else 0
         self.metrics_height = len( windowgram_lines )
         self.analysis_layers = 1        # Fixed for now
-    def Analyze_WidthHeight(self): return [ self.metrics_width, self.metrics_height ]
-    def Analyze_IsBlank(self): return True if not max(self.Analyze_WidthHeight()) else False
+    def Analyze_WidthHeight(self):
+        return [ self.metrics_width, self.metrics_height ]
+    def Analyze_IsBlank(self):
+        return True if not max(self.Analyze_WidthHeight()) else False
     def Analyze_Type(self):
         # Determine compatibility (split, tiled, layered)
         analysis_type = ""
@@ -1485,7 +1517,7 @@ class SessionFile(object):
 
 def scalecore_v1(windowgram_string, w_chars, h_chars):
     ##
-    ## Original scale code used in tmuxomatic 1.x
+    ## Based on the scale code used in tmuxomatic 1.x
     ##
     def scale_one(element, multiplier):
         # Scale element using integer rounding, multiplier must be float
@@ -1506,22 +1538,6 @@ def scalecore_v1(windowgram_string, w_chars, h_chars):
             pane['h'] -= pane['y']
             if not pane['x'] or not pane['y'] or not pane['w'] or not pane['h']: lost += 1
         return lost
-    def render_windowgram(list_panes):
-        # Prints the windowgram (TODO: This is probably redundant)
-        windowgram_list = []
-        for paneid in list_panes.keys():
-            pane = list_panes[paneid]
-            for y in range( pane['y'], pane['y'] + pane['h'] ):
-                for x in range( pane['x'], pane['x'] + pane['w'] ):
-                    ix = int(x) - 1
-                    iy = int(y) - 1
-                    while len(windowgram_list) <= iy: windowgram_list.append([])
-                    while len(windowgram_list[iy]) <= ix: windowgram_list[iy].append([])
-                    windowgram_list[iy][ix] = pane['n']
-        windowgram_string = ""
-        for line in windowgram_list:
-            windowgram_string += "".join(line) + "\n"
-        return windowgram_string
     # Get pane list
     list_panes = Windowgram(windowgram_string).Export_Parsed()
     # Set the multipliers
@@ -1530,8 +1546,8 @@ def scalecore_v1(windowgram_string, w_chars, h_chars):
     # Perform the scale
     list_panes_scaled = copy.deepcopy( list_panes )
     scale_windowgram( list_panes_scaled, ax, ay )
-    windowgram_new = render_windowgram( list_panes_scaled )
-    return windowgram_new
+    windowgram_string_new = Windowgram_Convert.Parsed_To_String( list_panes_scaled )
+    return windowgram_string_new
 
 def scalecore_v2(windowgram, w_chars, h_chars):
     ##
@@ -1556,25 +1572,25 @@ def scalecore(windowgram, w_chars, h_chars, retry=None): # TODO: Scale by wg to 
     # Retry with necessary increment and/or decrement until desired pane dimensions are reached.  This is required for
     # commands like "break", which need to scale to a specific pane size.  There's likely a way to derive these metrics
     # reliably, but this works too.  Verify that two resizes are necessary with: "n 1 ; s 42x42 ; b 1 6x6 ; b 1 3x3"
-    retries = 0
-    retries_max = 16 # An infinite loop is unlikely, but this maximum will prevent such an occurrence
+    tries = 0
+    tries_max = 16 # An infinite loop is unlikely, but this maximum will prevent such an occurrence
     paneid = exp_w = exp_h = None
     if retry and type(retry) is tuple and len(retry) == 3:
         paneid, exp_w, exp_h = retry # retry == ( paneid, w, h )
-        if Windowgram( windowgram ).Panes_HasPane( paneid ): retries = retries_max
+        if Windowgram( windowgram ).Panes_HasPane( paneid ): tries = tries_max
         else: paneid = None
     # Scale until satisfied; this loop is for pane measurement, since the windowgram should always scale on first try.
-    if retries < 1: retries = 1
+    if tries < 1: tries = 1
     try_w, try_h = w_chars, h_chars
-    while retries:
+    while tries:
         # Scale core discrepancy example ... "n 1 ; b 1 2x2 ; s 3x3 ; s 2x2" ... Note: v2 loses 3 panes, v1 does not
-        windowgram_scaled = scalecore_v1( windowgram, try_w, try_h ) # Preliminarily using v1 as of 2.3
+        windowgram_scaled = scalecore_v1( windowgram, try_w, try_h ) # Using v1 as of 2.3
         if paneid:
             _, _, new_w, new_h = Windowgram( windowgram_scaled ).Panes_PaneXYWH( paneid )
             if new_w == exp_w and new_h == exp_h: break
             try_w += 1 if new_w < exp_w else -1 if new_w > exp_w else 0
             try_h += 1 if new_h < exp_h else -1 if new_h > exp_h else 0
-        retries -= 1
+        tries -= 1
     return windowgram_scaled
 
 ##
@@ -1635,19 +1651,32 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Planned:
+## Planned modifiers:
 ##
-##      drag <edge> <panes> <dir> <how>             panes == A, ab / edge == left / dir == up, u / how == 2, 50%, -50%
-##      split <panes> <how> [drag_dir_how]          pane == A, ab / how == v, h
+##      drag <panes> <dir> <how>                    drags edge, panes == xyz / dir == up / how == 50%
+##      drag <edge> <panes> <dir> <how>             drags group edge, edge == top, bottom, left, right
+##
+##          Drag notes: When dragging an edge, it will be forced to stop for pane preservation
+##          Drag notes: When dragging a group edge, the internal edges are scaled, only the group edge is contiguous
+##          Drag notes: Drags specified edges, keeps opposing edges pinned, and scales the inner edges
+##          Drag notes: May need a specialized scaler for this command
+##          Drag notes: Maximum scale range depends whether a pane disappears or not
+##          Drag notes: Dragging pushing edges was considered, but this would get messy and probably unnecessary
+##
 ##      rename <panes1> <panes2>                    rename pane, target must be unused
 ##      swap <panes1> <panes2>                      swap two panes (mutual rename), both must exist, 3+ args for cycle
 ##      move <panes1> <panes2>                      swap if both panes are defined, otherwise rename (mv)
 ##      rotate <how>                                how == cw, ccw, 180, interpret 1-3 and -1--3 as multiples of 90
 ##      insert <panes> <edge> <size> [newpanes]     insert pane at edge of panes, just like add but with panes
 ##      del <pane>                                  remove pane from edge of window (delete, clip, remove, drop, rm)
-##      undo                                        undo
-##      redo                                        redo
-##      wipe                                        destroy the windowgram modification history (cannot undo)
+##
+## Planned other:
+##
+##      again                                       repeat last command (flex recognized, not official)
+##      undo                                        stack: undo command
+##      redo                                        stack: redo command
+##      wipe                                        stack: discard the windowgram modification history (cannot undo)
+##      clip                                        stack: discard any commands that had been undone (cannot undo)
 ##
 ## Possible:
 ##
@@ -1657,11 +1686,12 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##      mvlink <line_from> <line_to>                move line in directions
 ##      breakout <pane> [shapes]                    break with axial concatenated shapes == 2x2; x 2x2 3x1; y 1 3x3 1
 ##      shuffle <panegroup1> <panegroup2>           shuffle if all bounding boxes share full edge, or are of equal size
+##      clonewindow <newname>                       copy current selected window into a new window and select
 ##
 ## Conceptual:
 ##
-##      clone <group> <type> <edge> [panes_from] [panes_to]
-##      clone <group> <type> <group> <direction> [panes_from] [panes_to]
+##      clone <group> <type> <edge> [newpanes]
+##      clone <group> <type> <group> <direction> [newpanes]
 ##
 ##      The clone command takes the first group of panes, forming a full rectangle, and along the specified edge, it
 ##      stretches (like scale) the surrounding windowgram to accommodate, and inserts it in.  This would be very useful
@@ -1672,7 +1702,11 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##
 ##      When targeting by group, it would have to support gaps, all that matters is the edge.
 ##
-## Behaviors:
+##      Notes that [newpanes] follows the order of <group>
+##
+## Expectations:
+##
+##      The object (pane, group, edge) should always be the first argument to any command (with exception for qualifier)
 ##
 ##      Any modification of the windowgram outside of flex will result in a "manual" entry in flex stack
 ##
@@ -1825,6 +1859,8 @@ def size_ConvertToCharacters(arg, base_characters):
 ## Flex: Expressions ... See actual usage for examples
 ##
 
+## Directions
+
 valid_directions = [ # These directions are recongized, the list is ordered 0123 == TBRL || NSEW
     [ "top", "t", "tp",     "north", "n",   "up", "u", "over", "above",     ],  # ix == 0 -> Vertical +
     [ "bottom", "b", "bt",  "south", "s",   "down", "d", "under", "below",  ],  # ix == 1 -> Vertical -
@@ -1835,11 +1871,13 @@ valid_directions = [ # These directions are recongized, the list is ordered 0123
 def direction_to_axiswithflag(direction): # axis_as_vh, negate_flag | None, None
     for ix, directions_ent in enumerate(valid_directions):
         if True in [True if d.lower().strip() == direction.lower().strip() else False for d in directions_ent]:
-            if ix == 0: return "v", False
-            if ix == 1: return "v", True
-            if ix == 2: return "h", True
-            if ix == 3: return "h", False
+            if ix == 0: return "v", False   # Top
+            if ix == 1: return "v", True    # Bottom
+            if ix == 2: return "h", True    # Right
+            if ix == 3: return "h", False   # Left
     return None, None
+
+## Detections
 
 is_axis_vert = lambda axis: True if axis in [ "v", "vertical", "vert" ] else False
 is_axis_horz = lambda axis: True if axis in [ "h", "horizontal", "horz" ] else False
@@ -1863,6 +1901,17 @@ def newpanes_RebuildPaneListsInPreferentialOrder(used, unused, newpanes):
     unused += work[ix:] + work[:ix] # Ordered by assignment availability, rooted by lastpaneid
     # Return both (note only unused is preferentially reordered)
     return used, unused
+
+##
+## Flex: Other macros
+##
+
+def panes_in_use_message_generate(panes_in_use):
+    if not panes_in_use:
+        return None
+    print_panes = "pane" + ("s" if len(panes_in_use) > 1 else "")
+    print_isare = "are" if len(panes_in_use) > 1 else "is"
+    return "Specified " + print_panes + " (" + panes_in_use + ") " + print_isare + " already in use"
 
 ##
 ## Decorator for building flex commands
@@ -1947,8 +1996,8 @@ def cmd_help_0():
 
 @flex(
     command     = "help",
-    aliases     = [["h", "help "], ["?", "help "], ["/", "help "]],
     examples    = [ "help new scale" ],
+    aliases     = [ ["h", "help "], ["?", "help "], ["/", "help "] ],
 )
 def cmd_help_N(*commands):
     # Filter specified commands into a list of unique commands, sorted by the official command order
@@ -2027,8 +2076,8 @@ flexgroup = "selectors"
 
 @flex(
     command     = "list",
-    aliases     = [["l", "list "]],
     description = "List all available windows in this tmuxomatic session",
+    aliases     = [ ["l", "list "] ],
 )
 def cmd_list():
     flexsense['output'].append( "  Available windows in this session file (use serial number or name):" )
@@ -2054,9 +2103,9 @@ def cmd_list():
 
 @flex(
     command     = "use",
-    aliases     = [["u", "use "]],
     examples    = [ "use my example", "use 1" ],
     description = "Select the window you would like to modify",
+    aliases     = [ ["u", "use "] ],
 )
 def cmd_use(*name_or_serial_REQUIRED):
     name_or_serial = " ".join(name_or_serial_REQUIRED)
@@ -2087,9 +2136,9 @@ def cmd_use(*name_or_serial_REQUIRED):
 
 @flex(
     command     = "new",
-    aliases     = [["n", "new "]],
     examples    = [ "new some feeds" ],
     description = "Create a new window, initialized to '1'",
+    aliases     = [ ["n", "new "] ],
 )
 def cmd_new(*window_name_REQUIRED):
     name = " ".join(window_name_REQUIRED)
@@ -2111,8 +2160,8 @@ flexgroup = "informers"
 
 @flex(
     command     = "print",
-    aliases     = [["p", "print"]],
     description = "Display windowgram (automatic if there is no other output)",
+    aliases     = [ ["p", "print"] ],
 )
 def cmd_print():
     serial = flexmenu_index[0]
@@ -2133,8 +2182,9 @@ flexgroup = "modifiers"
                   "dimensions, or any combination thereof.  Use a space ( ), colon (:), or times (x) to separate " + \
                   "the x and y axis.  If only one axis is specified then the value will be applied to both x and y.",
     aliases     = [ ["sc", "scale "], ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"],
-                    ["wider", "scale 200%:100%"], ["thinner", "scale 50%:100%"], ["taller", "scale 100%:200%"],
-                    ["shorter", "scale 100%:50%"], ["higher", "scale 100%:200%"], ["lower", "scale 100%:50%"], ],
+                    ["wider", "scale 200%:100%"], ["thinner", "scale 50%:100%"],
+                    ["taller", "scale 100%:200%"], ["shorter", "scale 100%:50%"],
+                    ["higher", "scale 100%:200%"], ["lower", "scale 100%:50%"], ],
 )
 def cmd_scale_1(xy_how): # 1 parameter
     # Split directives like "64:36" and "64x36" into "64 36", also works using percentages "200%:50%", or using
@@ -2204,10 +2254,10 @@ def cmd_add(edge, size, newpane=None):
         return flexsense['notices'].append( FlexError( "Unable to secure a new pane id: " + error ) )
     # Convert axis-flag to ix to avoid rewrite
     axis_as_vh, negate_flag = direction_to_axiswithflag(edge)
-    if axis_as_vh == "v" and negate_flag == False: ix = 0
-    elif axis_as_vh == "v" and negate_flag == True: ix = 1
-    elif axis_as_vh == "h" and negate_flag == True: ix = 2
-    elif axis_as_vh == "h" and negate_flag == False: ix = 3
+    if axis_as_vh == "v" and negate_flag == False: ix = 0   # Top
+    elif axis_as_vh == "v" and negate_flag == True: ix = 1  # Bottom
+    elif axis_as_vh == "h" and negate_flag == True: ix = 2  # Right
+    elif axis_as_vh == "h" and negate_flag == False: ix = 3 # Left
     else: ix = None
     # Process
     if ix is not None:
@@ -2246,15 +2296,18 @@ def cmd_add(edge, size, newpane=None):
     description = "Break a pane into a grid of specified dimensions.  If the break does not produce even panes at " + \
                   "the specified resolution, it will automatically scale up to the next best fit.  The newpanes " + \
                   "parameter is an optional starting pane id, or pane rename sequence.",
-    aliases     = [ ["b", "break "], ["grid", "break "], ["divide", "break "], ["div", "break "], ["crack", "break "],
-                    ["shatter", "break "], ["fragment", "break "], ["crush", "break "], ],
+    aliases     = [ ["b", "break "], ["br", "break "], ["grid", "break "], ["panes", "break "], ],
 )
 def cmd_break(pane, grid, newpanes=None):
-    # As an example of avoiding unnecessary complexity: It's easy to incorporate support for group as target.  Such an
-    # algorithm would break all panes in group equally and apply newpanes linearly.  But a minor complication arises.
-    # The need to find the most efficient break sequence, or common divisors, in order to minimize windowgram size
-    # explosions.  It seems easily managed by the user of flex; simply break them one by one in a sequence that yields
-    # personally satisfactory results.  Because it's already possible with flex, this would only add some complexity.
+    # Analogues:
+    #       Break may be used for split 50%
+    # Notes:
+    #       An example of avoiding unnecessary complexity: It's easy to incorporate support for group as target.  Such
+    #       an algorithm would break all panes in group equally and apply newpanes linearly.  But things become complex
+    #       quickly if it were to avoid size explosions by finding the most efficient break sequence (common divisors).
+    #       Besides, such situations are easily managed by the user of flex; simply break them one by one in a sequence
+    #       that yields personally satisfactory results.  Because this is already possible with flex, such a feature
+    #       would only add complexity without achieving a practical function.
     serial = flexmenu_index[0]
     if not flexmenu_session.Serial_Is_Valid(serial):
         return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
@@ -2318,6 +2371,10 @@ def cmd_break(pane, grid, newpanes=None):
     #                BLN                   BLNOPQ
     #                BLN1                  BLN123
     if newpanes:
+        panes_in_use = "".join([ch for ch in newpanes if ch not in unused and ch != pane])
+        panes_in_use_message = panes_in_use_message_generate( panes_in_use )
+        if panes_in_use_message:
+            return flexsense['notices'].append( FlexError( panes_in_use_message ) )
         used, unused = newpanes_RebuildPaneListsInPreferentialOrder( used, unused, newpanes )
     # Replace pane with grid
     windowgram_lines = wg.Export_Lines()
@@ -2334,9 +2391,12 @@ def cmd_break(pane, grid, newpanes=None):
     description = "Join a contiguous group of panes into a single pane.  Multiple joins are supported.  The joined " + \
                   "pane is named after the first pane specified, but can be renamed by adding dot (.) followed by " + \
                   "the pane id.",
-    aliases     = [ ["j", "join "], ["group", "join "], ["merge", "join "], ["glue", "join "], ],
+    aliases     = [ ["j", "join "], ["jo", "join "], ["group", "join "], ["merge", "join "], ["glue", "join "], ],
 )
 def cmd_join(*groups_REQUIRED):
+    # Analogues:
+    #       Join may be used for rename: join <old>.<new>
+    #       Join may be used for swap: join <one>.<two> <two>.<one>
     groups = groups_REQUIRED # Readability
     argument = lambda ix: str(ix+1) + " (\"" + groups_REQUIRED[ix] + "\")" # Show the group that the user specified
     serial = flexmenu_index[0]
@@ -2424,7 +2484,9 @@ def cmd_join(*groups_REQUIRED):
                   "newpanes parameter will rename the panes in order of newest to oldest (2 panes maximum).",
     aliases     = [ ["sp", "split "], ],
 )
-def cmd_split(pane, axis, size=None, newpanes=None):
+def cmd_split(pane, how, size=None, newpanes=None):
+    # Analogues:
+    #       Break may be used for split 50%
     # Expectations (for testing):
     #       If any of the specified newpanes are invalid, return error
     #       A negative flag for edges (tblr) is ignored, but used for axis (vh)
@@ -2436,6 +2498,7 @@ def cmd_split(pane, axis, size=None, newpanes=None):
         return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     wg = flexmenu_session.Get_Wg( serial )
     used, unused = wg.Panes_GetUsedUnused()
+    axis = how # This is converted to axis
     # Verify pane
     if pane not in PANE_CHARACTERS:
         return flexsense['notices'].append( FlexError( "The pane you specified is invalid" ) )
@@ -2490,9 +2553,10 @@ def cmd_split(pane, axis, size=None, newpanes=None):
     for ch in set(newpanes):
         if not ch in PANE_CHARACTERS: return flexsense['notices'].append( FlexError(
             "Invalid pane in newpanes parameter: " + ch ) )
-    for ch in newpanes:
-        if ch not in unused and ch != pane:
-            return flexsense['notices'].append( FlexError( "Specified pane (" + ch + ") is already in use" ) )
+    panes_in_use = "".join([ch for ch in newpanes if ch not in unused and ch != pane])
+    panes_in_use_message = panes_in_use_message_generate( panes_in_use )
+    if panes_in_use_message:
+        return flexsense['notices'].append( FlexError( panes_in_use_message ) )
     used, unused = newpanes_RebuildPaneListsInPreferentialOrder( used, unused, newpanes )
     # Reorder the newpanes to match fill logic expectations
     newpanes = newpanes[:2] if not inverse else newpanes[1::-1]
@@ -2553,21 +2617,24 @@ def cmd_oops():
 @flex(
     command     = "done",
     description = "Keep changes to session, then execute",
-    aliases     = [["d", "done"], ["run", "done"], ["go", "done"]],
+    aliases     = [ ["d", "done"], ["run", "done"], ["go", "done"] ],
 )
 def cmd_done():
     flexsense['finished'] = flexsense['execute'] = True
 
 @flex(
     command     = "exit",
-    aliases     = [["x", "exit"]],
     description = "Keep changes to session, but do not execute",
+    aliases     = [ ["x", "exit"] ],
 )
 def cmd_exit():
     flexsense['finished'] = True
 
 ##
 ## Flex Shell
+##
+## TODO: Reload the xterm dimensions before printing the buffer to support resize during use
+## TODO: Support "again" that repeats the last command
 ##
 
 def flex_shell(user_wh, session, serial=0):
@@ -2876,15 +2943,8 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
         #
         # 3) Build list_panes
         #
-
-        #
-        # 3.1) Sort top to bottom, left to right, move into list (layout[] -> list_panes[])
-        #
-        list_panes, layout = SortPanes( layout )
-
-        #
-        # 3.2) Now check for overlaps
-        #
+        list_panes, layout = SortPanes( layout ) # Sort t to b, l to r, move into list (layout[] -> list_panes[])
+        # Now check for overlaps
         overlap_pane1, overlap_pane2 = PaneOverlap( list_panes )
         if overlap_pane1 or overlap_pane2:
             synerr(errpkg, "Overlapping panes: " + overlap_pane1 + " and " + overlap_pane2)
