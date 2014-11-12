@@ -96,6 +96,8 @@ First use the `new` command to create a new window named `wallets`.  By default,
 
 From here it takes only four flex commands to complete the envisioned windowgram.
 
+**Scale**:
+
 To make the window easier to work with, let's `scale` this windowgram to `25` characters wide, by `10` characters high.  Many flex parameters are flexible, instead of characters we could have used multipliers or percentages.
 
 	flex> scale 25x10
@@ -110,6 +112,8 @@ To make the window easier to work with, let's `scale` this windowgram to `25` ch
 	1111111111111111111111111
 	1111111111111111111111111
 	1111111111111111111111111
+
+**Add**:
 
 Now let's `add` a new pane on the `right` edge, and make it `50%` of the size of the base windowgram (or `12` characters, if you prefer).
 
@@ -128,6 +132,8 @@ Now let's `add` a new pane on the `right` edge, and make it `50%` of the size of
 
 There are only two commands left to complete this, and two ways to do it.  One way uses `split` and `break`, the other uses `break` and `join`.  We'll use break and join, because split is shown in the next demonstration.
 
+**Break**:
+
 So let's `break` pane `0` into a grid, `3` panes wide by `5` panes high.  For readability, we'll make use of the optional parameter so that new panes to start at `A`.
 
 	flex> break 0 3x5 A
@@ -142,6 +148,8 @@ So let's `break` pane `0` into a grid, `3` panes wide by `5` panes high.  For re
 	1111111111111111111111111JJJJKKKKLLLL
 	1111111111111111111111111MMMMNNNNOOOO
 	1111111111111111111111111MMMMNNNNOOOO
+
+**Join**:
 
 Finally we complete the envisioned layout using just one `join` command.  Each parameter represents a group of panes to be joined together.  By default, the first pane in the group becomes the joined name.  But we'll be using the optional rename, by appending `.` followed by the new pane id.
 

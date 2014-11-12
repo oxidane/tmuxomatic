@@ -65,7 +65,7 @@ DESCRIPTION = "Intelligent tmux session management" # TODO: Need a better descri
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
 VERSION = "2.5"                                     # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.5     TBD         New flex command: rename
+##  2.5     2014-11-12  New flex command: rename
 ##                      Improved the split command
 ##
 ##  2.4     2014-09-14  New flex command: split
