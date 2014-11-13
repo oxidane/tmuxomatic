@@ -11,7 +11,7 @@
 #
 #--------------------------------------------------------------------------------------
 
-#session new_name 			# Optional session rename (only valid at top of file)
+#session new_name 			# Session rename (optional, only valid at top of file)
 
 #--------------------------------------------------------------------------------------
 #
