@@ -66,10 +66,8 @@ HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE a
 VERSION = "2.6"                                     # x.y: x = Major feature, y = Minor feature or bug fix
 ##
 ##  2.6     TBD         TBD
-## TODO
-##                      Added support for pane as size
-##                      Sessions may be renamed from the session file, requested in issue #9
-##                      Flex command ambiguity handler so two character aliases may be dropped
+##                      Support for issue #9: Sessions may be renamed from the session file
+##                      Flex command ambiguity resolver to eliminate the need for short aliases
 ##
 ##  2.5     2014-11-12  New flex command: rename
 ##                      Improved the split command
@@ -2058,7 +2056,7 @@ def cmd_help_0():
 @flex(
     command     = "help",
     examples    = [ "help new scale" ],
-    aliases     = [ ["h", "help "], ["?", "help "], ["/", "help "] ],
+    aliases     = [ ["?", "help "], ["/", "help "] ],
 )
 def cmd_help_N(*commands):
     # Filter specified commands into a list of unique commands, sorted by the official command order
@@ -2138,7 +2136,6 @@ flexgroup = "selectors"
 @flex(
     command     = "list",
     description = "List all available windows in this tmuxomatic session",
-    aliases     = [ ["l", "list "] ],
 )
 def cmd_list():
     flexsense['output'].append( "  Available windows in this session file (use serial number or name):" )
@@ -2166,7 +2163,6 @@ def cmd_list():
     command     = "use",
     examples    = [ "use my example", "use 1" ],
     description = "Select the window you would like to modify",
-    aliases     = [ ["u", "use "] ],
 )
 def cmd_use(*name_or_serial_REQUIRED):
     name_or_serial = " ".join(name_or_serial_REQUIRED)
@@ -2199,7 +2195,6 @@ def cmd_use(*name_or_serial_REQUIRED):
     command     = "new",
     examples    = [ "new some feeds" ],
     description = "Create a new window, initialized to '1'",
-    aliases     = [ ["n", "new "] ],
 )
 def cmd_new(*window_name_REQUIRED):
     name = " ".join(window_name_REQUIRED)
@@ -2222,7 +2217,6 @@ flexgroup = "informers"
 @flex(
     command     = "print",
     description = "Display windowgram (automatic if there is no other output)",
-    aliases     = [ ["p", "print"] ],
 )
 def cmd_print():
     serial = flexmenu_index[0]
@@ -2242,7 +2236,7 @@ flexgroup = "modifiers"
     description = "Scale the windowgram.  Valid parameters are multipliers (x), percentages (%), exact character " + \
                   "dimensions, or any combination thereof.  Use a space ( ), colon (:), or times (x) to separate " + \
                   "the x and y axis.  If only one axis is specified then the value will be applied to both x and y.",
-    aliases     = [ ["sc", "scale "], ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"],
+    aliases     = [ ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"],
                     ["wider", "scale 200%:100%"], ["thinner", "scale 50%:100%"],
                     ["taller", "scale 100%:200%"], ["shorter", "scale 100%:50%"],
                     ["higher", "scale 100%:200%"], ["lower", "scale 100%:50%"], ],
@@ -2299,7 +2293,7 @@ def cmd_scale_2(x_how, y_how): # 2 parameters
                   "abbreviations (e.g., r, rt).  The size of the pane may be defined as an exact character size, " + \
                   "a percentage (%), or a multiplier (x).  If a pane id is not specified, lowest available will " + \
                   "be used.",
-    aliases     = [ ["a", "add "], ["append", "add "], ["app", "add "] ],
+    aliases     = [ ["append", "add "], ["app", "add "] ],
 )
 def cmd_add(edge, size, newpane=None):
     # TODO: Edge could also represent a combined edge of panes.  The panes would have to be adjacent, but it would
@@ -2357,7 +2351,7 @@ def cmd_add(edge, size, newpane=None):
     description = "Break a pane into a grid of specified dimensions.  If the break does not produce even panes at " + \
                   "the specified resolution, it will automatically scale up to the next best fit.  The newpanes " + \
                   "parameter is an optional starting pane id, or pane rename sequence.",
-    aliases     = [ ["b", "break "], ["br", "break "], ["grid", "break "], ["panes", "break "], ],
+    aliases     = [ ["grid", "break "], ["panes", "break "], ],
 )
 def cmd_break(pane, grid, newpanes=None):
     # Analogues:
@@ -2452,7 +2446,7 @@ def cmd_break(pane, grid, newpanes=None):
     description = "Join a contiguous group of panes into a single pane.  Multiple joins are supported.  The joined " + \
                   "pane is named after the first pane specified, but can be renamed by adding dot (.) followed by " + \
                   "the pane id.",
-    aliases     = [ ["j", "join "], ["jo", "join "], ["group", "join "], ["merge", "join "], ["glue", "join "], ],
+    aliases     = [ ["group", "join "], ["merge", "join "], ["glue", "join "], ],
 )
 def cmd_join(*groups_REQUIRED):
     # Analogues:
@@ -2532,7 +2526,6 @@ def cmd_join(*groups_REQUIRED):
     description = "Splits one pane on either: an axis (vert, horz), or from an edge (top, left).  For an axis, a " + \
                   "negation of size inverses the split.  Size parameter is optional, the default is 50%.  Optional " + \
                   "newpanes parameter will rename the panes in order of newest to oldest (2 panes maximum).",
-    aliases     = [ ["sp", "split "], ],
 )
 def cmd_split(pane, how, size=None, newpanes=None):
     # Analogues:
@@ -2628,7 +2621,6 @@ def cmd_split(pane, how, size=None, newpanes=None):
     examples    = [ "rename Ff Tt", "rename F T f t" ],
     description = "Rename from one pane or group, to another pane or group, paired as <from> <to>.  Multiple " + \
                   "pairs may be specified.",
-    aliases     = [ ["re", "rename "], ],
 )
 def cmd_rename(panes_from, *panes_to):
     # Analogues:
@@ -2741,7 +2733,7 @@ def cmd_oops():
 @flex(
     command     = "done",
     description = "Keep changes to session, then execute",
-    aliases     = [ ["d", "done"], ["run", "done"], ["go", "done"] ],
+    aliases     = [ ["run", "done"], ["go", "done"] ],
 )
 def cmd_done():
     flexsense['finished'] = flexsense['execute'] = True
@@ -2906,6 +2898,26 @@ def flex_shell(user_wh, session, serial=0):
         flexsense = copy.deepcopy( flexsense_reset )
         # Command specified
         if len(thisinput_lst):
+            invoked = False
+            # Ambiguity handler (repackages input)
+            # This corrects the command or alias where possible, and reports ambiguity error otherwise
+            # Eliminates the need for manually entered short aliases
+            # For example: "sp" -> "split"
+            def AmbiguityMatch(part, whole): # True if part matches with whole[:part]
+                if len(part) > len(whole): return False
+                return False if [ True for p, w in zip(list(part), list(whole)) if p != w ] else True
+            hits = []
+            for alias_tup in flexmenu_aliases:
+                of = alias_tup[0]
+                if AmbiguityMatch( lastcmd, of ): hits.append( of )
+            for cmd_dict in flexmenu:
+                of = cmd_dict['about'][0]
+                if AmbiguityMatch( lastcmd, of ): hits.append( of )
+            if len(hits) == 1: lastcmd = hits[0]
+            elif len(hits) > 1:
+                flexsense['notices'].append( FlexError( "Command \"" + lastcmd + "\" is ambiguous, try: " + \
+                    ", ".join(hits) ) )
+                continue
             # Alias handler (repackages input)
             # Note that trailing space means duplicate parameters: ["?", "help "] forwards "? use new" to "help use new"
             for alias_tup in flexmenu_aliases:
@@ -2916,7 +2928,7 @@ def flex_shell(user_wh, session, serial=0):
                     lastcmd = thisinput_lst[0] if len(thisinput_lst) else lastcmd
                     break
             # Command handler (based on provided arguments and first matching function)
-            invoked = False
+            finished = False
             argcount = len(thisinput_lst) - 1
             for cmd_dict in flexmenu:
                 if cmd_dict['about'][0] == lastcmd:
@@ -2933,8 +2945,9 @@ def flex_shell(user_wh, session, serial=0):
                         flexsense['notices'].append( FlexError( "Parameter mismatch for valid command \"" + \
                             lastcmd + "\", displaying help instead" ) )
                         cmd_help_N( lastcmd )
-                        invoked = True # Skips invalid command
+                        finished = True
                     break
+            if finished: continue
             # Invalid command handler
             if not invoked:
                 # Throw it in the warnings queue as an error and it will flush the queue on the next pass
@@ -2952,6 +2965,7 @@ def flex_shell(user_wh, session, serial=0):
                 if flexsense['execute']:
                     return session # Return object in case of restore
                 exit()
+        # Previous block assumes nothing follows, so it may continue to next command
     ##
     ## Not reached
     ##
