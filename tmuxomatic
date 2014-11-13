@@ -1445,7 +1445,7 @@ class SessionFile(object):
                 f.write( self.footer )
             if self.format == "yaml":
                 # YAML
-                unformatted = []
+                formatted = ""
                 # Required for writing block literals, source: https://stackoverflow.com/a/6432605
                 def change_style(style, representer):
                     def new_representer(dumper, data):
@@ -1456,6 +1456,12 @@ class SessionFile(object):
                 class literal_str(str): pass
                 represent_literal_str = change_style('|', yaml.representer.SafeRepresenter.represent_str)
                 yaml.add_representer(literal_str, represent_literal_str)
+                # Add the session name change
+                rename = self.RenameIfSpecified_Raw()
+                if rename is not None:
+                    formatted += yaml.dump( [{'session': rename}], \
+                        indent=2, default_flow_style=False, explicit_start=False )
+                    formatted += "\n"
                 # Now add all windows to a dictionary for saving
                 for ix, window in enumerate(self.windows):
                     serial = 1+ix
@@ -1464,13 +1470,14 @@ class SessionFile(object):
                     # Append window definition
                     # TODO: Sort as "name", "windowgram", "directions".  Maybe use: http://pyyaml.org/ticket/29
                     window_dict = {
-                        'name': name,
+                        'name': str(name),
                         'windowgram': literal_str(window['windowgram']),
                         'directions': literal_str(window['directions']),
                     }
-                    unformatted.append( window_dict )
-                # Format as YAML
-                formatted = yaml.dump( unformatted, indent=2, default_flow_style=False, explicit_start=True )
+                    # Dump to string, with linebreaks
+                    if formatted is "": formatted += "\n---\n\n" # Manual explicit start
+                    formatted += yaml.dump( [window_dict], indent=2, default_flow_style=False, explicit_start=False )
+                    formatted += "\n"
                 # Write file
                 f = open(self.filename, 'w')
                 f.write( formatted )
@@ -1540,7 +1547,7 @@ class SessionFile(object):
         # Modified
         self.modified = True
         return serial
-    def RenameIfSpecified(self, original_name):
+    def RenameIfSpecified_Raw(self): # new_name (raw) or None
         # Parse every line and change the name if specified (session rename only valid in comments sections)
         new_name = None
         if self.windows:
@@ -1548,7 +1555,10 @@ class SessionFile(object):
             for line in batch:
                 if is_sessiondeclaration(line):
                     new_name = sessiondeclaration_name(line)
-        return original_name if new_name is None else (PROGRAM_THIS + "_" + new_name)
+        return new_name
+    def RenameIfSpecified(self): # new_name (modified) or None
+        new_name = self.RenameIfSpecified_Raw()
+        return None if new_name is None else (PROGRAM_THIS + "_" + new_name)
 
 
 
@@ -2641,7 +2651,7 @@ def cmd_rename(panes_from, *panes_to):
     pairs = [ pairs[i*2:i*2+2] for i in range(len(pairs)>>1) ]
     # Ends parsed separately to allow for any pair ordering, this parallel effect is also supported by the join command
     def proc_list(which): # error or None
-        nonlocal save_f, save_t, work_f, work_t
+        nonlocal save_f, work_f, work_t
         pair = "1"
         for f, t in pairs:
             if len(f) != len(t):
@@ -2667,13 +2677,13 @@ def cmd_rename(panes_from, *panes_to):
             pair = str( int(pair) + 1 )
         return None
     # Validate pair lists in order of: from, to
-    work_f = work_t = save_f = save_t = ""
+    work_f = work_t = save_f = ""
     error = proc_list(0) # From
     if error: return flexsense['notices'].append( FlexError( error ) )
-    save_f, save_t, work_f, work_t = work_f, work_t, "", "" # Retention required for second pass validation
+    save_f, work_f, work_t = work_f, "", "" # Retention required for second pass validation
     error = proc_list(1) # To
     if error: return flexsense['notices'].append( FlexError( error ) )
-    # Perform the renames independently, result is paired with a mask for later merging
+    # Perform the renames independently, result is paired with a mask and stored in a list
     renames = []
     for f, t in pairs:
         for pf, pt in zip(f, t):
@@ -3387,7 +3397,8 @@ def main():
     # Load session file
     session = SessionFile( ARGS.filename )
     session.Load()
-    session_name = session.RenameIfSpecified( session_name )
+    new_name = session.RenameIfSpecified()
+    if new_name is not None: session_name = new_name
 
     # Flex shell entry
     if ARGS.flex:
