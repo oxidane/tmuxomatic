@@ -58,7 +58,7 @@ Before proceeding with the flex demonstration, take a moment to review these key
   * **Pane**: Single character pane identifier representing one pane in a windowgram
   * **Group**: String of one or more panes (usually in the form of a rectangle without gaps)
   * **Edge**: String of panes that together border one or more edges (the imaginary line between panes)
-  * **Size**: Expressed in exact characters, or contextually as percentages or multipliers
+  * **Size**: Expressed in exact characters, or contextually as a percentage or multiplier
   * **Direction**: Cardinal directions (up, down, left, right) for movement or to specify object edge
 
 For brevity, the flex shell is represented in this demonstration by the `flex>` prompt.  For a detailed list of all flex commands, type `help` from the shell at any time.
@@ -166,7 +166,7 @@ Finally we complete the envisioned layout using just one `join` command.  Each p
 	1111111111111111111111111bbbbllllnnnn
 	1111111111111111111111111bbbbllllnnnn
 
-That's it.  Our windowgram is ready for use.
+That's it.  Our windowgram is ready to use.
 
 Either type `done` and flex will open this session file in tmux, or type `exit` and add some directions to the session file.  The directions specify run commands, home directories, and focus state.  For more information on directions, see the example session at the start of this readme.
 
@@ -210,7 +210,7 @@ In this demonstration is presented in summary form.  Here we modify the windowgr
 
 **Rename**:
 
-> Now `rename` the panes 'N' and 'n', to 'D' and 'd' respectively
+> Now `rename` the panes `N` and `n`, to `D` and `d` respectively
 
 	flex> rename Nn Dd
 

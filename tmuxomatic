@@ -63,7 +63,13 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DESCRIPTION = "Intelligent tmux session management" # TODO: Need a better description for 2.x
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
-VERSION = "2.5"                                     # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.6"                                     # x.y: x = Major feature, y = Minor feature or bug fix
+##
+##  2.6     TBD         TBD
+## TODO
+##                      Added support for pane as size
+##                      Sessions may be renamed from the session file, requested in issue #9
+##                      Flex command ambiguity handler so two character aliases may be dropped
 ##
 ##  2.5     2014-11-12  New flex command: rename
 ##                      Improved the split command
@@ -1201,6 +1207,13 @@ is_windowdeclaration = lambda line: re.search(r"window", line)
 windowdeclaration_name = lambda line: " ".join(re.split(r"[ \t]+", line)[1:]) if is_windowdeclaration(line) else ""
 
 ##
+## Session declaration macros
+##
+
+is_sessiondeclaration = lambda line: re.search(r"session", line)
+sessiondeclaration_name = lambda line: " ".join(re.split(r"[ \t]+", line)[1:]) if is_sessiondeclaration(line) else ""
+
+##
 ## Parsed session file classes
 ##
 
@@ -1214,6 +1227,8 @@ class BatchOfLines(object): # A batch of lines (delimited string) with the corre
         linecount = len(lines.split("\n")[:-1]) # Account for extra line
         self.lines += lines
         self.counts += [line for line in range(1, linecount+1)] if increment else ([start] * linecount)
+    def IsEmpty(self):
+        return True if not self.lines else False
 
 class Window(object): # Common container of window data, divided into sections identified by the keys below
     def __init__(self):
@@ -1364,20 +1379,34 @@ class SessionFile(object):
         except:
             filedict = {}
         # Dict -> Shorthand
+        group_session = []
+        group_other = []
         bol = BatchOfLines()
         bol.AppendBatch( "\n", 0, False ) # Translated YAML -> Shorthand, no need for header
         if type(filedict) is list:
             for entry in filedict:
-                if type(entry) is dict and 'name' in entry:
-                    # Windows are identified by 'name' key
-                    # Should contain 'windowgram' and 'directions' as block literals
-                    name = entry['name']
+                # Session renames
+                if type(entry) is dict and 'session' in entry:
+                    linenumber = entry['__line__'] if '__line__' in entry else 0
+                    rawfile_shorthand = "session " + str(entry['session']) + "\n\n"
+                    group_session.append( [ rawfile_shorthand, linenumber, False ] )
+                # Name blocks... Windows are identified by 'name' key
+                elif type(entry) is dict and 'name' in entry:
+                    # Must contain 'windowgram' and 'directions' as block literals
                     windowgram = entry['windowgram'] if 'windowgram' in entry else ""
                     directions = entry['directions'] if 'directions' in entry else ""
                     linenumber = entry['__line__'] if '__line__' in entry else 0
-                    rawfile_shorthand = "window " + name + "\n\n" + windowgram + "\n" + directions + "\n\n\n"
-                    # Append lines
-                    bol.AppendBatch( rawfile_shorthand, linenumber, False )
+                    rawfile_shorthand = \
+                        "window " + str(entry['name']) + "\n\n" + windowgram + "\n" + directions + "\n\n\n"
+                    group_other.append( [ rawfile_shorthand, linenumber, False ] )
+        # Append data, if any; this will force session renames to the top of the shorthand file
+        if group_session or group_other:
+            # Session renaming is only valid at top of file
+            for rawfile_shorthand, linenumber, flag in group_session:
+                bol.AppendBatch( rawfile_shorthand, linenumber, False )
+            # Everything else follows
+            for rawfile_shorthand, linenumber, flag in group_other:
+                bol.AppendBatch( rawfile_shorthand, linenumber, False )
         # Shorthand -> Core
         self.Load_Shorthand_SharedCore( bol )
     def Load(self):
@@ -1511,6 +1540,15 @@ class SessionFile(object):
         # Modified
         self.modified = True
         return serial
+    def RenameIfSpecified(self, original_name):
+        # Parse every line and change the name if specified (session rename only valid in comments sections)
+        new_name = None
+        if self.windows:
+            batch = self.windows[0].SplitCleanByKey('title_comments')
+            for line in batch:
+                if is_sessiondeclaration(line):
+                    new_name = sessiondeclaration_name(line)
+        return original_name if new_name is None else (PROGRAM_THIS + "_" + new_name)
 
 
 
@@ -1678,10 +1716,9 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##
 ##      rename <panes1> <panes2>                    rename pane, target must be unused
 ##      swap <panes1> <panes2>                      swap two panes (mutual rename), both must exist, 3+ args for cycle
-##      move <panes1> <panes2>                      swap if both panes are defined, otherwise rename (mv)
-##      rotate <how>                                how == cw, ccw, 180, interpret 1-3 and -1--3 as multiples of 90
+##      rotate <how>                                how == cw, ccw, 180, interpret 1..3 and -1..-3 as multiples of 90
 ##      insert <panes> <edge> <size> [newpanes]     insert pane at edge of panes, just like add but with panes
-##      del <pane>                                  remove pane from edge of window (delete, clip, remove, drop, rm)
+##      delete <pane>                               remove pane from edge of window (del, clip, remove, drop, rm)
 ##
 ## Planned other:
 ##
@@ -1700,6 +1737,7 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##      breakout <pane> [shapes]                    break with axial concatenated shapes == 2x2; x 2x2 3x1; y 1 3x3 1
 ##      shuffle <panegroup1> <panegroup2>           shuffle if all bounding boxes share full edge, or are of equal size
 ##      clonewindow <newname>                       copy current selected window into a new window and select
+##      move <panes1> <panes2>                      swap if both panes are defined otherwise rename (probably redundant)
 ##
 ## Conceptual:
 ##
@@ -3349,6 +3387,7 @@ def main():
     # Load session file
     session = SessionFile( ARGS.filename )
     session.Load()
+    session_name = session.RenameIfSpecified( session_name )
 
     # Flex shell entry
     if ARGS.flex:
