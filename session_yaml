@@ -17,6 +17,8 @@
 
 ---
 
+#- session: new_name      # Optional session rename
+
 - name: one
   windowgram: |
     12

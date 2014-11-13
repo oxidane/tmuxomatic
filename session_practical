@@ -11,6 +11,8 @@
 #
 #--------------------------------------------------------------------------------------
 
+#session new_name 			# Optional session rename (only valid at top of file)
+
 #--------------------------------------------------------------------------------------
 #
 # First window: Administrative overview.  Host name, network addresses, process list,
