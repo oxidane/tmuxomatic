@@ -193,7 +193,7 @@ In this demonstration is presented in summary form.  Here we modify the windowgr
 
 **Split**:
 
-> On pane `1`, split along `bottom`, exactly `3` characters, name the new pane `s`
+> Split pane `1`, along `bottom`, exactly `3` characters, name the new pane `s`
 
 	flex> split 1 bottom 3 s
 
@@ -210,9 +210,26 @@ In this demonstration is presented in summary form.  Here we modify the windowgr
 
 **Rename**:
 
-> Now `rename` the panes `N` and `n`, to `D` and `d` respectively
+> Rename the panes `N` and `n`, to `D` and `d` respectively
 
 	flex> rename Nn Dd
+
+	1111111111111111111111111zzzzzzzzzzzz
+	1111111111111111111111111zzzzzzzzzzzz
+	1111111111111111111111111BBBBLLLLDDDD
+	1111111111111111111111111BBBBLLLLDDDD
+	1111111111111111111111111BBBBLLLLDDDD
+	1111111111111111111111111BBBBLLLLDDDD
+	1111111111111111111111111bbbblllldddd
+	sssssssssssssssssssssssssbbbblllldddd
+	sssssssssssssssssssssssssbbbblllldddd
+	sssssssssssssssssssssssssbbbblllldddd
+
+**Swap**:
+
+> Swap pane `z` with `s`, also swap panes `Ll` with `Dd`.
+
+	flex> swap z s Ll Dd
 
 	1111111111111111111111111zzzzzzzzzzzz
 	1111111111111111111111111zzzzzzzzzzzz

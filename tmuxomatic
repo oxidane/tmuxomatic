@@ -65,7 +65,7 @@ DESCRIPTION = "Intelligent tmux session management" # TODO: Need a better descri
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
 VERSION = "2.6"                                     # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.6     TBD         TBD
+##  2.6     TBD         New flex command: swap
 ##                      Support for issue #9: Sessions may be renamed from the session file
 ##                      Flex command ambiguity resolver to eliminate the need for short aliases
 ##
@@ -1746,6 +1746,7 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##      shuffle <panegroup1> <panegroup2>           shuffle if all bounding boxes share full edge, or are of equal size
 ##      clonewindow <newname>                       copy current selected window into a new window and select
 ##      move <panes1> <panes2>                      swap if both panes are defined otherwise rename (probably redundant)
+##      blockswap <panes1> <panes2>                 swaps one block of panes for another, e.g. `BLDbld` with `1` in demo
 ##
 ## Conceptual:
 ##
@@ -1888,31 +1889,42 @@ def table(output, markers, marklines, title, contents):
 ## Flex: Conversion of windowgram metrics
 ##
 
-arg_is_multiplier = lambda how: True if how[-1:] == "x" or how[-1:] == "X" or how[-1:] == "*" else False
-arg_is_percentage = lambda how: True if how[-1:] == "%" else False
+def arg_is_multiplier(arg):
+    if type(arg) is str and arg[:-1].isdigit() and (arg[-1:] == "x" or arg[-1:] == "X" or arg[-1:] == "*"): return True
+    return False
+
+def arg_is_percentage(arg):
+    if type(arg) is str and arg[:-1].isdigit() and arg[-1:] == "%": return True
+    return False
+
+def arg_is_characters(arg):
+    try:
+        _ = int(arg)
+        return True
+    except ValueError:
+        return False
 
 def size_GetType(arg):
     # Return type or None if invalid
-    try:
-        if arg_is_multiplier(arg): return "multiplier"
-        if arg_is_percentage(arg): return "percentage"
-        _ = int(arg)
-        return "characters"
-    except ValueError:
-        return None
+    if arg_is_multiplier(arg): return "multiplier"
+    if arg_is_percentage(arg): return "percentage"
+    if arg_is_characters(arg): return "characters"
+    return None
 
 def size_GreaterOrEqualToBaseCharacters(arg, base_characters):
     # If the parameter is greater or equal to 100%, 1x, or base_characters
-    if size_GetType(arg) is None: return None
-    if arg_is_multiplier(arg): return True if float(arg[:-1]) >= 1.0 else False
-    if arg_is_percentage(arg): return True if float(arg[:-1]) >= 100.0 else False
-    return True if int(arg) >= base_characters else False
+    if size_GetType(arg) is not None:
+        if arg_is_multiplier(arg): return True if float(arg[:-1]) >= 1.0 else False
+        if arg_is_percentage(arg): return True if float(arg[:-1]) >= 100.0 else False
+        if arg_is_characters(arg): return True if int(arg) >= base_characters else False
+    return None
 
 def size_ConvertToCharacters(arg, base_characters):
-    if size_GetType(arg) is None: return None
-    if arg_is_multiplier(arg): return int(float(base_characters) * float(arg[:-1]))
-    elif arg_is_percentage(arg): return int(float(base_characters) * (float(arg[:-1]) / 100.0))
-    return int(arg)
+    if size_GetType(arg) is not None:
+        if arg_is_multiplier(arg): return int(float(base_characters) * float(arg[:-1]))
+        if arg_is_percentage(arg): return int(float(base_characters) * (float(arg[:-1]) / 100.0))
+        if arg_is_characters(arg): return int(arg)
+    return None
 
 ##
 ## Flex: Expressions ... See actual usage for examples
@@ -2572,6 +2584,9 @@ def cmd_split(pane, how, size=None, newpanes=None):
     size_type = size_GetType( size )
     if size_type is None:
         return flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
+    size_type = size_GetType( size )
+    if size_type is None:
+        return flexsense['notices'].append( FlexError( "Invalid size type: " + size ) )
     if size_GreaterOrEqualToBaseCharacters( size, axis_length ):
         size_type = size_GetType( size )
         rep = "-" if inverse else ""
@@ -2652,17 +2667,17 @@ def cmd_rename(panes_from, *panes_to):
             # Iterate all panes in this argument and validate
             for paneid in fort:
                 if not paneid in PANE_CHARACTERS:
-                    return "Invalid pane " + paneid + " in pair " + pair
+                    return "Invalid pane `" + paneid + "` in pair " + pair
                 if which == 0: # Only From
                     if paneid in work_f: # The pane must not have been previously freed
-                        return "The <from> pane " + paneid + " in pair " + pair + " was already renamed by another pair"
+                        return "The <from> pane `" + paneid + "` in pair " + pair + " was renamed by another pair"
                     if not paneid in used: # The pane must already be in use
-                        return "The <from> pane " + paneid + " in pair " + pair + " is not being used"
+                        return "The <from> pane `" + paneid + "` in pair " + pair + " is not being used"
                 if which == 1: # Only To
                     if paneid in work_t: # The pane must not have been previously named
-                        return "The <to> pane " + paneid + " in pair " + pair + " was already named by another pair"
+                        return "The <to> pane `" + paneid + "` in pair " + pair + " was already named by another pair"
                     if not paneid in unused + save_f: # The pane must be unavailable
-                        return "The <to> pane " + paneid + " in pair " + pair + " is already being used"
+                        return "The <to> pane `" + paneid + "` in pair " + pair + " is already being used"
             # Next
             work_f += f
             work_t += t
@@ -2686,6 +2701,60 @@ def cmd_rename(panes_from, *panes_to):
             renames.append( [ pair_w, pair_m ] )
     # A separate merge step is required
     wg.Import_Mosaic( wg, *renames )
+    # Replace windowgram
+    flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+
+@flex(
+    command     = "swap",
+    examples    = [ "swap A B", "swap Aa Bb 1 2" ],
+    description = "Swaps one pane or group, with another pane or group, paired as <from> <to>.  Multiple " + \
+                  "pairs may be specified.",
+)
+def cmd_swap(panes_from, *panes_to):
+    # Analogues:
+    #       Join may be used for swap: join <one>.<two> <two>.<one>
+    #       Rename may be used for swap: rename <old><new> <new><old>
+    # Notes:
+    #       This was going to be simple single pane swap, but decided to go for the same flexibility as rename
+    #       Because of this, much of the code between rename and swap is the same or similar
+    serial = flexmenu_index[0]
+    if not flexmenu_session.Serial_Is_Valid(serial):
+        return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+    # This command could have wrapped join, but a native implementation has been made to reduce overhead somewhat
+    wg = flexmenu_session.Get_Wg( serial )
+    used, unused = wg.Panes_GetUsedUnused()
+    pairs = [ panes_from ] + [ arg for arg in panes_to ]
+    if len(pairs)&1:
+        return flexsense['notices'].append( FlexError( "Insufficient data, every <from> must be followed by <to>" ) )
+    pairs = [ pairs[i*2:i*2+2] for i in range(len(pairs)>>1) ]
+    # Panes are only permitted to be swapped once
+    swaplist = ""
+    pair = "1"
+    try:
+        for f, t in pairs:
+            if len(f) != len(t):
+                raise Exception("Pair " + pair + " count error, both <from> and <to> pane counts must be identical")
+            # Iterate all panes in this argument and validate
+            for spot, paneid in zip( ["<from>" for _ in f] + ["<to>" for _ in t], f + t):
+                if not paneid in PANE_CHARACTERS:
+                    raise Exception("Invalid pane `" + paneid + "` in " + spot + " of pair " + pair)
+                if paneid in swaplist: # The pane must not have been previously swapped
+                    raise Exception("The " + spot + " pane `" + paneid + "` in pair " + pair + " is already swapped")
+                if not paneid in used: # The pane must already be in use
+                    raise Exception("The " + spot + " pane `" + paneid + "` in pair " + pair + " is not being used")
+            # Next
+            swaplist += f + t
+            pair = str( int(pair) + 1 )
+    except Exception as error:
+        return flexsense['notices'].append( FlexError( str(error) ) )
+    # Merge all arguments into a single unified from and to that contains both, so only one direction (f->t) is needed
+    master_f, master_t = "".join([f for f, _ in pairs]), "".join([t for _, t in pairs])
+    master_f, master_t = master_f + master_t, master_t + master_f
+    # Perform the swaps in a single pass now that we know all panes are referenced only once
+    windowgram_lines = wg.Export_Lines()
+    wg.Import_Lines( [ "".join(
+        [ ch if ch not in master_f else master_t[master_f.find(ch)] for ch in list(line) ]
+        ) for line in windowgram_lines ] )
     # Replace windowgram
     flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
 
@@ -2901,7 +2970,7 @@ def flex_shell(user_wh, session, serial=0):
             invoked = False
             # Ambiguity handler (repackages input)
             # This corrects the command or alias where possible, and reports ambiguity error otherwise
-            # Eliminates the need for manually entered short aliases
+            # Eliminates the need for the manual entry of short aliases for flex commands
             # For example: "sp" -> "split"
             def AmbiguityMatch(part, whole): # True if part matches with whole[:part]
                 if len(part) > len(whole): return False
@@ -2915,8 +2984,8 @@ def flex_shell(user_wh, session, serial=0):
                 if AmbiguityMatch( lastcmd, of ): hits.append( of )
             if len(hits) == 1: lastcmd = hits[0]
             elif len(hits) > 1:
-                flexsense['notices'].append( FlexError( "Command \"" + lastcmd + "\" is ambiguous, try: " + \
-                    ", ".join(hits) ) )
+                flexsense['notices'].append( FlexError( "Ambiguous command \"" + lastcmd + "\" has " + \
+                    str(len(hits)) + " matches: " + ", ".join(hits) ) )
                 continue
             # Alias handler (repackages input)
             # Note that trailing space means duplicate parameters: ["?", "help "] forwards "? use new" to "help use new"
