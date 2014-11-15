@@ -1,6 +1,7 @@
 
 
-# tmuxomatic <div style="float: right">[![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)</div>
+# tmuxomatic <div style="float: right"><img src="http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat" href="https://pypi.python.org/pypi/tmuxomatic"> <img src="http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat" href="https://pypi.python.org/pypi/tmuxomatic"></div>
+<!-- [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) -->
 
 
 
