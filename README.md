@@ -12,7 +12,7 @@ A completely different kind of tmux session manager.
 
 Other tmux session managers require pages of documentation to use, and define windows as a complicated nesting of pane splits.  Instead, tmuxomatic is so easy that anyone could use it after just one example.  Yet tmuxomatic is more flexible and more powerful than other tmux session managers.
 
-At the heart of tmuxomatic is the **windowgram**, a better way of arranging tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character grouping identifies the name, position, size, and shape of a pane.  It should take only one example to demonstrate the flexibility and power of the windowgram.
+At the heart of tmuxomatic is the **windowgram**, a better way of arranging tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character grouping identifies the name, position, size, and shape of a pane.  It should take only one example to demonstrate the power and flexibility of the windowgram.
 
 
 
@@ -231,16 +231,16 @@ In this demonstration is presented in summary form.  Here we modify the windowgr
 
 	flex> swap z s Ll Dd
 
-	1111111111111111111111111zzzzzzzzzzzz
-	1111111111111111111111111zzzzzzzzzzzz
-	1111111111111111111111111BBBBLLLLDDDD
-	1111111111111111111111111BBBBLLLLDDDD
-	1111111111111111111111111BBBBLLLLDDDD
-	1111111111111111111111111BBBBLLLLDDDD
-	1111111111111111111111111bbbblllldddd
-	sssssssssssssssssssssssssbbbblllldddd
-	sssssssssssssssssssssssssbbbblllldddd
-	sssssssssssssssssssssssssbbbblllldddd
+	1111111111111111111111111ssssssssssss
+	1111111111111111111111111ssssssssssss
+	1111111111111111111111111BBBBDDDDLLLL
+	1111111111111111111111111BBBBDDDDLLLL
+	1111111111111111111111111BBBBDDDDLLLL
+	1111111111111111111111111BBBBDDDDLLLL
+	1111111111111111111111111bbbbddddllll
+	zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
+	zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
+	zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
 
 **NOTE: Flex is still in development, more will be added in future releases**
 

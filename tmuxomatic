@@ -288,16 +288,20 @@ VERBOSE_MAX     = 4                     # 0 = quiet, 1 = summary, 2 = inputs, 3 
 PANE_CHARACTERS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" # Official order "[0-9a-zA-Z]"
 MAXIMUM_PANES   = len(PANE_CHARACTERS)  # 62 maximum panes (not windows)
 
-# Panes Extended (These are never saved to file... Remember that panes "#" and " " cannot be used)
+# Panes Extended (these characters are never saved to file)
 
 MASKPANE_X      = "."                   # Transparency pane id
 MASKPANE_1      = "@"                   # Mask character: One
 MASKPANE_0      = ":"                   # Mask character: Zero
-WGPANE          = "*"                   # Used as a windowgram reference in some flex commands
+
+PANE_CHAR_ALL   = "*"                   # Used as a windowgram reference in some flex commands
+PANE_CHAR_COM   = "#"                   # Cannot be used: Session file stripped
+PANE_CHAR_SPA   = " "                   # Cannot be used: Session file stripped
 
 # Reserved panes
 
-PANE_RESERVED   = MASKPANE_X + MASKPANE_1 + MASKPANE_0 + WGPANE
+PANE_RESERVED   = MASKPANE_X + MASKPANE_1 + MASKPANE_0              # Valid ephemeral characters
+PANE_RESERVED_X = PANE_CHAR_SPA + PANE_CHAR_COM + PANE_CHAR_ALL     # Invalid or used as wildcard
 
 # Aliases for flexible directions
 
@@ -1656,7 +1660,7 @@ def scalecore(windowgram, w_chars, h_chars, retry=None): # TODO: Scale by wg to 
 ## Group core ... Tests group of panes for contiguity, returns group capability, if panes are missing it suggests them
 ##
 ## Used by ... join
-## Anticipating ... drag (if scaling?), split (???), swap, insert, delete, flip (group), mirror (group)
+## Anticipating ... drag, insert, delete, flip (group), mirror (group)
 ##
 
 class GroupStatus:
@@ -2553,56 +2557,53 @@ def cmd_split(pane, how, size=None, newpanes=None):
         return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     wg = flexmenu_session.Get_Wg( serial )
     used, unused = wg.Panes_GetUsedUnused()
-    axis = how # This is converted to axis
+    axis = how # This argument is handled as an axis
+    # Set the default size if unspecified
+    if size is None: size = "50%"
     # Verify pane
     if pane not in PANE_CHARACTERS:
         return flexsense['notices'].append( FlexError( "The pane you specified is invalid" ) )
     elif pane in unused:
         return flexsense['notices'].append( FlexError( "The pane you specified does not exist" ) )
-    # Verify axis ... Reduce to "v" or "h" for use in code
-    if axis == "v" or axis == "h": negate_flag = None
+    # Verify axis and reduce to "v" or "h"
+    inverse = "-" if size[0] == "-" else ""
+    if is_axis_vert(axis): axis = "v"
+    elif is_axis_horz(axis): axis = "h"
     else:
+        if size[0] == "-":
+            return flexsense['notices'].append( FlexError( "Negative size only valid if `how` is vert or horz" ) )
         axis, negate_flag = direction_to_axiswithflag(axis)
         if axis is None or negate_flag is None:
             return flexsense['notices'].append( FlexError( "The axis you specified is invalid" ) )
+        inverse = "-" if negate_flag else ""
     # Get axis_length
     px, py, pw, ph = wg.Panes_PaneXYWH(pane)
     axis_length = pw if axis == "h" else ph
-    # Default size
-    if size is None: size = "50%"
     # Verify pane is large enough to split
     if pw < 2 and ph < 2: # Single character pane
         return flexsense['notices'].append( FlexError( "Pane is too small to be split" ) )
-    if axis_length < 2: # Single character on specified axis
+    if axis_length < 2: # Single character length on the specified axis
         return flexsense['notices'].append( FlexError( "Pane is too small to be split in that way" ) )
     # Verify size
-    if negate_flag is not None:
-        inverse = negate_flag
-    else:
-        inverse = True if (size and size[0] == "-") or negate_flag else False
-    while size and size[0] == "-": size = size[1:] # Strip negation if present
+    original_size = size # Retain original for error messages
+    while size and size[0] == "-": size = size[1:] # Strip negation
     size_type = size_GetType( size )
     if size_type is None:
-        return flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
-    size_type = size_GetType( size )
-    if size_type is None:
-        return flexsense['notices'].append( FlexError( "Invalid size type: " + size ) )
+        return flexsense['notices'].append( FlexError( "Invalid size parameter: " + original_size ) )
     if size_GreaterOrEqualToBaseCharacters( size, axis_length ):
-        size_type = size_GetType( size )
-        rep = "-" if inverse else ""
-        if size_type == "characters": rep = "axis length (" + str(axis_length) + ")"
-        if size_type == "percentage": rep += "100%"
-        if size_type == "multiplier": rep += "1x"
-        return flexsense['notices'].append( FlexError( "Specified size (" + size + \
-            ") is greater or equal to the limit of range (" + rep + ") of this function" ) )
+        rep = inverse
+        if size_type == "characters": rep += str(axis_length)
+        elif size_type == "percentage": rep += "100%"
+        elif size_type == "multiplier": rep += "1x"
+        return flexsense['notices'].append( FlexError( "Specified size (" + original_size + \
+            ") is greater or equal to the maximum range (" + rep + ") of this function" ) )
     size_chars = size_ConvertToCharacters( size, axis_length )
     if size_chars >= axis_length: # Shouldn't happen by now, but if it does
-        return flexsense['notices'].append( FlexError( "Resulting size (" + str(size_chars) + \
-            ") is greater or equal to the axis length (" + str(axis_length) + ")" ) )
+        return flexsense['notices'].append( FlexError( "Resulting size (" + inverse + str(size_chars) + \
+            " characters) is greater or equal to the axis length (" + str(axis_length) + ")" ) )
     if inverse: size_chars = axis_length - size_chars # Flip
     # Verify newpanes ... Set to first available if not specified
-    if len(unused) < 1: return flexsense['notices'].append( FlexError(
-        "There are insufficient panes available for this command" ) )
+    if len(unused) < 1: return flexsense['notices'].append( FlexError( "Insufficient panes available for a split" ) )
     if newpanes is None: newpanes = ""
     if len(newpanes) == 0: newpanes += unused[0] # New pane is first available
     if len(newpanes) == 1: newpanes += pane # Base pane
@@ -2613,8 +2614,7 @@ def cmd_split(pane, how, size=None, newpanes=None):
             "Invalid pane in newpanes parameter: " + ch ) )
     panes_in_use = "".join([ch for ch in newpanes if ch not in unused and ch != pane])
     panes_in_use_message = panes_in_use_message_generate( panes_in_use )
-    if panes_in_use_message:
-        return flexsense['notices'].append( FlexError( panes_in_use_message ) )
+    if panes_in_use_message: return flexsense['notices'].append( FlexError( panes_in_use_message ) )
     used, unused = newpanes_RebuildPaneListsInPreferentialOrder( used, unused, newpanes )
     # Reorder the newpanes to match fill logic expectations
     newpanes = newpanes[:2] if not inverse else newpanes[1::-1]
