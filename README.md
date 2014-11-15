@@ -1,6 +1,6 @@
 
 
-# tmuxomatic <p align="right">[![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)</p>
+# tmuxomatic <div style="float: right">[![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)</div>
 
 
 
@@ -272,11 +272,11 @@ There are three ways to install tmuxomatic, in order of convenience:
     * `git clone git://github.com/oxidane/tmuxomatic.git`
     * `cp -a tmuxomatic/tmuxomatic /usr/bin`
 
-Verify that you have successfully installed the latest release [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic), by using the command `tmuxomatic -V`.
+Verify that you have successfully installed the latest release [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) with `tmuxomatic -V`.
 
 
 
-## Optional Installation
+## Optional
 
 These packages should be installed if you want additional features:
 
