@@ -2,22 +2,22 @@
 #
 # YAML session file example (session_yaml)
 #
-# This demonstrates a tmuxomatic session file in YAML format.  For configuration
-# details, see the other session examples.
+# This demonstrates a tmuxomatic session file in YAML format only.  For configuration
+# in general, see the other session examples.
 #
 # Using YAML as the format for tmuxomatic sessions has one minor limitation, the first
-# line of a YAML block literal cannot be indented, this affects indenting the unlinked
+# line of a YAML block literal cannot be indented.  This affects indenting the unlinked
 # commands in the directions section (used in the other examples for readability).
 #
 # IMPORTANT: ALL comments will be lost when tmuxomatic writes to a YAML session file
-# (for example, when using flex).  If you want to comment your session configurations,
+# (for example, when using flex).  If you need to comment your session configurations,
 # use shorthand, and don't comment on the same lines as the windowgram.
 # 
 #--------------------------------------------------------------------------------------
 
 ---
 
-#- session: new_name      # Session rename (optional, valid anywhere in file)
+### - session: new_name   # Session rename (optional) may be placed anywhere in file
 
 - name: one
   windowgram: |

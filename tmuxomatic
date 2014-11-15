@@ -65,7 +65,7 @@ DESCRIPTION = "Intelligent tmux session management" # TODO: Need a better descri
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
 VERSION = "2.6"                                     # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.6     TBD         New flex command: swap
+##  2.6     2014-11-15  New flex command: swap
 ##                      Support for issue #9: Sessions may be renamed from the session file
 ##                      Flex command ambiguity resolver to eliminate the need for short aliases
 ##
