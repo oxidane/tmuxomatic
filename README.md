@@ -1,6 +1,6 @@
 
 
-# tmuxomatic [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
+# tmuxomatic <p align="right">[![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)</p>
 
 
 
@@ -259,7 +259,7 @@ There are three ways to install tmuxomatic, in order of convenience:
 
   * **Automatically** (pip)
 
-    * `pip-python3 install tmuxomatic`
+    * `pip-python3 install tmuxomatic --upgrade --force`
 
   * **Manually** (python)
 
@@ -272,16 +272,13 @@ There are three ways to install tmuxomatic, in order of convenience:
     * `git clone git://github.com/oxidane/tmuxomatic.git`
     * `cp -a tmuxomatic/tmuxomatic /usr/bin`
 
-Verify that you have the current version installed: [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
+Verify that you have successfully installed the latest release [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic), by using the command `tmuxomatic -V`.
 
-  * `tmuxomatic -V`
 
-On some systems pip may not upgrade properly, try clearing the pip cache prior to upgrade:
 
-  * `rm -rf /tmp/pip-build-root/tmuxomatic`
-  * `pip-python3 install tmuxomatic --upgrade --force`
+## Optional Installation
 
-Optional packages:
+These packages should be installed if you want additional features:
 
   * `pip-python3 install pyyaml` ... For YAML session file support
 
