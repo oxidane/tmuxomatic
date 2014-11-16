@@ -1,7 +1,6 @@
 
 
-# tmuxomatic <div style="float: right"><img src="http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat" href="https://pypi.python.org/pypi/tmuxomatic"> <img src="http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat" href="https://pypi.python.org/pypi/tmuxomatic"></div>
-<!-- [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) -->
+# tmuxomatic   [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
 
 
@@ -273,7 +272,7 @@ There are three ways to install tmuxomatic, in order of convenience:
     * `git clone git://github.com/oxidane/tmuxomatic.git`
     * `cp -a tmuxomatic/tmuxomatic /usr/bin`
 
-Verify that you have successfully installed the latest release [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) with `tmuxomatic -V`.
+Verify that the version reported by `tmuxomatic -V` matches the latest release.  [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
 
 
