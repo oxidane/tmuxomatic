@@ -471,8 +471,9 @@ def satisfies_minimum_version(minimum, version):
     """
     Asserts compliance by tmux version.  I've since seen a similar version check somewhere that may come with Python
     and could probably replace this code, but this works fine for now.
-    Update / TODO: This could probably be replaced with setuptools.pkg_resources.parse_version()
-    Example: parse_version(version) >= parse_version(minimum)
+    Update:
+        Option 1: setuptools.pkg_resources.parse_version() ... The setuptools library is non-standard
+        Option 2: distutils.version.LooseVersion() ... Required for "1.9a" to be recognized
     """
     qn = len(minimum.split("."))
     pn = len(version.split("."))
@@ -1860,7 +1861,6 @@ flexsense = {
     'errors': [],                   # Command errors: Print and exit
 }
 flexsense_reset = copy.deepcopy( flexsense )
-flexgroup = ""
 
 ##
 ## Table Printer (used by help and list)
@@ -2001,11 +2001,12 @@ def panes_in_use_message_generate(panes_in_use):
 ##
 
 class flex(object):
-    def __init__(self, command="", examples=[], description=None, aliases=[]):
+    def __init__(self, command="", examples=[], description=None, aliases=[], group=""):
         self.command_only = command
         self.description = description
         self.examples = examples
         self.aliases = aliases
+        self.group = group
     def __call__(self, function):
         # From function build usage
         self.usage = self.command_only
@@ -2056,9 +2057,9 @@ class flex(object):
                 exit()
             flexmenu_aliases.append( alias_tup )
         # Grouped commands
-        if not flexgroup in flexmenu_grouped: flexmenu_grouped[flexgroup] = []
-        if not self.command_only in flexmenu_grouped[flexgroup]:
-            flexmenu_grouped[flexgroup].append(self.command_only)
+        if not self.group in flexmenu_grouped: flexmenu_grouped[self.group] = []
+        if not self.command_only in flexmenu_grouped[self.group]:
+            flexmenu_grouped[self.group].append(self.command_only)
         # Function wrapper
         def wrapper(*args):
             return function(*args)
@@ -2068,10 +2069,9 @@ class flex(object):
 ## Commands: Helpers
 ##
 
-flexgroup = "helpers"
-
 @flex(
     command     = "help",
+    group       = "helpers",
     description = "Show information for one or more commands",
 )
 def cmd_help_0():
@@ -2079,6 +2079,7 @@ def cmd_help_0():
 
 @flex(
     command     = "help",
+    group       = "helpers",
     examples    = [ "help new scale" ],
     aliases     = [ ["?", "help "], ["/", "help "] ],
 )
@@ -2155,10 +2156,9 @@ def cmd_help_N(*commands):
 ## Commands: Selectors
 ##
 
-flexgroup = "selectors"
-
 @flex(
     command     = "list",
+    group       = "selectors",
     description = "List all available windows in this tmuxomatic session",
 )
 def cmd_list():
@@ -2185,6 +2185,7 @@ def cmd_list():
 
 @flex(
     command     = "use",
+    group       = "selectors",
     examples    = [ "use my example", "use 1" ],
     description = "Select the window you would like to modify",
 )
@@ -2217,6 +2218,7 @@ def cmd_use(*name_or_serial_REQUIRED):
 
 @flex(
     command     = "new",
+    group       = "selectors",
     examples    = [ "new some feeds" ],
     description = "Create a new window, initialized to '1'",
 )
@@ -2233,14 +2235,14 @@ def cmd_new(*window_name_REQUIRED):
     cmd_use(*[str(serial)])
 
 ##
-## Commands: Informers ... Mainly a pseudo-group to keep print out of the quick menus
+## Commands: Printers ... Mainly a pseudo-group to keep print out of the quick menus
 ##
-
-flexgroup = "informers"
 
 @flex(
     command     = "print",
+    group       = "printers",
     description = "Display windowgram (automatic if there is no other output)",
+    aliases     = [ [".", "print "], ],
 )
 def cmd_print():
     serial = flexmenu_index[0]
@@ -2252,10 +2254,9 @@ def cmd_print():
 ## Commands: Modifiers
 ##
 
-flexgroup = "modifiers"
-
 @flex(
     command     = "scale",
+    group       = "modifiers",
     examples    = [ "scale 25", "scale 500%", "scale 2x", "scale 64:36" ],
     description = "Scale the windowgram.  Valid parameters are multipliers (x), percentages (%), exact character " + \
                   "dimensions, or any combination thereof.  Use a space ( ), colon (:), or times (x) to separate " + \
@@ -2278,6 +2279,7 @@ def cmd_scale_1(xy_how): # 1 parameter
 
 @flex(
     command     = "scale",
+    group       = "modifiers",
     examples    = [ "scale 25 15", "scale 200% 50%", "scale 2x .5x" ],
 )
 def cmd_scale_2(x_how, y_how): # 2 parameters
@@ -2312,6 +2314,7 @@ def cmd_scale_2(x_how, y_how): # 2 parameters
 
 @flex(
     command     = "add",
+    group       = "modifiers",
     examples    = [ "add right 50% A", "add b 3", "add l .5x" ],
     description = "Append pane to windowgram edge.  Edge is identified by name (e.g., right), or a variety of " + \
                   "abbreviations (e.g., r, rt).  The size of the pane may be defined as an exact character size, " + \
@@ -2371,6 +2374,7 @@ def cmd_add(edge, size, newpane=None):
 
 @flex(
     command     = "break",
+    group       = "modifiers",
     examples    = [ "break 1 3x3", "break 0 3x1 x", "break z 3x2 IVXLCD" ],
     description = "Break a pane into a grid of specified dimensions.  If the break does not produce even panes at " + \
                   "the specified resolution, it will automatically scale up to the next best fit.  The newpanes " + \
@@ -2466,6 +2470,7 @@ def cmd_break(pane, grid, newpanes=None):
 
 @flex(
     command     = "join",
+    group       = "modifiers",
     examples    = [ "join abcd efgh", "join abcd.x efgh.y" ],
     description = "Join a contiguous group of panes into a single pane.  Multiple joins are supported.  The joined " + \
                   "pane is named after the first pane specified, but can be renamed by adding dot (.) followed by " + \
@@ -2476,6 +2481,8 @@ def cmd_join(*groups_REQUIRED):
     # Analogues:
     #       Join may be used for rename: join <old>.<new>
     #       Join may be used for swap: join <one>.<two> <two>.<one>
+    # Notes:
+    #       Join could be seen as a type of rename, and was used for rename and swap prior to those implementations
     groups = groups_REQUIRED # Readability
     argument = lambda ix: str(ix+1) + " (\"" + groups_REQUIRED[ix] + "\")" # Show the group that the user specified
     serial = flexmenu_index[0]
@@ -2546,6 +2553,7 @@ def cmd_join(*groups_REQUIRED):
 
 @flex(
     command     = "split",
+    group       = "modifiers",
     examples    = [ "split 1 bottom 3", "split 1 vertical -3", "split 0 left 25% LR" ],
     description = "Splits one pane on either: an axis (vert, horz), or from an edge (top, left).  For an axis, a " + \
                   "negation of size inverses the split.  Size parameter is optional, the default is 50%.  Optional " + \
@@ -2641,6 +2649,7 @@ def cmd_split(pane, how, size=None, newpanes=None):
 
 @flex(
     command     = "rename",
+    group       = "modifiers",
     examples    = [ "rename Ff Tt", "rename F T f t" ],
     description = "Rename from one pane or group, to another pane or group, paired as <from> <to>.  Multiple " + \
                   "pairs may be specified.",
@@ -2719,6 +2728,7 @@ def cmd_rename(panes_from, *panes_to):
 
 @flex(
     command     = "swap",
+    group       = "modifiers",
     examples    = [ "swap A B", "swap Aa Bb 1 2" ],
     description = "Swaps one pane or group, with another pane or group, paired as <from> <to>.  Multiple " + \
                   "pairs may be specified.",
@@ -2783,6 +2793,7 @@ def cmd_swap(panes_from, *panes_to):
 
 @flex(
     command     = "mirror",
+    group       = "modifiers",
     description = "Reverse horizontally (left/right)",
 )
 def cmd_mirror():
@@ -2797,6 +2808,7 @@ def cmd_mirror():
 
 @flex(
     command     = "flip",
+    group       = "modifiers",
     description = "Reverse vertically (top/bottom)",
 )
 def cmd_flip():
@@ -2813,10 +2825,9 @@ def cmd_flip():
 ## Commands: Terminators
 ##
 
-flexgroup = "terminators"
-
 @flex(
     command     = "oops",
+    group       = "terminators",
     description = "Restore the original session, then exit without execution",
 )
 def cmd_oops():
@@ -2824,6 +2835,7 @@ def cmd_oops():
 
 @flex(
     command     = "done",
+    group       = "terminators",
     description = "Keep changes to session, then execute",
     aliases     = [ ["run", "done"], ["go", "done"] ],
 )
@@ -2832,6 +2844,7 @@ def cmd_done():
 
 @flex(
     command     = "exit",
+    group       = "terminators",
     description = "Keep changes to session, but do not execute",
     aliases     = [ ["x", "exit"] ],
 )
