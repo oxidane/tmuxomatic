@@ -65,7 +65,8 @@ DESCRIPTION = "Intelligent tmux session management" # TODO: Need a better descri
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
 VERSION = "2.7"                                     # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.7     TBD         TBD
+##  2.7     TBD         Separate code into windowgram library, includes the flex modifier commands
+##                      Various source cleanup in windowgram and flex
 ##
 ##  2.6     2014-11-15  New flex command: swap
 ##                      Support for issue #9: Sessions may be renamed from the session file
@@ -501,9 +502,11 @@ def command_matches(command, primary):
 ##
 ## Window splitter logic
 ##
+## This converts a windowgram to a layout with split mechanics (tmux).
+##
 ##----------------------------------------------------------------------------------------------------------------------
 
-def tmuxomatic_split( dim, at_linkid, linkid, list_split, list_links, how, of_this ):
+def SplitProcessor_SplitWindow( sw, dim, at_linkid, linkid, list_split, list_links, how, of_this ):
     """
 
     Splits the window 'at_linkid' along axis 'how'
@@ -540,14 +543,14 @@ def tmuxomatic_split( dim, at_linkid, linkid, list_split, list_links, how, of_th
             w = this_ent['inst_w']
             h = of_this - 1
             per = str( float(of_this) / float(this_ent['inst_h']) * 100.0 )
-            if ARGS.relative:
+            if sw['relative']:
                 this_ent['inst_h'] = int(this_ent['inst_h']) - of_this # Subtract split from root pane
         else: # elif how == 'h':
             of_this = translate( of_this, dim['win'][0], dim['scr'][0] ) # From size-in-definition to size-on-screen
             w = of_this - 1
             h = this_ent['inst_h']
             per = str( float(of_this) / float(this_ent['inst_w']) * 100.0 )
-            if ARGS.relative:
+            if sw['relative']:
                 this_ent['inst_w'] = int(this_ent['inst_w']) - of_this # Subtract split from root pane
 
     # Split list tracks tmux pane number at the time of split (for building the split commands)
@@ -557,7 +560,7 @@ def tmuxomatic_split( dim, at_linkid, linkid, list_split, list_links, how, of_th
     at_tmux += 1
     list_links.append( (linkid[0], at_tmux) )
 
-def find_clean_break( vertical, pos, list_panes, bx, by, bw, bh ):
+def SplitProcessor_FindCleanBreak( sw, vertical, pos, list_panes, bx, by, bw, bh ):
     """
 
     Finds a split on an axis within the specified bounds, if found returns True, otherwise False.
@@ -587,8 +590,9 @@ def find_clean_break( vertical, pos, list_panes, bx, by, bw, bh ):
     #-----------------------------------------------------------------------------------------------
 
     # Notify user
-    if DEBUG_SCANLINE and ARGS.verbose >= 3:
-        print("(3) Scanline: Find clean " + [ "horizontal", "vertical" ][vertical] + " break at position " + str(pos))
+    if sw['scanline'] and sw['verbose'] >= 3:
+        sw['print']("(3) Scanline: Find clean " + [ "horizontal", "vertical" ][vertical] + \
+            " break at position " + str(pos))
 
     # ~ Establish pointers
     if vertical: sl_bgn, sl_siz = bx, bw # Vertical split is a horizontal line
@@ -612,15 +616,15 @@ def find_clean_break( vertical, pos, list_panes, bx, by, bw, bh ):
         if sl_pos + sl_len > sl_bgn + sl_siz: sl_len = sl_bgn + sl_siz - sl_pos # Clip after
         for n in range( sl_pos - sl_bgn, sl_pos - sl_bgn + sl_len ): scanline[n] = 'X'
         # Show the scanline in action
-        if DEBUG_SCANLINE and ARGS.verbose >= 3:
-            print("(3) Scanline: [" + "".join(scanline) + "]: modified by pane " + pane['n'])
+        if sw['scanline'] and sw['verbose'] >= 3:
+            sw['print']("(3) Scanline: [" + "".join(scanline) + "]: modified by pane " + pane['n'])
         #   ~ If scanline has no spaces, then a clean break has been found, return True
         if not ' ' in scanline: return True
 
     # ~ Nothing found, return False
     return False
 
-def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_linkid, bx, by, bw, bh ):
+def SplitProcessor_FillerRecursive( sw, dim, linkid, l_split, l_links, l_panes, this_linkid, bx, by, bw, bh ):
     """
 
     Once the panes have been loaded, this recursive function begins with the xterm dimensions.
@@ -654,8 +658,8 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
         # Print the rectangle for debugging purposes.  Maybe change to use a rectangle class.
         return "Rectangle( x=" + str(bx) + ", y=" + str(by) + ", w=" + str(bw) + ", h=" + str(bh) + " )"
 
-    v = True if ARGS.verbose >= 3 else False
-    if v: print("(3) " + idstr(bx, by, bw, bh) + ": Enter")
+    v = True if sw['verbose'] >= 3 else False
+    if v: sw['print']("(3) " + idstr(bx, by, bw, bh) + ": Enter")
 
     # ~ If any available pane is a perfect fit, link to linkid, mark as processed, return
     for pane in l_panes:
@@ -663,10 +667,11 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
         if 's' in pane: continue                            # Skip processed panes
         # Perfect fit?
         if pane['x'] == bx and pane['y'] == by and pane['w'] == bw and pane['h'] == bh:
-            if v: print("(3) " + idstr(bx, by, bw, bh) + ": Linking pane " + str(pane['n']) + " to " + str(this_linkid))
+            if v: sw['print']("(3) " + idstr(bx, by, bw, bh) + \
+                ": Linking pane " + str(pane['n']) + " to " + str(this_linkid))
             pane['l'] = this_linkid
             pane['s'] = True # Linked to tmux[] / Disqualified from further consideration
-            if v: print("(3) " + idstr(bx, by, bw, bh) + ": Exit")
+            if v: sw['print']("(3) " + idstr(bx, by, bw, bh) + ": Exit")
             return
 
     # ~ Search panes for clean break, if found then split, reenter 1, reenter 2, return
@@ -679,49 +684,73 @@ def tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, this_li
         at = ""
         # Split at top edge?
         if pane['y'] > by:
-            if find_clean_break( True, pane['y'], l_panes, bx, by, bw, bh ):
-                if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split vert at top of pane " + str(pane['n']))
+            if SplitProcessor_FindCleanBreak( sw, True, pane['y'], l_panes, bx, by, bw, bh ):
+                if v: sw['print']("(3) " + idstr(bx, by, bw, bh) + ": Split vert at top of pane " + str(pane['n']))
                 at = pane['y']
         # Split at bottom edge?
         if pane['y']+pane['h'] < by+bh:
-            if find_clean_break( True, pane['y']+pane['h'], l_panes, bx, by, bw, bh ):
-                if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split vert at bottom of pane " + str(pane['n']))
+            if SplitProcessor_FindCleanBreak( sw, True, pane['y']+pane['h'], l_panes, bx, by, bw, bh ):
+                if v: sw['print']("(3) " + idstr(bx, by, bw, bh) + ": Split vert at bottom of pane " + str(pane['n']))
                 at = pane['y']+pane['h']
         # Perform vertical split
         if at:
             linkid_1 = this_linkid
-            tmuxomatic_split( dim, this_linkid, linkid, l_split, l_links, 'v', bh-(at-by) )
+            SplitProcessor_SplitWindow( sw, dim, this_linkid, linkid, l_split, l_links, 'v', bh-(at-by) )
             linkid_2 = linkid[0]
-            tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_1, bx, by, bw, at-by )
-            tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_2, bx, at, bw, bh-(at-by) )
-            if v: print("(3) " + idstr(bx, by, bw, bh) + ": Exit")
+            SplitProcessor_FillerRecursive(sw, dim, linkid, l_split, l_links, l_panes, linkid_1, bx, by, bw, at-by)
+            SplitProcessor_FillerRecursive(sw, dim, linkid, l_split, l_links, l_panes, linkid_2, bx, at, bw, bh-(at-by))
+            if v: sw['print']("(3) " + idstr(bx, by, bw, bh) + ": Exit")
             return
         # Split at left edge?
         if pane['x'] < bx:
-            if find_clean_break( False, pane['x'], l_panes, bx, by, bw, bh ):
-                if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split horz at left of pane " + str(pane['n']))
+            if SplitProcessor_FindCleanBreak( sw, False, pane['x'], l_panes, bx, by, bw, bh ):
+                if v: sw['print']("(3) " + idstr(bx, by, bw, bh) + ": Split horz at left of pane " + str(pane['n']))
                 at = pane['x']
         # Split at right edge?
         if pane['x']+pane['w'] < bx+bw:
-            if find_clean_break( False, pane['x']+pane['w'], l_panes, bx, by, bw, bh ):
-                if v: print("(3) " + idstr(bx, by, bw, bh) + ": Split horz at right of pane " + str(pane['n']))
+            if SplitProcessor_FindCleanBreak( sw, False, pane['x']+pane['w'], l_panes, bx, by, bw, bh ):
+                if v: sw['print']("(3) " + idstr(bx, by, bw, bh) + ": Split horz at right of pane " + str(pane['n']))
                 at = pane['x']+pane['w']
         # Perform horizontal split
         if at:
             linkid_1 = this_linkid
-            tmuxomatic_split( dim, this_linkid, linkid, l_split, l_links, 'h', bw-(at-bx) )
+            SplitProcessor_SplitWindow( sw, dim, this_linkid, linkid, l_split, l_links, 'h', bw-(at-bx) )
             linkid_2 = linkid[0]
-            tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_1, bx, by, at-bx, bh )
-            tmuxomatic_filler_recursive( dim, linkid, l_split, l_links, l_panes, linkid_2, at, by, bw-(at-bx), bh )
-            if v: print("(3) " + idstr(bx, by, bw, bh) + ": Exit")
+            SplitProcessor_FillerRecursive(sw, dim, linkid, l_split, l_links, l_panes, linkid_1, bx, by, at-bx, bh)
+            SplitProcessor_FillerRecursive(sw, dim, linkid, l_split, l_links, l_panes, linkid_2, at, by, bw-(at-bx), bh)
+            if v: sw['print']("(3) " + idstr(bx, by, bw, bh) + ": Exit")
             return
 
     # ~ If reached, user specified an unsupported layout that will be detected by caller, return
-    if v: print("(3) " + idstr(bx, by, bw, bh) + ": No match found, unsupported layout")
+    if v: sw['print']("(3) " + idstr(bx, by, bw, bh) + ": No match found, unsupported layout")
     return
 
+def SplitProcessor( sw, wg, iw, ih, list_panes ): # list_split, list_links
+    #
+    # Split window into panes
+    #
+    linkid = [ 1001 ]   # Incrementing number for cross-referencing (0 is reserved)
+    # The linkid number is a unique identifier used to track the tmux panes and cross-reference them when the
+    # window is fully divided to get the final pane index for a particular pane.  This is an essential link
+    # because panes are renumbered as splits occur, and before they're assigned to tmuxomatic pane ids.
+    # Note: 'inst_w' and 'inst_h' are the dimensions when split, the first pane uses full dimensions.
+    # Note: The first pane does not use the entires 'split' or 'tmux'.
+    list_split = [ { 'linkid': linkid[0], 'split': "", 'tmux': 65536, 'inst_w': iw, 'inst_h': ih, 'per': "100.0" } ]
+    list_links = [ ( linkid[0], 0 ) ]   # List of cross-references (linkid, pane_tmux)
+    # Run the recursive splitter
+    windowgram_w, windowgram_h = wg.Analyze_WidthHeight() # TODO: Clean up remaining wg inlines
+    dim = {}
+    dim['win'] = [ windowgram_w, windowgram_h ]
+    dim['scr'] = [ iw, ih ]
+    SplitProcessor_FillerRecursive( \
+        sw, dim, linkid, list_split, list_links, list_panes, linkid[0], 1, 1, windowgram_w, windowgram_h )
+    # Return useful elements
+    return list_split, list_links
+
+
+
 ##
-## Related
+## Miscellaneous
 ##
 
 def SortPanes(layout): # list_panes, layout
@@ -755,30 +784,6 @@ def PaneOverlap(list_panes): # overlap_pane1, overlap_pane2
                 if p1x1 < p2x2 and p1x2 > p2x1 and p1y1 < p2y2 and p1y2 > p2y1:
                     return pane1['n'], pane2['n']
     return None, None
-
-def SplitProcessor( interactive, wg, iw, ih, list_panes ): # list_split, list_links
-    #
-    # Split window into panes
-    #
-    # TODO: Need to use interactive when doing the build, instead of the verbose flag, so it won't conflict with flex
-    #
-    linkid = [ 1001 ]   # Incrementing number for cross-referencing (0 is reserved)
-    # The linkid number is a unique identifier used to track the tmux panes and cross-reference them when the
-    # window is fully divided to get the final pane index for a particular pane.  This is an essential link
-    # because panes are renumbered as splits occur, and before they're assigned to tmuxomatic pane ids.
-    # Note: 'inst_w' and 'inst_h' are the dimensions when split, the first pane uses full dimensions.
-    # Note: The first pane does not use the entires 'split' or 'tmux'.
-    list_split = [ { 'linkid': linkid[0], 'split': "", 'tmux': 65536, 'inst_w': iw, 'inst_h': ih, 'per': "100.0" } ]
-    list_links = [ ( linkid[0], 0 ) ]   # List of cross-references (linkid, pane_tmux)
-    # Run the recursive splitter
-    windowgram_w, windowgram_h = wg.Analyze_WidthHeight() # TODO: Clean up remaining wg inlines
-    dim = {}
-    dim['win'] = [ windowgram_w, windowgram_h ]
-    dim['scr'] = [ iw, ih ]
-    tmuxomatic_filler_recursive( \
-        dim, linkid, list_split, list_links, list_panes, linkid[0], 1, 1, windowgram_w, windowgram_h )
-    # Return useful elements
-    return list_split, list_links
 
 
 
@@ -1026,6 +1031,8 @@ class Windowgram():
         return self.Import_Raw( Windowgram_Convert.Parsed_To_String(windowgram_parsed) )
     def Import_Mosaic(self, windowgram_mosaic):
         return self.Import_Raw( Windowgram_Convert.Mosaic_To_String(windowgram_mosaic) )
+    def Import_Wg(self, wg):
+        return self.Import_Raw( wg.Export_String() )
 
     ##
     ## Exports ... The windowgram is only converted upon request
@@ -1057,7 +1064,7 @@ class Windowgram():
         return True if not max(self.Analyze_WidthHeight()) else False
     def Analyze_Layers(self):
         return 1 # Fixed for now
-    def Analyze_Type(self):
+    def Analyze_Type(self, relative):
         # Determine compatibility (split, tiled, layered)
         analysis_type = ""
         while True:
@@ -1072,7 +1079,8 @@ class Windowgram():
                 analysis_type = "layered" # Implicit
                 break
             # Detect split
-            list_split, list_links = SplitProcessor( False, self, 1024, 1024, list_panes ) # Avoid layout errors here
+            sw = { 'print': None, 'verbose': 0, 'relative': relative, 'scanline': False } # No print
+            list_split, list_links = SplitProcessor( sw, self, 1024, 1024, list_panes ) # Avoid layout errors
             splityes = True
             for split in list_split:
                 #
@@ -1643,7 +1651,8 @@ def scalecore(windowgram, w_chars, h_chars, retry=None): # TODO: Scale by wg to 
     windowgram_scaled = "" # Scope, and reset in case of error
     # Retry with necessary increment and/or decrement until desired pane dimensions are reached.  This is required for
     # commands like "break", which need to scale to a specific pane size.  There's likely a way to derive these metrics
-    # reliably, but this works too.  Verify that two resizes are necessary with: "n 1 ; s 42x42 ; b 1 6x6 ; b 1 3x3"
+    # reliably, but this works too.  Verify that two resizes are necessary with the following commands:
+    #       "new 1 ; scale 42x42 ; break 1 6x6 ; break 1 3x3"
     tries = 0
     tries_max = 16 # An infinite loop is unlikely, but this maximum will prevent such an occurrence
     paneid = exp_w = exp_h = None
@@ -1655,7 +1664,8 @@ def scalecore(windowgram, w_chars, h_chars, retry=None): # TODO: Scale by wg to 
     if tries < 1: tries = 1
     try_w, try_h = w_chars, h_chars
     while tries:
-        # Scale core discrepancy example ... "n 1 ; b 1 2x2 ; s 3x3 ; s 2x2" ... Note: v2 loses 3 panes, v1 does not
+        # Scale core discrepancy example, note that v2 loses 3 panes, but v1 does not:
+        #       "new 1 ; break 1 2x2 ; scale 3x3 ; scale 2x2"
         windowgram_scaled = scalecore_v1( windowgram, try_w, try_h ) # Using v1 as of 2.3
         if paneid:
             _, _, new_w, new_h = Windowgram( windowgram_scaled ).Panes_PaneXYWH( paneid )
@@ -1944,7 +1954,7 @@ def size_ConvertToCharacters(arg, base_characters):
 
 ## Directions
 
-valid_directions = [ # These directions are recongized, the list is ordered 0123 == TBRL || NSEW
+valid_directions = [ # These directions are recognized, the list is ordered 0123 == TBRL || NSEW
     [ "top", "t", "tp",     "north", "n",   "up", "u", "over", "above",     ],  # ix == 0 -> Vertical +
     [ "bottom", "b", "bt",  "south", "s",   "down", "d", "under", "below",  ],  # ix == 1 -> Vertical -
     [ "right", "r", "rt",   "east", "e"                                     ],  # ix == 2 -> Horizontal -
@@ -2019,16 +2029,16 @@ class flex(object):
             for ix in range(0, len(spec.args)) ]
         brackets = lambda optional: "[]" if optional else "<>"
         for arg, default in args_with_defaults:
-            self.arglens[1] += 1
-            if default is NoDefault: self.arglens[0] += 1
-            enclosed = brackets( default is not NoDefault )
-            self.usage += " " + enclosed[0] + arg + enclosed[1]
+            if not arg.endswith("_PRIVATE"):
+                self.arglens[1] += 1
+                if default is NoDefault: self.arglens[0] += 1
+                enclosed = brackets( default is not NoDefault )
+                self.usage += " " + enclosed[0] + arg + enclosed[1]
         if spec.varargs:
-            marker = "_REQUIRED"
             varargs = spec.varargs
-            required = True if varargs.endswith(marker) else False
+            required = True if varargs.endswith("_REQUIRED") else False
             enclosed = brackets( not required )
-            if varargs.endswith(marker): varargs = varargs[:-len(marker)] # Clip marker before printing
+            if varargs.endswith("_REQUIRED"): varargs = varargs[:-len("_REQUIRED")] # Clip marker before printing
             self.usage += " " + enclosed[0] + varargs + "..." + enclosed[1]
             if required: self.arglens[0] += 1 # If required then varargs is [REQ+1, -1] instead of [REQ, -1]
             self.arglens[1] = -1 # Represents use of *args
@@ -2039,12 +2049,14 @@ class flex(object):
             if entdict['about'][0] == self.command_only:
                 entdict['funcs'] += [ function ]
                 entdict['usage'] += [ self.usage, self.examples, self.arglens ]
+                entdict['group'] += [ self.group ]
                 append = True
         if not append:
             flexmenu.append( {
                 'funcs': [ function ],
                 'about': [ self.command_only, self.description ],
                 'usage': [ self.usage, self.examples, self.arglens ],
+                'group': [ self.group ]
             } )
             if not self.command_only in flexmenu_list: flexmenu_list.append( self.command_only )
         # Add aliases if any
@@ -2266,29 +2278,28 @@ def cmd_print():
                     ["taller", "scale 100%:200%"], ["shorter", "scale 100%:50%"],
                     ["higher", "scale 100%:200%"], ["lower", "scale 100%:50%"], ],
 )
-def cmd_scale_1(xy_how): # 1 parameter
+def cmd_scale_1(wg_PRIVATE, xy_how): # 1 parameter
     # Split directives like "64:36" and "64x36" into "64 36", also works using percentages "200%:50%", or using
     # multipliers "2x:2x" as long as ":" is used instead of "x" as there would be a conflict with the multiplier
     # TODO: This could be more flexible to cover cases like "2xx2" and "2x2x" by using regex
     xy_spl = None
     if xy_how.count("x") == 1 and xy_how[-1:] != "x": xy_spl = xy_how.split("x")
     elif xy_how.count(":") == 1: xy_spl = xy_how.split(":")
-    if xy_spl and len(xy_spl) == 2: return cmd_scale_2( *xy_spl )
+    if xy_spl and len(xy_spl) == 2: return cmd_scale_2( wg_PRIVATE, *xy_spl )
     # Others are simply cloned like "2x" into "2x 2x"
-    return cmd_scale_2( xy_how, xy_how )
+    return cmd_scale_2( wg_PRIVATE, xy_how, xy_how )
 
 @flex(
     command     = "scale",
     group       = "modifiers",
     examples    = [ "scale 25 15", "scale 200% 50%", "scale 2x .5x" ],
 )
-def cmd_scale_2(x_how, y_how): # 2 parameters
+def cmd_scale_2(wg_PRIVATE, x_how, y_how): # 2 parameters
     # Because text is inherently low resolution, fractional scaling may produce unsatisfactory results
-    serial = flexmenu_index[0]
-    if not flexmenu_session.Serial_Is_Valid(serial):
+    if not wg_PRIVATE:
         return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     # Generics
-    wg_before = flexmenu_session.Get_Wg(serial)
+    wg_before = wg_PRIVATE
     dim_before = wg_before.Analyze_WidthHeight()
     # Convert to common float multipliers for easy scaling
     args = [ dim_before[0], dim_before[1] ] # Default to no scale on error
@@ -2310,7 +2321,7 @@ def cmd_scale_2(x_how, y_how): # 2 parameters
     if len(lost_panes):
         flexsense['notices'].append( FlexWarning( "Lost " + str( len(lost_panes) ) + " panes: " + lost_panes ) )
     # Replace windowgram
-    flexmenu_session.Replace_Windowgram( serial, wg_after.Export_String() )
+    wg_PRIVATE.Import_Wg( wg_after )
 
 @flex(
     command     = "add",
@@ -2322,15 +2333,14 @@ def cmd_scale_2(x_how, y_how): # 2 parameters
                   "be used.",
     aliases     = [ ["append", "add "], ["app", "add "] ],
 )
-def cmd_add(edge, size, newpane=None):
+def cmd_add(wg_PRIVATE, edge, size, newpane=None):
     # TODO: Edge could also represent a combined edge of panes.  The panes would have to be adjacent, but it would
     # allow for the insertion of panes into the middle of windows.  Would require a bit of recursive acrobatics to
     # scale the surrounding panes to support the insertion, but it could be done.  This is the insert command, and
     # the accommodation logic is the same as clone.
-    serial = flexmenu_index[0]
-    if not flexmenu_session.Serial_Is_Valid(serial):
+    if not wg_PRIVATE:
         return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
-    wg = flexmenu_session.Get_Wg(serial)
+    wg = wg_PRIVATE
     newpane, error = wg.Panes_GetNewPaneId( newpane )
     if error:
         return flexsense['notices'].append( FlexError( "Unable to secure a new pane id: " + error ) )
@@ -2365,7 +2375,7 @@ def cmd_add(edge, size, newpane=None):
         if wg_compare_before == wg_compare_after:
             return flexsense['notices'].append( FlexWarning( "Addition was too small to register" ) )
         # Replace windowgram
-        flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+        wg_PRIVATE.Import_Wg( wg )
         # Done
         return
     # Edge not found
@@ -2381,7 +2391,7 @@ def cmd_add(edge, size, newpane=None):
                   "parameter is an optional starting pane id, or pane rename sequence.",
     aliases     = [ ["grid", "break "], ["panes", "break "], ],
 )
-def cmd_break(pane, grid, newpanes=None):
+def cmd_break(wg_PRIVATE, pane, grid, newpanes=None):
     # Analogues:
     #       Break may be used for split 50%
     # Notes:
@@ -2391,14 +2401,13 @@ def cmd_break(pane, grid, newpanes=None):
     #       Besides, such situations are easily managed by the user of flex; simply break them one by one in a sequence
     #       that yields personally satisfactory results.  Because this is already possible with flex, such a feature
     #       would only add complexity without achieving a practical function.
-    serial = flexmenu_index[0]
-    if not flexmenu_session.Serial_Is_Valid(serial):
+    if not wg_PRIVATE:
         return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     # In order to produce a break of even proportions, we have to scale this windowgram up to next best fit.  It
     # could go one step further and find the most optimal size, being a resolution that evenly scales the original
     # windowgram constituent panes, while simultaneously providing a grid of even sizes.  The problem is that common
     # use cases would result in massive sizes to accommodate; though accurate, it would not be very practical.
-    wg = flexmenu_session.Get_Wg( serial )
+    wg = wg_PRIVATE
     used, unused = wg.Panes_GetUsedUnused()
     if pane not in PANE_CHARACTERS:
         return flexsense['notices'].append( FlexError( "The pane you specified is invalid" ) )
@@ -2439,9 +2448,8 @@ def cmd_break(pane, grid, newpanes=None):
     # Validate
     if (npw != scale_to_pane_w or nph != scale_to_pane_h):
         return flexsense['notices'].append( FlexError( "The result is not the expected pane size" ) )
-    # Replace windowgram
+    # Swap
     wg = wg_new
-    flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
     # Dimensions must be reloaded in the event that the windowgram was scaled
     wg_w, wg_h = wg.Analyze_WidthHeight()
     px, py, pw, ph = wg.Panes_PaneXYWH( pane )
@@ -2466,7 +2474,7 @@ def cmd_break(pane, grid, newpanes=None):
             for ix, ch in enumerate(list(line)) ] ) for iy, line in enumerate(windowgram_lines)
     ] )
     # Replace windowgram
-    flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+    wg_PRIVATE.Import_Wg( wg )
 
 @flex(
     command     = "join",
@@ -2477,7 +2485,7 @@ def cmd_break(pane, grid, newpanes=None):
                   "the pane id.",
     aliases     = [ ["group", "join "], ["merge", "join "], ["glue", "join "], ],
 )
-def cmd_join(*groups_REQUIRED):
+def cmd_join(wg_PRIVATE, *groups_REQUIRED):
     # Analogues:
     #       Join may be used for rename: join <old>.<new>
     #       Join may be used for swap: join <one>.<two> <two>.<one>
@@ -2485,10 +2493,9 @@ def cmd_join(*groups_REQUIRED):
     #       Join could be seen as a type of rename, and was used for rename and swap prior to those implementations
     groups = groups_REQUIRED # Readability
     argument = lambda ix: str(ix+1) + " (\"" + groups_REQUIRED[ix] + "\")" # Show the group that the user specified
-    serial = flexmenu_index[0]
-    if not flexmenu_session.Serial_Is_Valid(serial):
+    if not wg_PRIVATE:
         return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
-    wg = flexmenu_session.Get_Wg( serial )
+    wg = wg_PRIVATE
     # Repackage groups so all have the rename element
     work, groups = groups, []
     for group in work: groups.append( group if "." in group else (group + "." + group[0]) )
@@ -2549,7 +2556,7 @@ def cmd_join(*groups_REQUIRED):
     # A separate merge step is required to prevent name conflicts where the user makes use of the rename option.
     wg.Import_Mosaic( ( wg, joins ) )
     # Replace windowgram
-    flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+    wg_PRIVATE.Import_Wg( wg )
 
 @flex(
     command     = "split",
@@ -2559,7 +2566,7 @@ def cmd_join(*groups_REQUIRED):
                   "negation of size inverses the split.  Size parameter is optional, the default is 50%.  Optional " + \
                   "newpanes parameter will rename the panes in order of newest to oldest (2 panes maximum).",
 )
-def cmd_split(pane, how, size=None, newpanes=None):
+def cmd_split(wg_PRIVATE, pane, how, size=None, newpanes=None):
     # Analogues:
     #       Break may be used for split 50%
     # Expectations (for testing):
@@ -2568,10 +2575,9 @@ def cmd_split(pane, how, size=None, newpanes=None):
     # TODO:
     #       Possible reordering detection, "split v h" (where "v" is the pane)
     #           Senses reordering, e.g. "split horz v", and if unable to determine defaults to pane first
-    serial = flexmenu_index[0]
-    if not flexmenu_session.Serial_Is_Valid(serial):
+    if not wg_PRIVATE:
         return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
-    wg = flexmenu_session.Get_Wg( serial )
+    wg = wg_PRIVATE
     used, unused = wg.Panes_GetUsedUnused()
     axis = how # This argument is handled as an axis
     # Set the default size if unspecified
@@ -2645,7 +2651,7 @@ def cmd_split(pane, how, size=None, newpanes=None):
         dst_lines.append( line )
     wg.Import_Lines( dst_lines )
     # Replace windowgram
-    flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+    wg_PRIVATE.Import_Wg( wg )
 
 @flex(
     command     = "rename",
@@ -2654,20 +2660,19 @@ def cmd_split(pane, how, size=None, newpanes=None):
     description = "Rename from one pane or group, to another pane or group, paired as <from> <to>.  Multiple " + \
                   "pairs may be specified.",
 )
-def cmd_rename(panes_from, *panes_to):
+def cmd_rename(wg_PRIVATE, panes_from, *panes_to):
     # Analogues:
     #       Join may be used for rename: join <old>.<new>
     #       Rename may be used for swap: rename <old><new> <new><old>
     # Tests:
-    #       n rename.t1 ; br 1 3x2 ABCabc ; re AaBb BbAa
-    #       n rename.t2 ; br 1 3x2 ABCabc ; re Aa Bb Bb Cc Cc Aa
-    #       n rename.t3 ; br 1 2x2 1 ; re 12 21 34 43
-    #       n rename.t4 ; br 1 2x2 1 ; re 1 2 2 1 3 4 4 3
-    serial = flexmenu_index[0]
-    if not flexmenu_session.Serial_Is_Valid(serial):
+    #       new rename.t1 ; break 1 3x2 ABCabc ; rename AaBb BbAa
+    #       new rename.t2 ; break 1 3x2 ABCabc ; rename Aa Bb Bb Cc Cc Aa
+    #       new rename.t3 ; break 1 2x2 1 ; rename 12 21 34 43
+    #       new rename.t4 ; break 1 2x2 1 ; rename 1 2 2 1 3 4 4 3
+    if not wg_PRIVATE:
         return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     # This command could have wrapped join, but a native implementation has been made to reduce overhead somewhat
-    wg = flexmenu_session.Get_Wg( serial )
+    wg = wg_PRIVATE
     used, unused = wg.Panes_GetUsedUnused()
     pairs = [ panes_from ] + [ arg for arg in panes_to ]
     if len(pairs)&1:
@@ -2724,7 +2729,7 @@ def cmd_rename(panes_from, *panes_to):
     # A separate merge step is required
     wg.Import_Mosaic( ( wg, renames ) )
     # Replace windowgram
-    flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+    wg_PRIVATE.Import_Wg( wg )
 
 @flex(
     command     = "swap",
@@ -2733,18 +2738,17 @@ def cmd_rename(panes_from, *panes_to):
     description = "Swaps one pane or group, with another pane or group, paired as <from> <to>.  Multiple " + \
                   "pairs may be specified.",
 )
-def cmd_swap(panes_from, *panes_to):
+def cmd_swap(wg_PRIVATE, panes_from, *panes_to):
     # Analogues:
     #       Join may be used for swap: join <one>.<two> <two>.<one>
     #       Rename may be used for swap: rename <old><new> <new><old>
     # Notes:
     #       This was going to be simple single pane swap, but decided to go for the same flexibility as rename
     #       Because of this, much of the code between rename and swap is the same or similar
-    serial = flexmenu_index[0]
-    if not flexmenu_session.Serial_Is_Valid(serial):
+    if not wg_PRIVATE:
         return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     # This command could have wrapped join, but a native implementation has been made to reduce overhead somewhat
-    wg = flexmenu_session.Get_Wg( serial )
+    wg = wg_PRIVATE
     used, unused = wg.Panes_GetUsedUnused()
     pairs = [ panes_from ] + [ arg for arg in panes_to ]
     if len(pairs)&1:
@@ -2789,37 +2793,35 @@ def cmd_swap(panes_from, *panes_to):
         [ ch if ch not in master_f else master_t[master_f.find(ch)] for ch in list(line) ]
         ) for line in windowgram_lines ] )
     # Replace windowgram
-    flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+    wg_PRIVATE.Import_Wg( wg )
 
 @flex(
     command     = "mirror",
     group       = "modifiers",
     description = "Reverse horizontally (left/right)",
 )
-def cmd_mirror():
+def cmd_mirror(wg_PRIVATE):
     # TODO: Optional pane group mirror
-    serial = flexmenu_index[0]
-    if not flexmenu_session.Serial_Is_Valid(serial):
+    if not wg_PRIVATE:
         return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
-    wg = flexmenu_session.Get_Wg(serial)
+    wg = wg_PRIVATE
     windowgram_lines = wg.Export_Lines()
     wg.Import_Lines( [ "".join( [ ch for ch in reversed(list(line)) ] ) for line in windowgram_lines ] )
-    flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+    wg_PRIVATE.Import_Wg( wg )
 
 @flex(
     command     = "flip",
     group       = "modifiers",
     description = "Reverse vertically (top/bottom)",
 )
-def cmd_flip():
+def cmd_flip(wg_PRIVATE):
     # TODO: Optional pane group flip
-    serial = flexmenu_index[0]
-    if not flexmenu_session.Serial_Is_Valid(serial):
+    if not wg_PRIVATE:
         return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
-    wg = flexmenu_session.Get_Wg(serial)
+    wg = wg_PRIVATE
     windowgram_lines = wg.Export_Lines()
     wg.Import_Lines( reversed(windowgram_lines) )
-    flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+    wg_PRIVATE.Import_Wg( wg )
 
 ##
 ## Commands: Terminators
@@ -2892,7 +2894,8 @@ def flex_shell(user_wh, session, serial=0):
     lastcmd = ""
     sc_support = None
     sc_serial = 0
-    split_check = lambda: True if not sc_serial or session.Get_Wg(sc_serial).Analyze_Type() == "split" else False
+    split_check = lambda: True \
+        if not sc_serial or session.Get_Wg(sc_serial).Analyze_Type(ARGS.relative) == "split" else False
     while True:
         global flexsense
         label_w = 12
@@ -2968,7 +2971,7 @@ def flex_shell(user_wh, session, serial=0):
                     str(len(unused)) + " unused > " + unused )
             flexout("")
         # If the windowgram is unsupportable by tmux, the user should know
-        # Example: "n unsupported ; b 1 3x3 1 ; j 12 36.2 98.3 74.4"
+        # Example: "new unsupported ; break 1 3x3 1 ; join 12 36.2 98.3 74.4"
         if not queue:
             # If window changed, check the new window
             if not flexmenu_index[0]:
@@ -3040,9 +3043,18 @@ def flex_shell(user_wh, session, serial=0):
                     availability = [] # Available arguments if user error: [ [from, to], [from, to], ... ]
                     for ix, triplet in enumerate(usage_triplets(cmd_dict)):
                         usage, examples, arglens = triplet
+                        group = cmd_dict['group'][ix]
                         if argcount >= arglens[0] and (argcount <= arglens[1] or arglens[1] == -1):
-                            if argcount: cmd_dict['funcs'][ix]( *(thisinput_lst[1:]) )
-                            else: cmd_dict['funcs'][ix]()
+                            serial = flexmenu_index[0]
+                            arguments = []
+                            wg = None
+                            if group == "modifiers":
+                                if flexmenu_session.Serial_Is_Valid(serial): wg = flexmenu_session.Get_Wg(serial)
+                                arguments.append( wg )
+                            if argcount: arguments += thisinput_lst[1:]
+                            cmd_dict['funcs'][ix]( *arguments )
+                            if wg is not None:
+                                flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
                             invoked = True
                             break
                     if not invoked:
@@ -3288,11 +3300,11 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
         #
         # 5.2) Split window into panes
         #
-        interactive = True if ARGS.verbose >= 3 else False
         if ARGS.verbose >= 3:
             print("")
             print("(3) Fitting panes = {")
-        list_split, list_links = SplitProcessor( interactive, wg, user_wh[0], user_wh[1], list_panes )
+        sw = { 'print': print, 'verbose': ARGS.verbose, 'relative': ARGS.relative, 'scanline': DEBUG_SCANLINE } # Print
+        list_split, list_links = SplitProcessor( sw, wg, user_wh[0], user_wh[1], list_panes )
         if ARGS.verbose >= 3:
             print("(3) }")
 
