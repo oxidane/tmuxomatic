@@ -1909,14 +1909,19 @@ def table(output, markers, marklines, title, contents):
 
 ##
 ## Flex: Conversion of windowgram metrics
+## Supports floating point values ("2.5x" for example), had been broken for a while until discovered and fixed in 2.7
 ##
 
 def arg_is_multiplier(arg):
-    if type(arg) is str and arg[:-1].isdigit() and (arg[-1:] == "x" or arg[-1:] == "X" or arg[-1:] == "*"): return True
+    if type(arg) is str:
+        if arg[:-1] == "".join([ch for ch in arg[:-1] if ch in "0123456789.,"]): # Fixed float support
+            if arg[-1:] == "x" or arg[-1:] == "X" or arg[-1:] == "*": return True
     return False
 
 def arg_is_percentage(arg):
-    if type(arg) is str and arg[:-1].isdigit() and arg[-1:] == "%": return True
+    if type(arg) is str:
+        if arg[:-1] == "".join([ch for ch in arg[:-1] if ch in "0123456789.,"]): # Fixed float support
+            if arg[-1:] == "%": return True
     return False
 
 def arg_is_characters(arg):
@@ -2620,6 +2625,8 @@ def cmd_split(wg_PRIVATE, pane, how, size=None, newpanes=None):
         return flexsense['notices'].append( FlexError( "Specified size (" + original_size + \
             ") is greater or equal to the maximum range (" + rep + ") of this function" ) )
     size_chars = size_ConvertToCharacters( size, axis_length )
+    if size_chars is None:
+        return flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
     if size_chars >= axis_length: # Shouldn't happen by now, but if it does
         return flexsense['notices'].append( FlexError( "Resulting size (" + inverse + str(size_chars) + \
             " characters) is greater or equal to the axis length (" + str(axis_length) + ")" ) )
