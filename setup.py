@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+##
+## Installer for tmuxomatic
+##
+## The distutils is the only standard packaging library included with Python 3.x
+##
+
 from distutils.core import setup
 from distutils import sysconfig
 import re, os, sys
@@ -19,9 +25,9 @@ keywords = "tmux, screen, awesome"
 # was called with "install", we search for tmuxomatic in the user's path, and then chmod 755.  If you happen know of a
 # way to do this install without a chmod step, or in a more correct manner, please send a pull request with the changes.
 
-packages = [] # ["tmuxomatic"]
-package_dir = {} # {'tmuxomatic': "/usr/bin"}
-package_data = {} # {'tmuxomatic': ["tmuxomatic"]}
+packages = [ "windowgram" ]
+package_dir = {}
+package_data = {}
 data_files = [
 	( "bin", [ "tmuxomatic" ] ),
 # Add readme after it's ported to pypi+github friendly format, add example sessions after install has been sorted out
