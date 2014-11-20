@@ -1,6 +1,6 @@
 
 
-# tmuxomatic ... [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
+# tmuxomatic [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
 
 
@@ -275,14 +275,15 @@ There are three ways to install tmuxomatic, in order of convenience:
   * **Manually** (python)
 
     * Download and extract the archive file from https://pypi.python.org/pypi/tmuxomatic
-    * `cd tmuxomatic` then run `python3 setup.py install`
+    * First `cd tmuxomatic` then run `python3 setup.py install`
 
   * **From Development** (git)
 
     * Visit https://github.com/oxidane/tmuxomatic for up-to-date installation instructions
     * `git clone git://github.com/oxidane/tmuxomatic.git`
-    * `cd tmuxomatic` then run `python3 setup.py install`
-    <!-- `cp -a windowgram ``python3 -c "import site ; print(site.getsitepackages()[0])"``` -->
+    * First `cd tmuxomatic` then run `python3 setup.py install`
+
+<!-- Alternative to setup.py for a development install: `cp tmuxomatic /usr/bin ; cp -a windowgram \`python3 -c "import site ; print(site.getsitepackages()[0])"\`` -->
 
 Verify that the version reported by `tmuxomatic -V` matches the latest release.  [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
@@ -308,5 +309,5 @@ Copyright 2013-2014, Oxidane.  All rights reserved.
 
 The `windowgram` module is presently not licensed for use outside of the tmuxomatic project.  For more information, including future plans for an open source license, please see the `windowgram.py` source.
 
-All other sources: Distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution of the source.  See the license for details.
+All other sources are distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution of the source.  See the license for details.
 
