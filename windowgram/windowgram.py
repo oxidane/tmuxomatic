@@ -6,7 +6,52 @@
 Copyright 2013-2014, Oxidane
 All rights reserved
 
+This source has NOT yet been licensed for redistribution, modification, or inclusion in other projects.
+
+An exception has been granted to the official tmuxomatic project, originating from the following addresses:
+
+    https://github.com/oxidane/tmuxomatic
+    https://pypi.python.org/pypi/tmuxomatic
+
+A proper open source license is expected to be applied on or before the release of this windowgram module as a separate
+project.  Please check this source at a later date for these changes.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 """
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Name ....... windowgram
+## Synopsis ... Module for windowgram flex processing 1.x
+## Author ..... Oxidane
+## License .... (To Be Determined)
+## Source ..... (To Be Announced)
+##
+##---------------+------------------------------------------------------------------------------------------------------
+##     About     |
+##---------------+
+##
+## The windowgram originated as the central concept in the tmuxomatic project.  It has since been expanded to include
+## flex, a functional windowgram modification language using natural syntax and spatially oriented objects.
+##
+## Not ready to reveal the future plans for this project.  Check back for updates.
+##
+##--------------+-------------------------------------------------------------------------------------------------------
+##     TODO     |
+##--------------+
+##
+## Now that this is an independent module, it needs unit testing.  Flex testing is most important, and it alone may
+## suffice, since it would have good coverage with all of the underlying windowgram code.  Maybe have the tests runnable
+## through a main function.  Check into official or lightweight python testing options.
+##
+##----------------------------------------------------------------------------------------------------------------------
 
 import sys, argparse, re, math, copy, inspect
 
@@ -14,7 +59,7 @@ import sys, argparse, re, math, copy, inspect
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Globals ... Mostly constants
+## Globals
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
@@ -288,8 +333,6 @@ def SplitProcessor( sw, wg, iw, ih, list_panes ): # list_split, list_links
         sw, dim, linkid, list_split, list_links, list_panes, linkid[0], 1, 1, windowgram_w, windowgram_h )
     # Return useful elements
     return list_split, list_links
-
-
 
 ##
 ## Miscellaneous

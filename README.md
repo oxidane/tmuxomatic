@@ -1,10 +1,10 @@
 
 
-# tmuxomatic   [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
+# tmuxomatic :: [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
 
 
-A completely different kind of tmux session manager.
+A completely different kind of tmux session manager!
 
 1. [Introduction](https://github.com/oxidane/tmuxomatic#introduction)
 2. [Learn by example](https://github.com/oxidane/tmuxomatic#learn-by-example)
@@ -305,5 +305,7 @@ To use tmuxomatic, you don't have to know everything about [how to use tmux](htt
 
 Copyright 2013-2014, Oxidane.  All rights reserved.
 
-Distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution of the source.  See the license for details.
+The `windowgram` module is presently not licensed for use outside of the tmuxomatic project.  For more information, including future plans for an open source license, please see the `windowgram.py` source.
+
+All other sources: Distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution of the source.  See the license for details.
 
