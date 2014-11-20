@@ -9,9 +9,9 @@ A completely different kind of tmux session manager.
 1. [Introduction](https://github.com/oxidane/tmuxomatic#introduction)
 2. [Learn by example](https://github.com/oxidane/tmuxomatic#learn-by-example)
 3. [Flex your windowgrams](https://github.com/oxidane/tmuxomatic#flex-your-windowgrams)
-3.1. [Flex demonstration introduction](https://github.com/oxidane/tmuxomatic#flex-demonstration-introduction)
-3.2. [Flex demonstration #1 -- Create a new windowgram](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram)
-3.3. [Flex demonstration #2 -- Modify a windowgram](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----modify-a-windowgram)
+  1. [Flex demonstration introduction](https://github.com/oxidane/tmuxomatic#flex-demonstration-introduction)
+  2. [Flex demonstration #1 -- Create a new windowgram](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram)
+  3. [Flex demonstration #2 -- Extend the windowgram](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-the-windowgram)
 4. [Installation](https://github.com/oxidane/tmuxomatic#installation)
 5. [Options](https://github.com/oxidane/tmuxomatic#options)
 6. [Notes](https://github.com/oxidane/tmuxomatic#notes)
@@ -21,7 +21,7 @@ A completely different kind of tmux session manager.
 
 ## Introduction
 
-Other tmux session managers require pages of documentation to use, and define windows as a complicated nesting of pane splits.  Instead, tmuxomatic is so easy that anyone could use it after just one example.  Yet tmuxomatic is more flexible and more powerful than other tmux session managers.
+Other tmux session managers require pages of documentation for basic use, and define windows as a complicated nesting of pane splits.  Instead, tmuxomatic is so easy that anyone could use it after just one example.  Yet tmuxomatic is more flexible and more powerful than other tmux session managers.
 
 At the heart of tmuxomatic is the **windowgram**, a better way of arranging tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character grouping identifies the name, position, size, and shape of a pane.  It should take only one example to demonstrate the power and flexibility of the windowgram.
 
@@ -183,7 +183,7 @@ Either type `done` and flex will open this session file in tmux, or type `exit` 
 
 
 
-#### Flex demonstration #2 -- Modify a windowgram
+#### Flex demonstration #2 -- Extend the windowgram
 
 In this demonstration is presented in summary form.  Here we modify the windowgram from the previous demonstration, using a different set of flex commands.
 
