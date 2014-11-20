@@ -1,10 +1,10 @@
 
 
-# tmuxomatic :: [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
+# tmuxomatic ... [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
 
 
-A completely different kind of tmux session manager!
+A completely different kind of tmux session manager.
 
 1. [Introduction](https://github.com/oxidane/tmuxomatic#introduction)
 2. [Learn by example](https://github.com/oxidane/tmuxomatic#learn-by-example)
@@ -72,7 +72,7 @@ Before proceeding with the flex demonstration, take a moment to review these key
   * **Size**: Expressed in exact characters, or contextually as a percentage or multiplier
   * **Direction**: Cardinal directions (up, down, left, right) for movement or to specify object edge
 
-For brevity, the flex shell is represented in this demonstration by the `flex>` prompt.  For a detailed list of all flex commands, type `help` from the shell at any time.
+For the sake of brevity, the flex shell is represented in this demonstration by the `flex>` prompt.  For a detailed list of all flex commands, type `help` from the shell at any time.
 
 
 
@@ -275,13 +275,14 @@ There are three ways to install tmuxomatic, in order of convenience:
   * **Manually** (python)
 
     * Download and extract the archive file from https://pypi.python.org/pypi/tmuxomatic
-    * In the tmuxomatic directory, run `python3 setup.py install`
+    * `cd tmuxomatic` then run `python3 setup.py install`
 
   * **From Development** (git)
 
     * Visit https://github.com/oxidane/tmuxomatic for up-to-date installation instructions
     * `git clone git://github.com/oxidane/tmuxomatic.git`
-    * `cp -a tmuxomatic/tmuxomatic /usr/bin`
+    * `cd tmuxomatic` then run `python3 setup.py install`
+    <!-- `cp -a windowgram ``python3 -c "import site ; print(site.getsitepackages()[0])"``` -->
 
 Verify that the version reported by `tmuxomatic -V` matches the latest release.  [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
