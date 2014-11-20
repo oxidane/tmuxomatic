@@ -1735,21 +1735,49 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##
 ## Planned modifiers:
 ##
+##          When dragging an edge, it will be forced to stop for pane preservation
+##          When dragging a group edge, the internal edges are scaled, only the group edge is contiguous
+##          Drags specified edges, keeps opposing edges pinned, and scales the inner edges
+##          May need a specialized scaler for this command
+##          Maximum scale range depends whether a pane disappears or not
+##          Dragging pushing edges was considered, but this would get messy and probably unnecessary
+##
 ##      drag <panes> <dir> <how>                    drags edge, panes == xyz / dir == up / how == 50%
 ##      drag <edge> <panes> <dir> <how>             drags group edge, edge == top, bottom, left, right
 ##
-##          Drag notes: When dragging an edge, it will be forced to stop for pane preservation
-##          Drag notes: When dragging a group edge, the internal edges are scaled, only the group edge is contiguous
-##          Drag notes: Drags specified edges, keeps opposing edges pinned, and scales the inner edges
-##          Drag notes: May need a specialized scaler for this command
-##          Drag notes: Maximum scale range depends whether a pane disappears or not
-##          Drag notes: Dragging pushing edges was considered, but this would get messy and probably unnecessary
+##          Modifiers insert and clone need to differentiate between a deduced edge (1 parameter), a specified edge (2),
+##          and the cardinal edge of a specified group (2).  Each of these is handled by one master function that will
+##          infer the intent by the specified arguments and their originating function.  This may even allow some degree
+##          of reordering of arguments, e.g., axis-edge and direction-group.  Also maybe support as edge:axis and
+##          group:direction, this would assist the highlighter when it's implemented.
 ##
-##      rename <panes1> <panes2>                    rename pane, target must be unused
-##      swap <panes1> <panes2>                      swap two panes (mutual rename), both must exist, 3+ args for cycle
-##      rotate <how>                                how == cw, ccw, 180, interpret 1..3 and -1..-3 as multiples of 90
-##      insert <panes> <edge> <size> [newpanes]     insert pane at edge of panes, just like add but with panes
+##          Both insert and clone uses the [axis] parameter as quasi-optional.  If the edge is ambiguous, it requests it
+##          for clarification.
+##
+##          Both insert and clone requires the edge-group parameter to have holes, all that is important the specified
+##          edge and that it is unambiguous.
+##
+##          Already supported mid-stream optional arguments, to use from flex function, specify "axis_OPTIONAL".  Note
+##          that there will still need to be two distinct functions, but they will both be wrappers for a core function.
+##
+##      insert [axis] <edge> <size> [newpanes]      insert pane at edge of panes, just like add but with panes
+##      insert <direction> <group> <size> [newpanes]
+##
+##          The clone command takes the first group of panes (forming a full rectangle), and along the specified edge,
+##          it stretches (like scale) the surrounding windowgram to accommodate, and inserts it in.  Most useful for
+##          rapidly expanding common windowgram patters.
+##
+##          The [newpanes] argument follows the same order as the first <group> parameter.
+##
+##      clone <group> [axis] <edge> [newpanes]
+##      clone <group> <direction> <group> [newpanes]
+##
+##          Other commands
+##
 ##      delete <pane>                               remove pane from edge of window (del, clip, remove, drop, rm)
+##      mirror <group>                              mirrors a group, supports *
+##      flip <group>                                flips a group, supports *
+##      rotate <how>                                how == cw, ccw, 180, interpret 1..3 and -1..-3 as multiples of 90
 ##
 ## Planned other:
 ##
@@ -1770,22 +1798,6 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##      clonewindow <newname>                       copy current selected window into a new window and select
 ##      move <panes1> <panes2>                      swap if both panes are defined otherwise rename (probably redundant)
 ##      blockswap <panes1> <panes2>                 swaps one block of panes for another, e.g. `BLDbld` with `1` in demo
-##
-## Conceptual:
-##
-##      clone <group> <type> <edge> [newpanes]
-##      clone <group> <type> <group> <direction> [newpanes]
-##
-##      The clone command takes the first group of panes, forming a full rectangle, and along the specified edge, it
-##      stretches (like scale) the surrounding windowgram to accommodate, and inserts it in.  This would be very useful
-##      for expanding common windowgram patterns.
-##
-##      The type parameter is quasi-optional.  If it's omitted, the command will try to determine the intent by context,
-##      and if it cannot be deduced, it requests <type> for clarification.
-##
-##      When targeting by group, it would have to support gaps, all that matters is the edge.
-##
-##      Notes that [newpanes] follows the order of <group>
 ##
 ## Expectations:
 ##
@@ -1873,43 +1885,8 @@ flexsense = {
 flexsense_reset = copy.deepcopy( flexsense )
 
 ##
-## Table Printer (used by help and list)
-##
-
-def table(output, markers, marklines, title, contents):
-    def table_divider(marker, row):
-        output.append(marker + "+-" + "-+-".join( [ len(col) * "-" for col in row ] ) + "-+")
-    def table_line(marker, row):
-        output.append(marker + "| " + " | ".join( [ col for col in row ] ) + " |")
-    # Count columns
-    columns = 0
-    for row in contents:
-        if len(row) > columns: columns = len(row)
-    # Maximum width of each column, taking into account title and all lines
-    widths = [ len(col) for col in title ]
-    for line in contents: widths = [ l if l > n else n for l, n in zip( widths, [ len(n) for n in line ] ) ]
-    # Pad all lines
-    contents.insert( 0, title )
-    contents_unpadded = contents
-    contents = []
-    for line in contents_unpadded:
-        contents.append( [ l + ((((w - len(l)) if len(l) < w else 0)) * " ") for w, l in zip( widths, line ) ] )
-    if columns:
-        first = True
-        line = 0
-        for row in contents:
-            line += 1
-            marker = markers[1] if line in marklines else markers[0]
-            if first: table_divider( markers[0], row )
-            table_line( marker, row )
-            if first: table_divider( markers[0], row )
-            first = False
-        table_divider( markers[0], row )
-        output.append("")
-
-##
 ## Flex: Conversion of windowgram metrics
-## Supports floating point values ("2.5x" for example), had been broken for a while until discovered and fixed in 2.7
+## Supports floating point values (example: "2.5x")
 ##
 
 def arg_is_multiplier(arg):
@@ -2033,17 +2010,32 @@ class flex(object):
         args_with_defaults = [ ( spec.args[ix], (NoDefault if ix < la-ld else spec.defaults[ix-(la-ld)]) ) \
             for ix in range(0, len(spec.args)) ]
         brackets = lambda optional: "[]" if optional else "<>"
+        def tagged(arg, tag): return True if tag in arg else False
+        def clipped(arg, tags):
+            arg = arg
+            for tag in tags:
+                if arg.find(tag) >= 0: arg = arg[:arg.find(tag)] + arg[arg.find(tag)+len(tag):]
+            return arg
         for arg, default in args_with_defaults:
-            if not arg.endswith("_PRIVATE"):
+            # Regular argument types (normally required):
+            #       _PRIVATE    This argument is never shown to the user
+            #       _OPTIONAL   Listed as optional even if a default parameter was not specified
+            #       =Default    Listed as optional if a default parameter was specified
+            if not tagged(arg, "_PRIVATE"):
                 self.arglens[1] += 1
                 if default is NoDefault: self.arglens[0] += 1
-                enclosed = brackets( default is not NoDefault )
+                optional = True if tagged(arg, "_OPTIONAL") else False
+                arg = clipped( arg, ["_OPTIONAL"] ) # Clip markers before printing
+                enclosed = brackets( default is not NoDefault or optional )
                 self.usage += " " + enclosed[0] + arg + enclosed[1]
         if spec.varargs:
+            # Variable argument types (normally optional):
+            #       _REQUIRED   Makes the parameter required where it is normally optional
             varargs = spec.varargs
-            required = True if varargs.endswith("_REQUIRED") else False
+            required = optional = False
+            required = True if tagged(varargs, "_REQUIRED") else False
+            varargs = clipped( varargs, ["_REQUIRED"] ) # Clip markers before printing
             enclosed = brackets( not required )
-            if varargs.endswith("_REQUIRED"): varargs = varargs[:-len("_REQUIRED")] # Clip marker before printing
             self.usage += " " + enclosed[0] + varargs + "..." + enclosed[1]
             if required: self.arglens[0] += 1 # If required then varargs is [REQ+1, -1] instead of [REQ, -1]
             self.arglens[1] = -1 # Represents use of *args
@@ -2081,6 +2073,41 @@ class flex(object):
         def wrapper(*args):
             return function(*args)
         return wrapper
+
+##
+## Table Printer (used by help and list)
+##
+
+def table(output, markers, marklines, title, contents):
+    def table_divider(marker, row):
+        output.append(marker + "+-" + "-+-".join( [ len(col) * "-" for col in row ] ) + "-+")
+    def table_line(marker, row):
+        output.append(marker + "| " + " | ".join( [ col for col in row ] ) + " |")
+    # Count columns
+    columns = 0
+    for row in contents:
+        if len(row) > columns: columns = len(row)
+    # Maximum width of each column, taking into account title and all lines
+    widths = [ len(col) for col in title ]
+    for line in contents: widths = [ l if l > n else n for l, n in zip( widths, [ len(n) for n in line ] ) ]
+    # Pad all lines
+    contents.insert( 0, title )
+    contents_unpadded = contents
+    contents = []
+    for line in contents_unpadded:
+        contents.append( [ l + ((((w - len(l)) if len(l) < w else 0)) * " ") for w, l in zip( widths, line ) ] )
+    if columns:
+        first = True
+        line = 0
+        for row in contents:
+            line += 1
+            marker = markers[1] if line in marklines else markers[0]
+            if first: table_divider( markers[0], row )
+            table_line( marker, row )
+            if first: table_divider( markers[0], row )
+            first = False
+        table_divider( markers[0], row )
+        output.append("")
 
 ##
 ## Commands: Helpers
@@ -2278,7 +2305,8 @@ def cmd_print():
     description = "Scale the windowgram.  Valid parameters are multipliers (x), percentages (%), exact character " + \
                   "dimensions, or any combination thereof.  Use a space ( ), colon (:), or times (x) to separate " + \
                   "the x and y axis.  If only one axis is specified then the value will be applied to both x and y.",
-    aliases     = [ ["resize", "scale "], ["half", "scale 50%"], ["double", "scale 2x"],
+    aliases     = [ ["resize", "scale "],
+                    ["half", "scale 50%"], ["double", "scale 2x"],
                     ["wider", "scale 200%:100%"], ["thinner", "scale 50%:100%"],
                     ["taller", "scale 100%:200%"], ["shorter", "scale 100%:50%"],
                     ["higher", "scale 100%:200%"], ["lower", "scale 100%:50%"], ],
