@@ -6,16 +6,16 @@
 
 A completely different kind of tmux session manager.
 
-	1. [Introduction](https://github.com/oxidane/tmuxomatic#introduction)
-	2. [Learn by example](https://github.com/oxidane/tmuxomatic#learn-by-example)
-	3. [Flex your windowgrams](https://github.com/oxidane/tmuxomatic#flex-your-windowgrams)
-		3.1. [Flex demonstration introduction](https://github.com/oxidane/tmuxomatic#flex-demonstration-introduction)
-		3.2. [Flex demonstration #1 -- Create a new windowgram](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram)
-		3.3. [Flex demonstration #2 -- Modify a windowgram](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----modify-a-windowgram)
-	4. [Installation](https://github.com/oxidane/tmuxomatic#installation)
-	5. [Options](https://github.com/oxidane/tmuxomatic#optional)
-	6. [Notes](https://github.com/oxidane/tmuxomatic#notes)
-	7. [Copyright and License](https://github.com/oxidane/tmuxomatic#copyright-and-license)
+1. [Introduction](https://github.com/oxidane/tmuxomatic#introduction)
+2. [Learn by example](https://github.com/oxidane/tmuxomatic#learn-by-example)
+3. [Flex your windowgrams](https://github.com/oxidane/tmuxomatic#flex-your-windowgrams)
+  3.1. [Flex demonstration introduction](https://github.com/oxidane/tmuxomatic#flex-demonstration-introduction)
+  3.2. [Flex demonstration #1 -- Create a new windowgram](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram)
+  3.3. [Flex demonstration #2 -- Modify a windowgram](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----modify-a-windowgram)
+4. [Installation](https://github.com/oxidane/tmuxomatic#installation)
+5. [Options](https://github.com/oxidane/tmuxomatic#optional)
+6. [Notes](https://github.com/oxidane/tmuxomatic#notes)
+7. [Copyright and License](https://github.com/oxidane/tmuxomatic#copyright-and-license)
 
 
 
