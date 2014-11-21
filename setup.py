@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+##----------------------------------------------------------------------------------------------------------------------
 ##
 ## Installer for tmuxomatic
 ##
 ## The distutils is the only standard packaging library included with Python 3.x
 ##
+##----------------------------------------------------------------------------------------------------------------------
 
 from distutils.core import setup
 from distutils import sysconfig
@@ -17,7 +19,9 @@ extract = lambda what: [re.search(r'"([^"]*)"', line).group() for line in lines 
 version = extract("VERSION")
 homepage = extract("HOMEPAGE")
 description = extract("DESCRIPTION")
-keywords = "tmux, screen, awesome"
+
+KEYWORDS = "tmux, screen, iterm, xterm, shell, command line, split, manager"
+keywords = [ key.strip() for key in KEYWORDS.split(",") ] # "1, 2, 3" -> ["1", "2", "3"]
 
 # Maybe someone could help get this sorted out properly.  I don't want to use a subdirectory or a manifest file.  When
 # the user installs, I want tmuxomatic to go into the user's bin directory.  I have been able to accomplish this by

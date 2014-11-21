@@ -47,9 +47,11 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##     TODO     |
 ##--------------+
 ##
-## Now that this is an independent module, it needs unit testing.  Flex testing is most important, and it alone may
-## suffice, since it would have good coverage with all of the underlying windowgram code.  Maybe have the tests runnable
-## through a main function.  Check into official or lightweight python testing options.
+##      Implement the planned flex modifiers
+##
+##      Flex unit testing
+##
+##      Windowgram unit testing
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 

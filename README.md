@@ -8,8 +8,8 @@ A completely different kind of tmux session manager.
 
 1. [Introduction](https://github.com/oxidane/tmuxomatic#introduction)
 2. [Learn by example](https://github.com/oxidane/tmuxomatic#learn-by-example)
-3. [Flex your windowgrams](https://github.com/oxidane/tmuxomatic#flex-your-windowgrams)
-  1. [Flex demonstration introduction](https://github.com/oxidane/tmuxomatic#flex-demonstration-introduction)
+3. [Flex](https://github.com/oxidane/tmuxomatic#flex)
+  1. [Flex concepts](https://github.com/oxidane/tmuxomatic#flex-concepts)
   2. [Flex demonstration #1 -- Create a new windowgram](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram)
   3. [Flex demonstration #2 -- Extend the windowgram](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-the-windowgram)
 4. [Installation](https://github.com/oxidane/tmuxomatic#installation)
@@ -54,17 +54,19 @@ For additional features, see the included example sessions.  Or for a list of co
 
 
 
-## Flex your windowgrams
+## Flex
 
-Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a windowgram is typed up quickly.  But if you need detail, you may find yourself doing a lot of ASCII art.  In tmuxomatic 2, **flex** was added to automate the construction and modification of the windowgram itself.
+Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a windowgram is typed up quickly.  But if you need detail, you may find yourself doing a lot of ASCII art.
+
+In tmuxomatic 2, **flex** was added to automate the construction and modification of the windowgram itself.
 
 Flex is an object-oriented windowgram editor.  It is visually expressive, naturally worded, logically ordered, minimal, and powerful.  Its short command set may be combined to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who desire detailed windowgrams without the tedium of manual entry.
 
 
 
-#### Flex demonstration introduction
+#### Flex concepts
 
-Before proceeding with the flex demonstration, take a moment to review these key concepts:
+Before proceeding with the flex demonstration, take a moment to review the following key concepts.
 
   * **Pane**: Single character pane identifier representing one pane in a windowgram
   * **Group**: String of one or more panes (usually in the form of a rectangle without gaps)
@@ -72,7 +74,7 @@ Before proceeding with the flex demonstration, take a moment to review these key
   * **Size**: Expressed in exact characters, or contextually as a percentage or multiplier
   * **Direction**: Cardinal directions (up, down, left, right) for movement or to specify object edge
 
-In the following demonstrations, the flex shell is represented by the `flex>` prompt.  For a detailed list of all flex commands, type `help` from the shell at any time.
+In the demonstrations below, the flex shell is represented by the `flex>` prompt.  For a detailed list of all flex commands, type `help` from the shell at any time.
 
 
 

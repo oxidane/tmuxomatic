@@ -61,11 +61,11 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##     Revisions     |
 ##-------------------+
 ##
-DESCRIPTION = "Intelligent tmux session management" # TODO: Need a better description for 2.x
-HOMEPAGE = "https://github.com/oxidane/tmuxomatic"  # NOTE: Variables HOMEPAGE and VERSION are used by setup.py
-VERSION = "2.7"                                     # x.y: x = Major feature, y = Minor feature or bug fix
+DESCRIPTION = "Intelligent tmux session management"
+HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
+VERSION = "2.7" # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.7     TBD         Separate code into windowgram library, includes the flex modifier commands
+##  2.7     2014-11-21  Moved windowgram and flex to its own module, see windowgram.py for details
 ##                      Various source cleanup in windowgram and flex
 ##
 ##  2.6     2014-11-15  New flex command: swap
@@ -108,11 +108,11 @@ VERSION = "2.7"                                     # x.y: x = Major feature, y 
 ##
 ## 2.x:
 ##
-##      Finish Flex Shell
+##      Finish flex console
 ##
-##      Pypi Readme
+##      PyPI compatible readme file
 ##
-##      Release Windowgram Library
+##      License and release windowgram library
 ##
 ## Minor:
 ##

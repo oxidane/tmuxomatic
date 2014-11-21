@@ -17,7 +17,7 @@
 
 ---
 
-### - session: new_name   # Session rename (optional) may be placed anywhere in file
+#- session: new_name   # Session rename (optional) may be placed anywhere in file
 
 - name: one
   windowgram: |
