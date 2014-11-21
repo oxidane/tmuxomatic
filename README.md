@@ -72,7 +72,7 @@ Before proceeding with the flex demonstration, take a moment to review these key
   * **Size**: Expressed in exact characters, or contextually as a percentage or multiplier
   * **Direction**: Cardinal directions (up, down, left, right) for movement or to specify object edge
 
-For the sake of brevity, the flex shell is represented in this demonstration by the `flex>` prompt.  For a detailed list of all flex commands, type `help` from the shell at any time.
+In the following demonstrations, the flex shell is represented by the `flex>` prompt.  For a detailed list of all flex commands, type `help` from the shell at any time.
 
 
 
@@ -283,8 +283,6 @@ There are three ways to install tmuxomatic, in order of convenience:
     * `git clone git://github.com/oxidane/tmuxomatic.git`
     * First `cd tmuxomatic` then run `python3 setup.py install`
 
-<!-- Alternative to setup.py for a development install: `cp tmuxomatic /usr/bin ; cp -a windowgram \`python3 -c "import site ; print(site.getsitepackages()[0])"\`` -->
-
 Verify that the version reported by `tmuxomatic -V` matches the latest release.  [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
 
@@ -307,7 +305,7 @@ To use tmuxomatic, you don't have to know everything about [how to use tmux](htt
 
 Copyright 2013-2014, Oxidane.  All rights reserved.
 
-The `windowgram` module is presently not licensed for use outside of the tmuxomatic project.  For more information, including future plans for an open source license, please see the `windowgram.py` source.
+The `windowgram` source is presently not licensed for use outside the tmuxomatic project.  For more information, including future plans for an open source license, please see the `windowgram.py` file.
 
-All other sources are distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution of the source.  See the license for details.
+All other source is distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution of the source.  See the license for details.
 
