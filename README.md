@@ -272,18 +272,21 @@ There are three ways to install tmuxomatic, in order of convenience:
 
   * **Automatically** (pip)
 
-    * `pip-python3 install tmuxomatic --upgrade --force`
+    * An upgrade may require an empty pip cache, `rm -rf /tmp/pip-build-root/`
+    * `pip-python3 install tmuxomatic --upgrade`
 
   * **Manually** (python)
 
     * Download and extract the archive file from https://pypi.python.org/pypi/tmuxomatic
-    * First `cd tmuxomatic` then run `python3 setup.py install`
+    * `cd tmuxomatic`
+    * `python3 setup.py install`
 
   * **From Development** (git)
 
     * Visit https://github.com/oxidane/tmuxomatic for up-to-date installation instructions
     * `git clone git://github.com/oxidane/tmuxomatic.git`
-    * First `cd tmuxomatic` then run `python3 setup.py install`
+    * `cd tmuxomatic`
+    * `python3 setup.py install`
 
 Verify that the version reported by `tmuxomatic -V` matches the latest release.  [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
@@ -307,7 +310,7 @@ To use tmuxomatic, you don't have to know everything about [how to use tmux](htt
 
 Copyright 2013-2014, Oxidane.  All rights reserved.
 
-The `windowgram` source is presently not licensed for use outside the tmuxomatic project.  For more information, including future plans for an open source license, please see the `windowgram.py` file.
+The `windowgram` module is presently not licensed for use outside the tmuxomatic project.  For more information, including future plans for an open source license, please see the file `windowgram.py`.
 
 All other source is distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution of the source.  See the license for details.
 
