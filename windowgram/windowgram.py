@@ -389,7 +389,7 @@ def PaneOverlap(list_panes): # overlap_pane1, overlap_pane2
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Formats:
+## Internal Formats:
 ##
 ##      Data    Example Value              Variable           Description
 ##      ------- -------------------------- ------------------ --------------------------------------------------------
@@ -398,18 +398,22 @@ def PaneOverlap(list_panes): # overlap_pane1, overlap_pane2
 ##      Lines   [ "12", "34" ]             windowgram_lines   List of lines, pure windowgram data (no delimiters)
 ##      Chars   [['1', '2'], ['3', '4']]   windowgram_chars   List of chars, pure windowgram data (no delimiters)
 ##      Parsed  {'a': {'x': 1, ...}, ...}  windowgram_parsed  Processed dictionary of panes with keys: n, x, y, w, h
-##      Mosaic  (base, [[ w, m ], ...])    *mosaic            Pairs of windowgram and mask, ordered bottom to top
+##      Mosaic  (base, [[ w, m ], ...])    windowgram_mosaic  Pairs of windowgram and mask, ordered bottom to top
 ##      ------- -------------------------- ------------------ --------------------------------------------------------
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Layers:
+## Windowgram Blocks:
 ##
-##      1222 444. ....
+##      1                   SPLIT ... 1 windowgram, 1 pane
+##
+##      112...              TILED ... 1 windowgram, 5 panes, transparency
+##      452...
+##      433...
+##
+##      1222 444. ....      LAYERED ... 3 windowgrams, 5 panes, implicit overlaps, explicit overlaps, transparency
 ##      3333 444. .555
 ##      3333 .... .555
-##
-## TODO: Layers are not yet supported
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 ##
@@ -455,9 +459,7 @@ def ValidPane(ch, extend=False): return True if (ch in PANE_CHARACTERS or (exten
 def ValidPanes(extend=False): return (PANE_CHARACTERS + PANE_RESERVED) if extend else PANE_CHARACTERS
 
 ##
-## Windowgram Convert
-##
-## These are windowgram conversion macros as static methods
+## Windowgram Format Conversions
 ##
 
 class Windowgram_Convert():
@@ -570,6 +572,104 @@ class Windowgram_Convert():
     def Purify(windowgram):
         # Full cycle purification -- asserts consistency of form
         return Windowgram_Convert.Lines_To_String( Windowgram_Convert.String_To_Lines( windowgram ) )
+
+##
+## Windowgram Block Conversions
+##
+##      WindowgramBlockPattern      Single string of 1 or more packed windowgrams with arbitrary padding
+##                                  This pattern must be horizontally aligned to accommodate differently sized panes
+##                                  See flex unit testing for examples of properly constructed objects
+##
+##      WindowgramBlockList         List of strings, where each string is a windowgram with optional padding
+##                                  Basically just a list of windowgram_string objects
+##
+
+class WindowgramBlock_Convert():
+
+    ## Pattern <-> List
+
+    @staticmethod
+    def PatternToList(windowgramblock_pattern):
+        windowgramblock_list = []
+        first_linewithcol = []
+        for line in windowgramblock_pattern.split("\n"):
+            if not line.strip(): first_linewithcol = []
+            else:
+                # Build list of lines according to starting column of character run
+                #       * Discard any out-of-bounds character runs (as defined by first line)
+                #       * Insert blank lines where no runs were found
+                def colsplit(line): # linewithcol
+                    linewithcol = [] # [ (line, col), ... ]
+                    for col, ch in enumerate(list(line)): # Never strip the line or this will fail: "1 2\n  2\n"
+                        if ch == " " or ch == "\t" or not linewithcol:
+                            if not linewithcol or linewithcol[-1][0]: linewithcol.append(["", None])
+                        if ch != " " and ch != "\t":
+                            if linewithcol[-1][1] is None: linewithcol[-1][1] = col
+                            linewithcol[-1][0] += ch
+                    return linewithcol
+                linewithcol = colsplit(line)
+                # Refine list using first line as a guide.  This will insert columns that are missing and remove
+                # columns that do not match the title.  Each windowgram line must match the one before it, or it's
+                # dropped, so a user must take care in editing windowgramblock_pattern objects or data disappears.
+                # TODO: Slightly more sophisticated matching that will compensate for unaligned windowgrams by
+                # snapping to the nearest column; this is just be an estimate, user error loss is still possible.
+                if first_linewithcol:
+                    # Strip columns with unexpected positions
+                    drop = []
+                    for ix1, (_, col1) in enumerate(linewithcol):
+                        ix2 = [ ix2 for ix2, (_, col2) in enumerate(first_linewithcol) if col2 == col1 ]
+                        if not ix2: drop.append(ix1)
+                    for ix in reversed(drop): linewithcol.pop(ix)
+                    # Insert missing columns
+                    for ix1, (_, col1) in enumerate(first_linewithcol):
+                        if not [ (ix2, col2) for ix2, (_, col2) in enumerate(linewithcol) if col2 == col1 ]:
+                            linewithcol.insert( ix1, ["", col1] )
+                # First line expands the collation list
+                if not first_linewithcol:
+                    first_linewithcol = linewithcol
+                    for n in range(len(first_linewithcol)): windowgramblock_list.append([])
+                # Insert lines into the collation list
+                linewithcol = linewithcol[:len(first_linewithcol)] # Assure truncation
+                for n in range(len(first_linewithcol)):
+                    windowgramblock_list[-(len(first_linewithcol)-n)].append(linewithcol[n][0])
+        # Return as list of windowgrams with blank lines removed
+        windowgramblock_list = [ "\n".join([ l2 for l2 in l if l2 ])+"\n" for ix, l in enumerate(windowgramblock_list) ]
+        return windowgramblock_list
+
+    @staticmethod
+    def ListToPattern(windowgramblock_list, maxwidth, lpad=0, mpad=1, testmode=False):
+        windowgramblock_pattern = ""
+        windowgram_line_arr = []
+        windowgram_width_arr = []
+        # Build arrays of lines and widths
+        for windowgram_string in windowgramblock_list:
+            windowgram_lines = Windowgram_Convert.String_To_Lines( windowgram_string )
+            windowgram_line_arr.append( windowgram_lines )
+            windowgram_width_arr.append( list( reversed( sorted( [ len(line) for line in windowgram_lines ] ) ) )[0] )
+        spent = 0
+        while spent < len(windowgram_width_arr):
+            # Determine how many of the remaining windowgrams will fit on this windowgramgroup row
+            pos = lpad
+            spending, spent = spent, spent + 1
+            while spent < len(windowgram_width_arr) and pos + windowgram_width_arr[spent] < maxwidth:
+                if pos: pos += mpad
+                pos += windowgram_width_arr[spent]
+                spent += 1
+            if windowgramblock_pattern: windowgramblock_pattern += "\n"
+            # Vertically pad the windowgrams for zip iteration
+            batch = windowgram_line_arr[spending:spent]
+            height = list( reversed( sorted( [ len(lines) for lines in batch ] ) ) )[0]
+            batch = [ lines if len(lines) >= height else lines + ([" "]*(height-len(lines))) for lines in batch ]
+            # Print this windowgramgroup row
+            for ix in range( height ):
+                row = [ lines[ix] if len(lines[ix]) >= windowgram_width_arr[spending+ix2] \
+                    else lines[ix] + (" "*(windowgram_width_arr[spending+ix2]-len(lines[ix]))) \
+                    for ix2, lines in enumerate( batch ) ]
+                windowgramblock_pattern = windowgramblock_pattern + (" "*lpad) + ((" "*mpad).join(row)) + "\n"
+        if testmode is not False:
+            # For ease of testing, add newline prefix and padding suffix of specified length
+            windowgramblock_pattern = "\n" + windowgramblock_pattern + (" "*testmode)
+        return windowgramblock_pattern
 
 ##
 ## Windowgram
