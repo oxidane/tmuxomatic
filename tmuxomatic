@@ -63,7 +63,9 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DESCRIPTION = "Intelligent tmux session management"
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
-VERSION = "2.7" # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.8" # x.y: x = Major feature, y = Minor feature or bug fix
+##
+##  2.8     TBD         Added unit tests for windowgram and flex
 ##
 ##  2.7     2014-11-21  Moved windowgram and flex to its own module, see windowgram.py for details
 ##                      Various source cleanup in windowgram and flex
@@ -1340,7 +1342,7 @@ def flex_shell(user_wh, session, serial=0):
                     thisinput_lst, thisinput_str = filter_input( newinput )
                     lastcmd = thisinput_lst[0] if len(thisinput_lst) else lastcmd
                     break
-            # Command handler (based on provided arguments and first matching function)
+            # Command handler (based on provided arguments and matching function)
             finished = False
             argcount = len(thisinput_lst) - 1
             for cmd_dict in flexmenu:
@@ -1891,6 +1893,12 @@ def main():
 ##----------------------------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
+
+    # Unit test
+    error = UnitTests()
+    if error:
+        print("\nUnit Test Failure:\n" + error)
+        exit()
 
     # Signal handlers
     signal.signal(signal.SIGINT, signal_handler_break) # SIGINT (user break)

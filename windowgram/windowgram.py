@@ -49,10 +49,6 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 ##      Implement the planned flex modifiers
 ##
-##      Flex unit testing
-##
-##      Windowgram unit testing
-##
 ##----------------------------------------------------------------------------------------------------------------------
 
 import sys, argparse, re, math, copy, inspect
@@ -1347,6 +1343,47 @@ class flex(object):
         def wrapper(*args):
             return function(*args)
         return wrapper
+
+##
+## Flex automated processor for one or more commands in the flex group "modifiers"
+##
+##      * Intended for unit testing, may also be used for macros
+##      * Supports multiple commands ("cmd 1 ; cmd 2 ; cmd 3")
+##      * Only the flex group "modifiers" is supported
+##      * No command ambiguity
+##      * No command aliases
+##      * Processing halts on flex warning or error
+##
+
+def flex_processor(wg, commands): # -> error
+    processed = found = False
+    for command in commands.split(";"):
+        command, arguments = re.split(r"[ \t]+", command)[:1][0], re.split(r"[ \t]+", command)[1:]
+        for cmd_dict in flexmenu:
+            for ix, triplet in enumerate(usage_triplets(cmd_dict)):
+                group = cmd_dict['group'][ix]
+                if group == "modifiers":
+                    funcname = cmd_dict['about'][0]
+                    if funcname == command:
+                        found = True
+                        usage, examples, arglens = triplet
+                        if len(arguments) >= arglens[0] and (len(arguments) <= arglens[1] or arglens[1] == -1):
+                            # Prepare for new command
+                            global flexsense
+                            flexsense = copy.deepcopy( flexsense_reset )
+                            # Execute
+                            args = [ wg ] + arguments
+                            cmd_dict['funcs'][ix]( *args )
+                            # Error handler
+                            if flexsense['notices']:
+                                output = "There were warnings or errors when processing: " + commands + "\n"
+                                output = output + "\n".join([ "* "+warn.GetMsg() for warn in flexsense['notices'] ])+"\n"
+                                return output
+                            # Processed
+                            processed = True
+    if not found: return "Command not found: " + commands + "\n"
+    if not processed: return "Command argument mismatch: " + commands + "\n"
+    return None
 
 ##
 ## Commands: Modifiers
