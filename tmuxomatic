@@ -1269,10 +1269,11 @@ def flex_shell(user_wh, session, serial=0):
                 if unittesting_fcl:
                     flexout("\n".join([ "        \"" + command + "\"," for command in unittesting_fcl ]))
                 flexout("    ], \"\"\"")
+                aftergroup = "    \"\"\" )"
                 if unittesting_wgp:
-                    flexout("\n".join([ line for line in unittesting_wgp.split("\n") ]) + "    \"\"\" )")
-                else
-                    flexout("    \"\"\" )")
+                    flexout("\n".join([ line for line in unittesting_wgp.split("\n") ]) + aftergroup)
+                else:
+                    flexout(aftergroup)
                 flexout("")
             else:
                 # Print the selected windowgram
