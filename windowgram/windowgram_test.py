@@ -157,8 +157,8 @@ class TestWindowgram(unittest.TestCase):
     ##
 
     def runTest(self):
-        self.test_WindowgramGroupConversions_PatternToList()
         self.test_WindowgramGroupConversions_ListToPattern()
+        self.test_WindowgramGroupConversions_PatternToList()
 
 
 
@@ -182,10 +182,10 @@ class TestFlex(unittest.TestCase):
 
     def assertFlexSequence(self, commands, pattern, build=None):
         windowgramgroup_list = WindowgramGroup_Convert.Pattern_To_List( pattern )
-        cmdlen, ptnlen = len(windowgramgroup_list), len(commands)
-        if ptnlen != cmdlen:
+        cmdlen, ptnlen = len(commands), len(windowgramgroup_list)
+        if cmdlen != ptnlen:
             raise Exception( "Mismatch: commands (" + str(cmdlen) + ") and windowgrams (" + str(ptnlen) + ")" )
-        wg = Windowgram( "1" )
+        wg = Windowgram( "1" ) # Specified in case the default changes
         for command, windowgram in zip( commands, windowgramgroup_list ):
             errors = flex_processor( wg, command )
             self.assertTrue( not errors )
@@ -197,7 +197,9 @@ class TestFlex(unittest.TestCase):
 
     def test_ReadmeDemonstration1(self):
         self.assertFlexSequence( [
-            "scale 25x10", "add right 50%", "break 0 3x5 A",
+            "scale 25x10",
+            "add right 50%",
+            "break 0 3x5 A",
             "join ABC.z DG.B EH.L FI.N JM.b KN.l LO.n",
         ], """
             1111111111111111111111111   1111111111111111111111111000000000000
@@ -223,6 +225,16 @@ class TestFlex(unittest.TestCase):
             1111111111111111111111111MMMMNNNNOOOO   1111111111111111111111111bbbbllllnnnn
         """ )
 
+    ##----------------------------------------------------------------------------------------------------------
+    ##
+    ## Keep this note for adding new unit tests for flex
+    ##
+    ##   flex> new unittest ScaleCommand    # When created, the output switches to a convenient code dump
+    ##   flex> scale 25x10                  # Run commands and the unittest code will be built as you go
+    ##   flex> scale 20x20                  # When finished just paste the generated code into this class
+    ##
+    ##----------------------------------------------------------------------------------------------------------
+
     ##
     ## Run
     ##
@@ -239,9 +251,22 @@ class TestFlex(unittest.TestCase):
 ##----------------------------------------------------------------------------------------------------------------------
 
 def UnitTests():
+
+    ##
+    ## Unit tests (low level first)
+    ##
+
+    units = [
+        TestWindowgram(),
+        TestFlex(),
+    ]
+
+    ##
+    ## Iterate
+    ##
+
     stream = io.StringIO()
     runner = unittest.TextTestRunner( stream=stream )
-    units = [ TestWindowgram(), TestFlex() ]
     error = ""
     for unit in units:
         result = runner.run( unit )

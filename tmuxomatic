@@ -65,7 +65,7 @@ DESCRIPTION = "Intelligent tmux session management"
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
 VERSION = "2.8" # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.8     TBD         Added unit tests for windowgram and flex
+##  2.8     TBD         Added unit tests for windowgram classes and flex modifiers
 ##
 ##  2.7     2014-11-21  Moved windowgram and flex to its own module, see windowgram.py for details
 ##                      Various source cleanup in windowgram and flex
@@ -910,6 +910,11 @@ class SessionFile(object):
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
+unittesting_name = "unittest" # Unit testing is activated when the user creates a window starting with this name
+unittesting_run = 0 # See notes in flex unit testing
+unittesting_fcl = [] # Flex Command List
+unittesting_wgp = "" # Windowgram Group Pattern
+
 ##
 ## Table Printer (used by help and list)
 ##
@@ -1070,6 +1075,8 @@ def cmd_list():
     description = "Select the window you would like to modify",
 )
 def cmd_use(*name_or_serial_REQUIRED):
+    global unittesting_run
+    if unittesting_run: unittesting_run = 0 # Turn off unit testing mode
     name_or_serial = " ".join(name_or_serial_REQUIRED)
     def using(serial):
         flexmenu_index[0] = serial
@@ -1103,6 +1110,8 @@ def cmd_use(*name_or_serial_REQUIRED):
     description = "Create a new window, initialized to '1'",
 )
 def cmd_new(*window_name_REQUIRED):
+    global unittesting_run
+    if unittesting_run: unittesting_run = 0 # Turn off unit testing mode
     name = " ".join(window_name_REQUIRED)
     for serial in range(1, flexmenu_session.Count_Windows()+1):
         if name == flexmenu_session.Get_Name(serial):
@@ -1111,8 +1120,10 @@ def cmd_new(*window_name_REQUIRED):
     # Create window
     comments = "## Window added by tmuxomatic flex " + VERSION + "\n\n"
     serial = flexmenu_session.Add_Windowgram( comments, name, "1" )
-    # Use it
+    # Use it (note that for unittesting this function clears the flag so it should be run first)
     cmd_use(*[str(serial)])
+    # Activate unit testing mode if the window begins with "unittest"
+    if name.startswith("unittest"): unittesting_run = 1
 
 ##
 ## Commands: Printers ... Mainly a pseudo-group to keep print out of the quick menus
@@ -1194,6 +1205,10 @@ def flex_shell(user_wh, session, serial=0):
         flexmenu_index[0] = serial
         cmd_use(*[str(serial)]) # By calling this we assure blank windowgrams are properly initialized
     ##
+    ## Easily generate flex unit tests by creating a new window starting with the name "unittest"
+    ##
+    global unittesting_run, unittesting_fcl, unittesting_wgp
+    ##
     ## Input loop
     ##
     warnings = []
@@ -1239,7 +1254,29 @@ def flex_shell(user_wh, session, serial=0):
             flexout(None) # The fill marker used for later padding to keep header consistently on top
         # Always show windowgram as long as: the command produced no output, and no commands are enqueued
         if not flexsense['output'] and not queue:
-            cmd_print()
+            if unittesting_run == 1:
+                unittesting_run = 2 # 0 = Not Used / 1 = Initialization Required / 2 = Process Normally
+                unittesting_fcl = []
+                unittesting_wgp = ""
+            if unittesting_run:
+                # Print the command-result array in code form for easy implementation
+                serial = flexmenu_index[0]
+                name = flexmenu_session.Get_Name(serial)
+                name_func = name[len(unittesting_name):].strip()
+                if not name_func: name_func = "NAMEHERE"
+                flexout("def test_" + name_func + "(self): # Created in flex using \"new " + name + "\"")
+                flexout("    self.assertFlexSequence( [")
+                if unittesting_fcl:
+                    flexout("\n".join([ "        \"" + command + "\"," for command in unittesting_fcl ]))
+                flexout("    ], \"\"\"")
+                if unittesting_wgp:
+                    flexout("\n".join([ line for line in unittesting_wgp.split("\n") ]) + "    \"\"\" )")
+                else
+                    flexout("    \"\"\" )")
+                flexout("")
+            else:
+                # Print the selected windowgram
+                cmd_print()
         # Show output if there was any
         if flexsense['output']:
             line = ""
@@ -1303,6 +1340,7 @@ def flex_shell(user_wh, session, serial=0):
         if not queue:
             try: thisinput_str = input("<<< tmuxomatic flex >>> ")
             except EOFError as e: thisinput_str = "exit" ; print("") # About to exit: print, not flexout
+            if unittesting_run and thisinput_str.strip(): unittesting_fcl.append( thisinput_str )
             if ";" in thisinput_str: queue = thisinput_str
         if queue:
             thisinput_str, queue = queue.split(";", 1) if ";" in queue else (queue, "")
@@ -1359,10 +1397,16 @@ def flex_shell(user_wh, session, serial=0):
                                 if flexmenu_session.Serial_Is_Valid(serial): wg = flexmenu_session.Get_Wg(serial)
                                 arguments.append( wg )
                             if argcount: arguments += thisinput_lst[1:]
-                            cmd_dict['funcs'][ix]( *arguments )
+                            cmd_dict['funcs'][ix]( *arguments ) # Run this command
                             if wg is not None:
                                 flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
                             invoked = True
+                            if not queue and serial:
+                                if unittesting_run:
+                                    windowgramgroup_list = WindowgramGroup_Convert.Pattern_To_List( unittesting_wgp ) \
+                                        + [ flexmenu_session.Get_Wg(serial).Export_String() ]
+                                    unittesting_wgp = WindowgramGroup_Convert.List_To_Pattern(
+                                        windowgramgroup_list, 120-leftgap, 8, 1 )
                             break
                     if not invoked:
                         # No invocation, could show available parameter counts, but showing help may be more useful
