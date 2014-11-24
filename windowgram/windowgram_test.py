@@ -217,8 +217,10 @@ class TestFlex(unittest.TestCase):
             wlist, FLEXUNIT_MAXWIDTH, FLEXUNIT_INDENT, FLEXUNIT_SPACE )
         if not pattern.split("\n")[-1].strip(): pattern = "\n".join([ \
             line for ix, line in enumerate(pattern.split("\n")) if ix != len(pattern.split("\n"))-1 ])
-#        self.assertTrue( True if pattern_produced == pattern else False,
-#                "The resulting pattern does not match specification: \n\n" + pattern_produced + "\n!=\n" + pattern )
+        pattern_produced = pattern_produced.rstrip(" \t\n").lstrip("\n")
+        pattern = pattern.rstrip(" \t\n").lstrip("\n")
+        self.assertTrue( pattern_produced == pattern,
+            "The resulting pattern does not match specification: \n\n" + pattern_produced + "\n!=\n" + pattern )
 
     ##----------------------------------------------------------------------------------------------------------
     ##
@@ -422,7 +424,7 @@ class TestFlex(unittest.TestCase):
             1111111111111111111111111 1111111111111111111111111000000000000 1111111111111111111111111JJJJKKKKLLLL
             1111111111111111111111111 1111111111111111111111111000000000000 1111111111111111111111111MMMMNNNNOOOO
             1111111111111111111111111 1111111111111111111111111000000000000 1111111111111111111111111MMMMNNNNOOOO
-    
+
             1111111111111111111111111zzzzzzzzzzzz
             1111111111111111111111111zzzzzzzzzzzz
             1111111111111111111111111BBBBLLLLNNNN
@@ -452,7 +454,7 @@ class TestFlex(unittest.TestCase):
             1111111111111111111111111bbbbllllnnnn sssssssssssssssssssssssssbbbbllllnnnn
             1111111111111111111111111bbbbllllnnnn sssssssssssssssssssssssssbbbbllllnnnn
             1111111111111111111111111bbbbllllnnnn sssssssssssssssssssssssssbbbbllllnnnn
-    
+
             1111111111111111111111111zzzzzzzzzzzz 1111111111111111111111111ssssssssssss
             1111111111111111111111111zzzzzzzzzzzz 1111111111111111111111111ssssssssssss
             1111111111111111111111111BBBBLLLLDDDD 1111111111111111111111111BBBBDDDDLLLL
