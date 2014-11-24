@@ -91,11 +91,11 @@ class TestWindowgram(unittest.TestCase):
             aaaaaaaaaaaaaaaaa    bbbbbbbbbbbbbbbbb
             aaaaaaaaaaaaaaaaa    bbbbbbbbbbbbbbbbb
             aaaaaaaaaaaaaaaaa    bbbbbbbbbbbbbbbbb
-            aaaaaaaaaaaaaaaaa                     
-            aaaaaaaaaaaaaaaaa                     
-            aaaaaaaaaaaaaaaaa                     
-            aaaaaaaaaaaaaaaaa                     
-            aaaaaaaaaaaaaaaaa                     
+            aaaaaaaaaaaaaaaaa
+            aaaaaaaaaaaaaaaaa
+            aaaaaaaaaaaaaaaaa
+            aaaaaaaaaaaaaaaaa
+            aaaaaaaaaaaaaaaaa
         """
         group_x = WindowgramGroup_Convert.List_To_Pattern( group_i, 50, 12, 4, testmode=8 )
         self.assertTrue( group_o == group_x )
@@ -108,11 +108,11 @@ class TestWindowgram(unittest.TestCase):
             111   3333333333 aaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbb
                   3333333333 aaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbb
                   3333333333 aaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbb
-                             aaaaaaaaaaaaaaaaa                  
-                             aaaaaaaaaaaaaaaaa                  
-                             aaaaaaaaaaaaaaaaa                  
-                             aaaaaaaaaaaaaaaaa                  
-                             aaaaaaaaaaaaaaaaa                  
+                             aaaaaaaaaaaaaaaaa
+                             aaaaaaaaaaaaaaaaa
+                             aaaaaaaaaaaaaaaaa
+                             aaaaaaaaaaaaaaaaa
+                             aaaaaaaaaaaaaaaaa
         """
         group_x = WindowgramGroup_Convert.List_To_Pattern( group_i, 100, 12, 1, testmode=8 )
         self.assertTrue( group_o == group_x )
@@ -184,6 +184,10 @@ class TestWindowgram(unittest.TestCase):
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
+FLEXUNIT_MAXWIDTH = 120
+FLEXUNIT_INDENT = 12
+FLEXUNIT_SPACE = 1
+
 class TestFlex(unittest.TestCase):
 
     ##----------------------------------------------------------------------------------------------------------
@@ -202,25 +206,204 @@ class TestFlex(unittest.TestCase):
         if cmdlen != ptnlen:
             raise Exception( "Mismatch: commands (" + str(cmdlen) + ") and windowgrams (" + str(ptnlen) + ")" )
         wg = Windowgram( "1" ) # Specified in case the default changes
+        wlist = []
         for ix, (command, windowgram) in enumerate( zip( commands, windowgramgroup_list ) ):
             errors = flex_processor( wg, command )
             self.assertTrue( not errors, errors )
             self.assertTrue( wg.Export_String() == windowgram, 
                 "The resulting windowgram for sequence #" + str(ix+1) + " does not match: \n\n" + wg.Export_String() )
+            wlist.append( wg.Export_String() )
+        pattern_produced = WindowgramGroup_Convert.List_To_Pattern( \
+            wlist, FLEXUNIT_MAXWIDTH, FLEXUNIT_INDENT, FLEXUNIT_SPACE )
+        if not pattern.split("\n")[-1].strip(): pattern = "\n".join([ \
+            line for ix, line in enumerate(pattern.split("\n")) if ix != len(pattern.split("\n"))-1 ])
+#        self.assertTrue( True if pattern_produced == pattern else False,
+#                "The resulting pattern does not match specification: \n\n" + pattern_produced + "\n!=\n" + pattern )
 
     ##----------------------------------------------------------------------------------------------------------
     ##
-    ## Tests
+    ## Run
     ##
     ##----------------------------------------------------------------------------------------------------------
 
+    def runTest(self):
+        self.test_Scale_OneParameter_DupCharacters()
+        self.test_Scale_OneParameter_DupPercentages()
+        self.test_Scale_OneParameter_DupMultipliers()
+        self.test_Scale_OneParameter_MixedJoin1()
+        self.test_Scale_OneParameter_MixedJoin2()
+        self.test_Scale_TwoParameter_Mixed()
+        self.test_ReadmeDemonstration1()
+        self.test_ReadmeDemonstration2()
+
+    ##----------------------------------------------------------------------------------------------------------
     ##
     ## Flex Scale
     ##
+    ##----------------------------------------------------------------------------------------------------------
 
+    def test_Scale_OneParameter_DupCharacters(self): # Created in flex using "new unittest Scale_OneParameter_DupCharacters"
+        self.assertFlexSequence( [
+            "scale 1",
+            "scale 19",
+            "scale 3",
+            "scale 20",
+        ], """
+            1 1111111111111111111 111 11111111111111111111
+              1111111111111111111 111 11111111111111111111
+              1111111111111111111 111 11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+              1111111111111111111     11111111111111111111
+                                      11111111111111111111
+        """ )
+
+    def test_Scale_OneParameter_DupPercentages(self): # Created in flex using "new unittest Scale_OneParameter_DupPercentages"
+        self.assertFlexSequence( [
+            "scale 200%",
+            "scale 400%",
+            "scale 25%",
+            "scale 400%",
+            "scale 75%",
+            "scale 33.4%",
+            "scale 100%",
+            "scale 100.99%",
+            "scale 50%",
+            "scale 1000%",
+            "scale 050.000%",
+        ], """
+            11 11111111 11 11111111 111111 11 11 11 1 1111111111 11111
+            11 11111111 11 11111111 111111 11 11 11   1111111111 11111
+               11111111    11111111 111111            1111111111 11111
+               11111111    11111111 111111            1111111111 11111
+               11111111    11111111 111111            1111111111 11111
+               11111111    11111111 111111            1111111111
+               11111111    11111111                   1111111111
+               11111111    11111111                   1111111111
+                                                      1111111111
+                                                      1111111111
+        """ )
+
+    def test_Scale_OneParameter_DupMultipliers(self): # Created in flex using "new unittest Scale_OneParameter_DupMultipliers"
+        self.assertFlexSequence( [
+            "scale 2x",
+            "scale 1x",
+            "scale .5x",
+            "scale 5x",
+            "scale 2.5x",
+            "scale 1.25x",
+            "scale .2x",
+            "scale 5.34x",
+            "scale 0.25x",
+            "scale 00000.25000x",
+        ], """
+            11 11 1 11111 111111111111 111111111111111 111 1111111111111111 1111 1
+            11 11   11111 111111111111 111111111111111 111 1111111111111111 1111
+                    11111 111111111111 111111111111111 111 1111111111111111 1111
+                    11111 111111111111 111111111111111     1111111111111111 1111
+                    11111 111111111111 111111111111111     1111111111111111
+                          111111111111 111111111111111     1111111111111111
+                          111111111111 111111111111111     1111111111111111
+                          111111111111 111111111111111     1111111111111111
+                          111111111111 111111111111111     1111111111111111
+                          111111111111 111111111111111     1111111111111111
+                          111111111111 111111111111111     1111111111111111
+                          111111111111 111111111111111     1111111111111111
+                                       111111111111111     1111111111111111
+                                       111111111111111     1111111111111111
+                                       111111111111111     1111111111111111
+                                                           1111111111111111
+        """ )
+
+    ## TODO: Expand to "2x:2x", etc
+
+    def test_Scale_OneParameter_MixedJoin1(self): # Created in flex using "new unittest Scale_OneParameter_MixedJoin1"
+        self.assertFlexSequence( [
+            "scale 5:10",
+            "scale 10:5",
+        ], """
+            11111 1111111111
+            11111 1111111111
+            11111 1111111111
+            11111 1111111111
+            11111 1111111111
+            11111
+            11111
+            11111
+            11111
+            11111
+        """ )
+
+    ## TODO: Expand to "2xx2x", etc
+
+    def test_Scale_OneParameter_MixedJoin2(self): # Created in flex using "new unittest Scale_OneParameter_MixedJoin2"
+        self.assertFlexSequence( [
+            "scale 5x10",
+            "scale 10x5",
+        ], """
+            11111 1111111111
+            11111 1111111111
+            11111 1111111111
+            11111 1111111111
+            11111 1111111111
+            11111
+            11111
+            11111
+            11111
+            11111
+        """ )
+
+    def test_Scale_TwoParameter_Mixed(self): # Created in flex using "new unittest Scale_TwoParameter_Mixed"
+        self.assertFlexSequence( [
+            "scale 5 10",
+            "scale 10 5",
+            "scale 10 2x",
+            "scale 2x 200%",
+            "scale 50% 10",
+            "scale 50% 1.5x",
+            "scale 2.5x 10",
+            "scale 10 50%",
+        ], """
+            11111 1111111111 1111111111 11111111111111111111 1111111111 11111 111111111111 1111111111
+            11111 1111111111 1111111111 11111111111111111111 1111111111 11111 111111111111 1111111111
+            11111 1111111111 1111111111 11111111111111111111 1111111111 11111 111111111111 1111111111
+            11111 1111111111 1111111111 11111111111111111111 1111111111 11111 111111111111 1111111111
+            11111 1111111111 1111111111 11111111111111111111 1111111111 11111 111111111111 1111111111
+            11111            1111111111 11111111111111111111 1111111111 11111 111111111111
+            11111            1111111111 11111111111111111111 1111111111 11111 111111111111
+            11111            1111111111 11111111111111111111 1111111111 11111 111111111111
+            11111            1111111111 11111111111111111111 1111111111 11111 111111111111
+            11111            1111111111 11111111111111111111 1111111111 11111 111111111111
+                                        11111111111111111111            11111
+                                        11111111111111111111            11111
+                                        11111111111111111111            11111
+                                        11111111111111111111            11111
+                                        11111111111111111111            11111
+                                        11111111111111111111
+                                        11111111111111111111
+                                        11111111111111111111
+                                        11111111111111111111
+                                        11111111111111111111
+        """ )
+
+    ##----------------------------------------------------------------------------------------------------------
     ##
     ## Readme Demonstration
     ##
+    ##----------------------------------------------------------------------------------------------------------
 
     def test_ReadmeDemonstration1(self): # Created in flex using "new unittest ReadmeDemonstration1"
         self.assertFlexSequence( [
@@ -252,14 +435,35 @@ class TestFlex(unittest.TestCase):
             1111111111111111111111111bbbbllllnnnn
         """ )
 
-    ##----------------------------------------------------------------------------------------------------------
-    ##
-    ## Run
-    ##
-    ##----------------------------------------------------------------------------------------------------------
-
-    def runTest(self):
-        self.test_ReadmeDemonstration1()
+    def test_ReadmeDemonstration2(self): # Created in flex using "new unittest ReadmeDemonstration2"
+        self.assertFlexSequence( [
+            "scale 25x10 ; add right 50% ; break 0 3x5 A ; join ABC.z DG.B EH.L FI.N JM.b KN.l LO.n",
+            "split 1 bottom 3 s",
+            "rename Nn Dd",
+            "swap z s Ll Dd",
+        ], """
+            1111111111111111111111111zzzzzzzzzzzz 1111111111111111111111111zzzzzzzzzzzz
+            1111111111111111111111111zzzzzzzzzzzz 1111111111111111111111111zzzzzzzzzzzz
+            1111111111111111111111111BBBBLLLLNNNN 1111111111111111111111111BBBBLLLLNNNN
+            1111111111111111111111111BBBBLLLLNNNN 1111111111111111111111111BBBBLLLLNNNN
+            1111111111111111111111111BBBBLLLLNNNN 1111111111111111111111111BBBBLLLLNNNN
+            1111111111111111111111111BBBBLLLLNNNN 1111111111111111111111111BBBBLLLLNNNN
+            1111111111111111111111111bbbbllllnnnn 1111111111111111111111111bbbbllllnnnn
+            1111111111111111111111111bbbbllllnnnn sssssssssssssssssssssssssbbbbllllnnnn
+            1111111111111111111111111bbbbllllnnnn sssssssssssssssssssssssssbbbbllllnnnn
+            1111111111111111111111111bbbbllllnnnn sssssssssssssssssssssssssbbbbllllnnnn
+    
+            1111111111111111111111111zzzzzzzzzzzz 1111111111111111111111111ssssssssssss
+            1111111111111111111111111zzzzzzzzzzzz 1111111111111111111111111ssssssssssss
+            1111111111111111111111111BBBBLLLLDDDD 1111111111111111111111111BBBBDDDDLLLL
+            1111111111111111111111111BBBBLLLLDDDD 1111111111111111111111111BBBBDDDDLLLL
+            1111111111111111111111111BBBBLLLLDDDD 1111111111111111111111111BBBBDDDDLLLL
+            1111111111111111111111111BBBBLLLLDDDD 1111111111111111111111111BBBBDDDDLLLL
+            1111111111111111111111111bbbblllldddd 1111111111111111111111111bbbbddddllll
+            sssssssssssssssssssssssssbbbblllldddd zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
+            sssssssssssssssssssssssssbbbblllldddd zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
+            sssssssssssssssssssssssssbbbblllldddd zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
+        """ )
 
 
 
