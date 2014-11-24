@@ -1178,7 +1178,15 @@ def cmd_exit():
 ## TODO: Support "again" that repeats the last command
 ##
 
-def flex_shell(user_wh, session, serial=0):
+def flex_shell(session, serial=0):
+    ##
+    ## Poll dimensions
+    ##
+    user_wh = [ 0, 0 ]
+    def poll_xterm():
+        nonlocal user_wh
+        user_wh = get_xterm_dimensions_wh()
+    poll_xterm()
     ##
     ## Print buffer
     ##
@@ -1224,6 +1232,8 @@ def flex_shell(user_wh, session, serial=0):
         label_w = 12
         labeler = lambda name: name + ( (" "*(label_w-len(name))) if len(name) < label_w else name ) + ": "
         if not flexmenu_session.Serial_Is_Valid(flexmenu_index[0]): flexmenu_index[0] = 0 # Serial is invalid, clear it
+        # Poll xterm dimensions before every print
+        poll_xterm()
         # Macros
         string_to_list = lambda string: [ x.strip() for x in string.strip().split() ]
         filter_input = lambda string: ( string_to_list( string ), " ".join( string_to_list( string ) ) )
@@ -1886,7 +1896,7 @@ def main():
 
     # Flex shell entry
     if ARGS.flex:
-        session = flex_shell( user_wh, session, serial )
+        session = flex_shell( session, serial )
         # Force reload of session file in order to get accurate line counts in the event of changes by user in flex
         session.Load()
 
