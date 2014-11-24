@@ -20,7 +20,7 @@ version = extract("VERSION")
 homepage = extract("HOMEPAGE")
 description = extract("DESCRIPTION")
 
-KEYWORDS = "tmux, screen, iterm, xterm, shell, command line, split, manager"
+KEYWORDS = "tmux, session manager, screen, shell, command line, iterm, xterm, split"
 keywords = [ key.strip() for key in KEYWORDS.split(",") ] # "1, 2, 3" -> ["1", "2", "3"]
 
 # Maybe someone could help get this sorted out properly.  I don't want to use a subdirectory or a manifest file.  When

@@ -257,31 +257,19 @@ In this demonstration is presented in summary form.  Here we modify the windowgr
 
 **Drag**:
 
-*TODO*
-
 **Insert**:
-
-*TODO*
 
 **Clone**:
 
-*TODO*
-
 **Delete**:
-
-*TODO*
 
 **Mirror**:
 
-*TODO*
-
 **Flip**:
-
-*TODO*
 
 **Rotate**:
 
-*TODO*
+*Flex is in development, these commands will be added in 2.x*
 
 
 

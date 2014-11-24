@@ -54,17 +54,29 @@ from windowgram import *
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Unit Testing :: Windowgram
+## Unit Testing :: Windowgram Classes
 ##
 ## TODO: Add support for the other windowgram classes and functions.
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-class TestWindowgram(unittest.TestCase):
+class TestWindowgramClasses(unittest.TestCase):
 
+    ##----------------------------------------------------------------------------------------------------------
     ##
-    ## Tests
+    ## Run
     ##
+    ##----------------------------------------------------------------------------------------------------------
+
+    def runTest(self):
+        self.test_WindowgramGroupConversions_ListToPattern()
+        self.test_WindowgramGroupConversions_PatternToList()
+
+    ##----------------------------------------------------------------------------------------------------------
+    ##
+    ## WindowgramGroup class
+    ##
+    ##----------------------------------------------------------------------------------------------------------
 
     def test_WindowgramGroupConversions_ListToPattern(self):
 
@@ -158,19 +170,11 @@ class TestWindowgram(unittest.TestCase):
         group_x = WindowgramGroup_Convert.Pattern_To_List( group_i )
         self.assertTrue( group_o == group_x )
 
-    ##
-    ## Run
-    ##
-
-    def runTest(self):
-        self.test_WindowgramGroupConversions_ListToPattern()
-        self.test_WindowgramGroupConversions_PatternToList()
-
 
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Unit Testing :: Flex
+## Unit Testing :: Flex Modifiers
 ##
 ## TODO: Test all commands comprehensively.
 ##
@@ -188,7 +192,7 @@ FLEXUNIT_MAXWIDTH = 120
 FLEXUNIT_INDENT = 12
 FLEXUNIT_SPACE = 1
 
-class TestFlex(unittest.TestCase):
+class TestFlexModifiers(unittest.TestCase):
 
     ##----------------------------------------------------------------------------------------------------------
     ##
@@ -215,8 +219,6 @@ class TestFlex(unittest.TestCase):
             wlist.append( wg.Export_String() )
         pattern_produced = WindowgramGroup_Convert.List_To_Pattern( \
             wlist, FLEXUNIT_MAXWIDTH, FLEXUNIT_INDENT, FLEXUNIT_SPACE )
-        if not pattern.split("\n")[-1].strip(): pattern = "\n".join([ \
-            line for ix, line in enumerate(pattern.split("\n")) if ix != len(pattern.split("\n"))-1 ])
         pattern_produced = pattern_produced.rstrip(" \t\n").lstrip("\n")
         pattern = pattern.rstrip(" \t\n").lstrip("\n")
         self.assertTrue( pattern_produced == pattern,
@@ -481,9 +483,9 @@ def UnitTests():
     ## Unit tests (low level first)
     ##
 
-    units = [
-        TestWindowgram(),
-        TestFlex(),
+    groups = [
+        TestWindowgramClasses(),
+        TestFlexModifiers(),
     ]
 
     ##
@@ -493,8 +495,8 @@ def UnitTests():
     stream = io.StringIO()
     runner = unittest.TextTestRunner( stream=stream )
     error = ""
-    for unit in units:
-        result = runner.run( unit )
+    for group in groups:
+        result = runner.run( group )
         if not result.wasSuccessful():
             if not error: error = "\n"
             error = error + result.failures[0][1]

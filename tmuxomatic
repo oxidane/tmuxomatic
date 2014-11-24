@@ -65,7 +65,9 @@ DESCRIPTION = "Intelligent tmux session management"
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
 VERSION = "2.8" # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.8     TBD         Added unit tests for windowgram classes and flex modifiers
+##  2.8     2014-11-24  Added some unit tests, full testing for flex and main classes to be added in 2.x
+##                      Windowgram group conversion between pattern and list representations
+##                      Flex console supports user window resize
 ##
 ##  2.7     2014-11-21  Moved windowgram and flex to its own module, see windowgram.py for details
 ##                      Various source cleanup in windowgram and flex
@@ -1232,8 +1234,6 @@ def flex_shell(session, serial=0):
         label_w = 12
         labeler = lambda name: name + ( (" "*(label_w-len(name))) if len(name) < label_w else name ) + ": "
         if not flexmenu_session.Serial_Is_Valid(flexmenu_index[0]): flexmenu_index[0] = 0 # Serial is invalid, clear it
-        # Poll xterm dimensions before every print
-        poll_xterm()
         # Macros
         string_to_list = lambda string: [ x.strip() for x in string.strip().split() ]
         filter_input = lambda string: ( string_to_list( string ), " ".join( string_to_list( string ) ) )
@@ -1253,6 +1253,8 @@ def flex_shell(session, serial=0):
             warnings.append( FlexError( "Errors occurred, dropping " + str(pending) + \
                 " pending command" + ("s" if pending-1 else "") ) )
             queue = ""
+        # Poll xterm dimensions before anything is printed using flexout
+        poll_xterm()
         # Shell header
         if not queue:
             flexout("")

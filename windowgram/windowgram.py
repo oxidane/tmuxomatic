@@ -1086,9 +1086,16 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##
 ##          The clone command takes the first group of panes (forming a full rectangle), and along the specified edge,
 ##          it stretches (like scale) the surrounding windowgram to accommodate, and inserts it in.  Most useful for
-##          rapidly expanding common windowgram patters.
+##          rapidly expanding common windowgram patterns.
 ##
 ##          The [newpanes] argument follows the same order as the first <group> parameter.
+##
+##          Clone could be thought of as:
+##              1) insert <pane> ...        Axis 1 stretch/scale and insert
+##              2) scale ...                Axis 2 scale to fit
+##              Then copy the group into the new pane.  This is pretty easy to implement.
+##
+##          Requires 3 functions: public by edge, public by group, hidden internal that is core of both wrappers
 ##
 ##      clone <group> [axis] <edge> [newpanes]
 ##      clone <group> <direction> <group> [newpanes]
@@ -1100,12 +1107,28 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##      flip <group>                                flips a group, supports *
 ##      rotate <how>                                how == cw, ccw, 180, interpret 1..3 and -1..-3 as multiples of 90
 ##
+## Improvements:
+##
+##      Proportional scale, using the following aliases:
+##
+##          @   Size of user window proportional to counter axis
+##          *   Size of current windowgram (just an alias for 1x/100%)
+##
+##          scale 20x@          Scale y proportionally according to 20 x (200x100 -> 20x10)
+##          scale @:*           Scale x proportionally to current y (200x100, 100x25 -> 50x25)
+##          scale @             If @ is specified for both, it's 50% of the window (200x100 -> 100x50)
+##
 ## Possible modifiers:
 ##
 ##      breakout <pane> [shapes]                    break with axial concatenated shapes, "2x2; x 2x2 3x1; y 1 3x3 1"
 ##      shuffle <panegroup1> <panegroup2>           shuffle if all bounding boxes share full edge, or are of equal size
 ##      move <panes1> <panes2>                      swap if both panes are defined otherwise rename (probably redundant)
 ##      blockswap <panes1> <panes2>                 swaps one block of panes for another, e.g. `BLDbld` with `1` in demo
+##
+## Other features:
+##
+##      Allow for direct windowgram edit mode, this effectively makes flex a modal editor.  Needs ncurses, so it's a
+##      feature for 3.x.
 ##
 ## Expectations:
 ##
