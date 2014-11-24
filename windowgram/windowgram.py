@@ -648,8 +648,9 @@ class WindowgramGroup_Convert():
         spent = 0
         while spent < len(windowgram_width_arr):
             # Determine how many of the remaining windowgrams will fit on this windowgramgroup row
-            spending, spent = spent, spent + 1
             tmplen = lpad + windowgram_width_arr[spent]
+            spending = spent
+            spent += 1
             while spent < len(windowgram_width_arr):
                 tmplen += mpad + windowgram_width_arr[spent]
                 if tmplen > maxwidth: break
