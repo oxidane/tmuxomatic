@@ -1187,6 +1187,7 @@ def flex_shell(user_wh, session, serial=0):
     def flexout(l):
         if l is None: buf.append( None )
         elif "\n" in l: return [ flexout(l) for l in l.split("\n") ]
+        elif not l.strip(): buf.append( "" ) # Do not print leading spaces if line is blank, unit test compatibility
         else: buf.append( (" " * leftgap) + str(l) )
     def flexout_divider():
         flexout( "-" * ( user_wh[0] - (leftgap + rightgap) ) )
