@@ -1406,8 +1406,8 @@ def flex_shell(user_wh, session, serial=0):
                                 if unittesting_run:
                                     windowgramgroup_list = WindowgramGroup_Convert.Pattern_To_List( unittesting_wgp ) \
                                         + [ flexmenu_session.Get_Wg(serial).Export_String() ]
-                                    unittesting_wgp = WindowgramGroup_Convert.List_To_Pattern(
-                                        windowgramgroup_list, 120-leftgap, 8, 1 )
+                                    unittesting_wgp = WindowgramGroup_Convert.List_To_Pattern( windowgramgroup_list,
+                                        FLEXUNIT_MAXWIDTH-leftgap, FLEXUNIT_INDENT-leftgap, FLEXUNIT_SPACE )
                             break
                     if not invoked:
                         # No invocation, could show available parameter counts, but showing help may be more useful

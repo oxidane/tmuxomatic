@@ -667,8 +667,10 @@ class WindowgramGroup_Convert():
                     else lines[ix] + (" "*(windowgram_width_arr[spending+ix2]-len(lines[ix]))) \
                     for ix2, lines in enumerate( batch ) ]
                 windowgramgroup_pattern = windowgramgroup_pattern + (" "*lpad) + ((" "*mpad).join(row)) + "\n"
+        # Strip blank spaces from end of line
+        windowgramgroup_pattern = "\n".join( [ line.rstrip() for line in windowgramgroup_pattern.split("\n") ] )
+        # For ease of testing, add newline prefix and padding suffix of specified length
         if testmode is not False:
-            # For ease of testing, add newline prefix and padding suffix of specified length
             windowgramgroup_pattern = "\n" + windowgramgroup_pattern + (" "*testmode)
         return windowgramgroup_pattern
 
