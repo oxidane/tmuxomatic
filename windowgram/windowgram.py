@@ -1359,15 +1359,16 @@ class flex(object):
 def flex_processor(wg, commands): # -> error
     processed = found = False
     for command in commands.split(";"):
+        command = command.strip()
         command, arguments = re.split(r"[ \t]+", command)[:1][0], re.split(r"[ \t]+", command)[1:]
         for cmd_dict in flexmenu:
             for ix, triplet in enumerate(usage_triplets(cmd_dict)):
+                usage, examples, arglens = triplet
                 group = cmd_dict['group'][ix]
                 if group == "modifiers":
                     funcname = cmd_dict['about'][0]
                     if funcname == command:
                         found = True
-                        usage, examples, arglens = triplet
                         if len(arguments) >= arglens[0] and (len(arguments) <= arglens[1] or arglens[1] == -1):
                             # Prepare for new command
                             global flexsense
