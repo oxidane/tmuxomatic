@@ -255,9 +255,33 @@ In this demonstration is presented in summary form.  Here we modify the windowgr
 	zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
 	zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
 
-**NOTE: Flex is in development, more will be added**
+**Drag**:
 
-**TODO: drag, insert, clone, delete, mirror, flip, rotate**
+*TODO*
+
+**Insert**:
+
+*TODO*
+
+**Clone**:
+
+*TODO*
+
+**Delete**:
+
+*TODO*
+
+**Mirror**:
+
+*TODO*
+
+**Flip**:
+
+*TODO*
+
+**Rotate**:
+
+*TODO*
 
 
 
