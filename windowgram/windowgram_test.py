@@ -39,6 +39,12 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ## A change in source indentation will cause some tests to fail because multiline strings are widely used.
 ##
 ##----------------------------------------------------------------------------------------------------------------------
+##
+## TODO: The runTest() method should sense tests from its class, ordered by line.  Doing so will eliminate need to add
+## the test to that method, which is something that is easy to forget when adding tests at a later date.  Should sense
+## only the methods that start with "test_" so the custom assert method is not mistakenly included in the tests.
+##
+##----------------------------------------------------------------------------------------------------------------------
 
 import unittest, io
 
@@ -59,6 +65,57 @@ class TestWindowgram(unittest.TestCase):
     ##
     ## Tests
     ##
+
+    def test_WindowgramGroupConversions_ListToPattern(self):
+
+        # Inclusion of blank lines
+        group_i = ['1\n', '2\n2\n']
+        group_o = """
+            1 2
+              2
+        """
+        group_x = WindowgramGroup_Convert.List_To_Pattern( group_i, 32, 12, 1, testmode=8 )
+        self.assertTrue( group_o == group_x )
+
+        # Fitting pattern #1
+        group_i = [ '111\n'*3, '2\n'*2, '3333333333\n'*5, 'aaaaaaaaaaaaaaaaa\n'*10, 'bbbbbbbbbbbbbbbbb\n'*5 ]
+        group_o = """
+            111    2    3333333333
+            111    2    3333333333
+            111         3333333333
+                        3333333333
+                        3333333333
+
+            aaaaaaaaaaaaaaaaa    bbbbbbbbbbbbbbbbb
+            aaaaaaaaaaaaaaaaa    bbbbbbbbbbbbbbbbb
+            aaaaaaaaaaaaaaaaa    bbbbbbbbbbbbbbbbb
+            aaaaaaaaaaaaaaaaa    bbbbbbbbbbbbbbbbb
+            aaaaaaaaaaaaaaaaa    bbbbbbbbbbbbbbbbb
+            aaaaaaaaaaaaaaaaa                     
+            aaaaaaaaaaaaaaaaa                     
+            aaaaaaaaaaaaaaaaa                     
+            aaaaaaaaaaaaaaaaa                     
+            aaaaaaaaaaaaaaaaa                     
+        """
+        group_x = WindowgramGroup_Convert.List_To_Pattern( group_i, 50, 12, 4, testmode=8 )
+        self.assertTrue( group_o == group_x )
+
+        # Fitting pattern #2
+        group_i = [ '111\n'*3, '2\n'*2, '3333333333\n'*5, 'aaaaaaaaaaaaaaaaa\n'*10, 'bbbbbbbbbbbbbbbbb\n'*5 ]
+        group_o = """
+            111 2 3333333333 aaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbb
+            111 2 3333333333 aaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbb
+            111   3333333333 aaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbb
+                  3333333333 aaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbb
+                  3333333333 aaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbb
+                             aaaaaaaaaaaaaaaaa                  
+                             aaaaaaaaaaaaaaaaa                  
+                             aaaaaaaaaaaaaaaaa                  
+                             aaaaaaaaaaaaaaaaa                  
+                             aaaaaaaaaaaaaaaaa                  
+        """
+        group_x = WindowgramGroup_Convert.List_To_Pattern( group_i, 100, 12, 1, testmode=8 )
+        self.assertTrue( group_o == group_x )
 
     def test_WindowgramGroupConversions_PatternToList(self):
 
@@ -91,7 +148,7 @@ class TestWindowgram(unittest.TestCase):
         group_x = WindowgramGroup_Convert.Pattern_To_List( group_i )
         self.assertTrue( group_o == group_x )
 
-        # Test misaligned windowgram lines (it should be clipped, see result)
+        # Test misaligned windowgram lines (second line of second window should be clipped, see expected result)
         group_i = """
             111  222  333
             111   222 333
@@ -99,57 +156,6 @@ class TestWindowgram(unittest.TestCase):
         """
         group_o = ['111\n111\n111\n', '222\n', '333\n333\n']
         group_x = WindowgramGroup_Convert.Pattern_To_List( group_i )
-        self.assertTrue( group_o == group_x )
-
-    def test_WindowgramGroupConversions_ListToPattern(self):
-
-        # Inclusion of blank lines
-        group_i = ['1\n', '2\n2\n']
-        group_o = """
-            1 2
-              2
-        """
-        group_x = WindowgramGroup_Convert.List_To_Pattern( group_i, 20, 12, 1, testmode=8 )
-        self.assertTrue( group_o == group_x )
-
-        # Fitting pattern #1
-        group_i = [ '111\n'*3, '2\n'*2, '3333333333\n'*5, 'aaaaaaaaaaaaaaaaa\n'*10, 'bbbbbbbbbbbbbbbbb\n'*5 ]
-        group_o = """
-            111    2    3333333333
-            111    2    3333333333
-            111         3333333333
-                        3333333333
-                        3333333333
-
-            aaaaaaaaaaaaaaaaa    bbbbbbbbbbbbbbbbb
-            aaaaaaaaaaaaaaaaa    bbbbbbbbbbbbbbbbb
-            aaaaaaaaaaaaaaaaa    bbbbbbbbbbbbbbbbb
-            aaaaaaaaaaaaaaaaa    bbbbbbbbbbbbbbbbb
-            aaaaaaaaaaaaaaaaa    bbbbbbbbbbbbbbbbb
-            aaaaaaaaaaaaaaaaa                     
-            aaaaaaaaaaaaaaaaa                     
-            aaaaaaaaaaaaaaaaa                     
-            aaaaaaaaaaaaaaaaa                     
-            aaaaaaaaaaaaaaaaa                     
-        """
-        group_x = WindowgramGroup_Convert.List_To_Pattern( group_i, 35, 12, 4, testmode=8 )
-        self.assertTrue( group_o == group_x )
-
-        # Fitting pattern #2
-        group_i = [ '111\n'*3, '2\n'*2, '3333333333\n'*5, 'aaaaaaaaaaaaaaaaa\n'*10, 'bbbbbbbbbbbbbbbbb\n'*5 ]
-        group_o = """
-            111 2 3333333333 aaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbb
-            111 2 3333333333 aaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbb
-            111   3333333333 aaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbb
-                  3333333333 aaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbb
-                  3333333333 aaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbb
-                             aaaaaaaaaaaaaaaaa                  
-                             aaaaaaaaaaaaaaaaa                  
-                             aaaaaaaaaaaaaaaaa                  
-                             aaaaaaaaaaaaaaaaa                  
-                             aaaaaaaaaaaaaaaaa                  
-        """
-        group_x = WindowgramGroup_Convert.List_To_Pattern( group_i, 100, 12, 1, testmode=8 )
         self.assertTrue( group_o == group_x )
 
     ##
@@ -169,9 +175,18 @@ class TestWindowgram(unittest.TestCase):
 ## TODO: Test all commands comprehensively.
 ##
 ##----------------------------------------------------------------------------------------------------------------------
+##
+## Keep this note for adding new unit tests for flex
+##
+##   flex> new unittest ScaleCommand    # When created, the output switches to a convenient code dump
+##   flex> scale 25x10                  # Run commands and the unittest code will be built as you go
+##   flex> scale 20x20                  # When finished just paste the generated code into this class
+##
+##----------------------------------------------------------------------------------------------------------------------
 
 class TestFlex(unittest.TestCase):
 
+    ##----------------------------------------------------------------------------------------------------------
     ##
     ##  Performs flex commands and compares the resulting windowgrams with those specified
     ##
@@ -179,6 +194,7 @@ class TestFlex(unittest.TestCase):
     ##  Pattern         Windowgram pattern, where they are ordered left to right, top to bottom, with first line 1-N
     ##  Build           OPTIONAL: If specified it will add the new windowgram(s) into the existing one and print it
     ##
+    ##----------------------------------------------------------------------------------------------------------
 
     def assertFlexSequence(self, commands, pattern, build=None):
         windowgramgroup_list = WindowgramGroup_Convert.Pattern_To_List( pattern )
@@ -186,58 +202,61 @@ class TestFlex(unittest.TestCase):
         if cmdlen != ptnlen:
             raise Exception( "Mismatch: commands (" + str(cmdlen) + ") and windowgrams (" + str(ptnlen) + ")" )
         wg = Windowgram( "1" ) # Specified in case the default changes
-        for command, windowgram in zip( commands, windowgramgroup_list ):
+        for ix, (command, windowgram) in enumerate( zip( commands, windowgramgroup_list ) ):
             errors = flex_processor( wg, command )
-            self.assertTrue( not errors )
-            self.assertTrue( wg.Export_String() == windowgram )
+            self.assertTrue( not errors, errors )
+            self.assertTrue( wg.Export_String() == windowgram, 
+                "The resulting windowgram for sequence #" + str(ix+1) + " does not match: \n\n" + wg.Export_String() )
 
+    ##----------------------------------------------------------------------------------------------------------
     ##
     ## Tests
     ##
+    ##----------------------------------------------------------------------------------------------------------
 
-    def test_ReadmeDemonstration1(self):
+    ##
+    ## Flex Scale
+    ##
+
+    ##
+    ## Readme Demonstration
+    ##
+
+    def test_ReadmeDemonstration1(self): # Created in flex using "new unittest ReadmeDemonstration1"
         self.assertFlexSequence( [
             "scale 25x10",
             "add right 50%",
             "break 0 3x5 A",
             "join ABC.z DG.B EH.L FI.N JM.b KN.l LO.n",
         ], """
-            1111111111111111111111111   1111111111111111111111111000000000000
-            1111111111111111111111111   1111111111111111111111111000000000000
-            1111111111111111111111111   1111111111111111111111111000000000000
-            1111111111111111111111111   1111111111111111111111111000000000000
-            1111111111111111111111111   1111111111111111111111111000000000000
-            1111111111111111111111111   1111111111111111111111111000000000000
-            1111111111111111111111111   1111111111111111111111111000000000000
-            1111111111111111111111111   1111111111111111111111111000000000000
-            1111111111111111111111111   1111111111111111111111111000000000000
-            1111111111111111111111111   1111111111111111111111111000000000000
-
-            1111111111111111111111111AAAABBBBCCCC   1111111111111111111111111zzzzzzzzzzzz
-            1111111111111111111111111AAAABBBBCCCC   1111111111111111111111111zzzzzzzzzzzz
-            1111111111111111111111111DDDDEEEEFFFF   1111111111111111111111111BBBBLLLLNNNN
-            1111111111111111111111111DDDDEEEEFFFF   1111111111111111111111111BBBBLLLLNNNN
-            1111111111111111111111111GGGGHHHHIIII   1111111111111111111111111BBBBLLLLNNNN
-            1111111111111111111111111GGGGHHHHIIII   1111111111111111111111111BBBBLLLLNNNN
-            1111111111111111111111111JJJJKKKKLLLL   1111111111111111111111111bbbbllllnnnn
-            1111111111111111111111111JJJJKKKKLLLL   1111111111111111111111111bbbbllllnnnn
-            1111111111111111111111111MMMMNNNNOOOO   1111111111111111111111111bbbbllllnnnn
-            1111111111111111111111111MMMMNNNNOOOO   1111111111111111111111111bbbbllllnnnn
+            1111111111111111111111111 1111111111111111111111111000000000000 1111111111111111111111111AAAABBBBCCCC
+            1111111111111111111111111 1111111111111111111111111000000000000 1111111111111111111111111AAAABBBBCCCC
+            1111111111111111111111111 1111111111111111111111111000000000000 1111111111111111111111111DDDDEEEEFFFF
+            1111111111111111111111111 1111111111111111111111111000000000000 1111111111111111111111111DDDDEEEEFFFF
+            1111111111111111111111111 1111111111111111111111111000000000000 1111111111111111111111111GGGGHHHHIIII
+            1111111111111111111111111 1111111111111111111111111000000000000 1111111111111111111111111GGGGHHHHIIII
+            1111111111111111111111111 1111111111111111111111111000000000000 1111111111111111111111111JJJJKKKKLLLL
+            1111111111111111111111111 1111111111111111111111111000000000000 1111111111111111111111111JJJJKKKKLLLL
+            1111111111111111111111111 1111111111111111111111111000000000000 1111111111111111111111111MMMMNNNNOOOO
+            1111111111111111111111111 1111111111111111111111111000000000000 1111111111111111111111111MMMMNNNNOOOO
+    
+            1111111111111111111111111zzzzzzzzzzzz
+            1111111111111111111111111zzzzzzzzzzzz
+            1111111111111111111111111BBBBLLLLNNNN
+            1111111111111111111111111BBBBLLLLNNNN
+            1111111111111111111111111BBBBLLLLNNNN
+            1111111111111111111111111BBBBLLLLNNNN
+            1111111111111111111111111bbbbllllnnnn
+            1111111111111111111111111bbbbllllnnnn
+            1111111111111111111111111bbbbllllnnnn
+            1111111111111111111111111bbbbllllnnnn
         """ )
 
     ##----------------------------------------------------------------------------------------------------------
     ##
-    ## Keep this note for adding new unit tests for flex
-    ##
-    ##   flex> new unittest ScaleCommand    # When created, the output switches to a convenient code dump
-    ##   flex> scale 25x10                  # Run commands and the unittest code will be built as you go
-    ##   flex> scale 20x20                  # When finished just paste the generated code into this class
-    ##
-    ##----------------------------------------------------------------------------------------------------------
-
-    ##
     ## Run
     ##
+    ##----------------------------------------------------------------------------------------------------------
 
     def runTest(self):
         self.test_ReadmeDemonstration1()

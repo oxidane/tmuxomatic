@@ -648,12 +648,13 @@ class WindowgramGroup_Convert():
         spent = 0
         while spent < len(windowgram_width_arr):
             # Determine how many of the remaining windowgrams will fit on this windowgramgroup row
-            pos = lpad
             spending, spent = spent, spent + 1
-            while spent < len(windowgram_width_arr) and pos + windowgram_width_arr[spent] < maxwidth:
-                if pos: pos += mpad
-                pos += windowgram_width_arr[spent]
+            tmplen = lpad + windowgram_width_arr[spent]
+            while spent < len(windowgram_width_arr):
+                tmplen += mpad + windowgram_width_arr[spent]
+                if tmplen > maxwidth: break
                 spent += 1
+            # Skip line between windowgram runs
             if windowgramgroup_pattern: windowgramgroup_pattern += "\n"
             # Vertically pad the windowgrams for zip iteration
             batch = windowgram_line_arr[spending:spent]
