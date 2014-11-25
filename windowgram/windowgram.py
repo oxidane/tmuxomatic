@@ -1372,6 +1372,16 @@ class flex(object):
         return wrapper
 
 ##
+## Flex modifier pointers parameter ... Because modifiers are in a separate module, this pointers parameter is required
+##
+
+class FlexPointersParameter(object):
+    def __init__(self, wg_ptr, flexsense_ptr):
+        self.wg = wg_ptr
+        self.flexsense = flexsense_ptr
+        return None
+
+##
 ## Flex automated processor for one or more commands in the flex group "modifiers"
 ##
 ##      * Intended for unit testing, may also be used for macros
@@ -1400,7 +1410,7 @@ def flex_processor(wg, commands): # -> error
                             global flexsense
                             flexsense = copy.deepcopy( flexsense_reset )
                             # Execute
-                            args = [ wg ] + arguments
+                            args = [ FlexPointersParameter(wg, flexsense) ] + arguments
                             cmd_dict['funcs'][ix]( *args )
                             # Error handler
                             if flexsense['notices']:
@@ -1430,50 +1440,51 @@ def flex_processor(wg, commands): # -> error
                     ["taller", "scale 100%:200%"], ["shorter", "scale 100%:50%"],
                     ["higher", "scale 100%:200%"], ["lower", "scale 100%:50%"], ],
 )
-def cmd_scale_1(wg_PRIVATE, xy_how): # 1 parameter
+def cmd_scale_1(fpp_PRIVATE, xy_how): # 1 parameter
     # Split directives like "64:36" and "64x36" into "64 36", also works using percentages "200%:50%", or using
     # multipliers "2x:2x" as long as ":" is used instead of "x" as there would be a conflict with the multiplier
     # TODO: This could be more flexible to cover cases like "2xx2" and "2x2x" by using regex
     xy_spl = None
     if xy_how.count("x") == 1 and xy_how[-1:] != "x": xy_spl = xy_how.split("x")
     elif xy_how.count(":") == 1: xy_spl = xy_how.split(":")
-    if xy_spl and len(xy_spl) == 2: return cmd_scale_2( wg_PRIVATE, *xy_spl )
+    if xy_spl and len(xy_spl) == 2: return cmd_scale_2( fpp_PRIVATE, *xy_spl )
     # Others are simply cloned like "2x" into "2x 2x"
-    return cmd_scale_2( wg_PRIVATE, xy_how, xy_how )
+    return cmd_scale_2( fpp_PRIVATE, xy_how, xy_how )
 
 @flex(
     command     = "scale",
     group       = "modifiers",
     examples    = [ "scale 25 15", "scale 200% 50%", "scale 2x .5x" ],
 )
-def cmd_scale_2(wg_PRIVATE, x_how, y_how): # 2 parameters
+def cmd_scale_2(fpp_PRIVATE, x_how, y_how): # 2 parameters
     # Because text is inherently low resolution, fractional scaling may produce unsatisfactory results
-    if not wg_PRIVATE:
-        return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+    if not fpp_PRIVATE.wg:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     # Generics
-    wg_before = wg_PRIVATE
+    wg_before = fpp_PRIVATE.wg
     dim_before = wg_before.Analyze_WidthHeight()
     # Convert to common float multipliers for easy scaling
     args = [ dim_before[0], dim_before[1] ] # Default to no scale on error
     for ix, arg in enumerate([x_how, y_how]):
         args[ix] = size_ConvertToCharacters(arg, dim_before[ix])
         if args[ix] is None:
-            return flexsense['notices'].append( FlexError( "Invalid size parameter: " + arg ) )
+            return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Invalid size parameter: " + arg ) )
     w_chars, h_chars = args
     # Scale the windowgram
     wg_after = Windowgram( scalecore( wg_before.Export_String(), w_chars, h_chars ) )
     # Verify new windowgram (in case of scale error)
     dim_result = wg_after.Analyze_WidthHeight()
     if not dim_result[0] or not dim_result[1]:
-        return flexsense['notices'].append( FlexError( "Scale produced a blank windowgram, skipping" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Scale produced a blank windowgram, skipping" ) )
     if dim_result[0] != w_chars or dim_result[1] != h_chars:
-        return flexsense['notices'].append( FlexError( "Scale produced erroneous result, skipping" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Scale produced erroneous result, skipping" ) )
     # Alert user to any panes lost
     lost_panes = PaneList_DiffLost( wg_before, wg_after )
     if len(lost_panes):
-        flexsense['notices'].append( FlexWarning( "Lost " + str( len(lost_panes) ) + " panes: " + lost_panes ) )
+        fpp_PRIVATE.flexsense['notices'].append(
+            FlexWarning( "Lost " + str( len(lost_panes) ) + " panes: " + lost_panes ) )
     # Replace windowgram
-    wg_PRIVATE.Import_Wg( wg_after )
+    fpp_PRIVATE.wg.Import_Wg( wg_after )
 
 @flex(
     command     = "add",
@@ -1485,17 +1496,17 @@ def cmd_scale_2(wg_PRIVATE, x_how, y_how): # 2 parameters
                   "be used.",
     aliases     = [ ["append", "add "], ["app", "add "] ],
 )
-def cmd_add(wg_PRIVATE, edge, size, newpane=None):
+def cmd_add(fpp_PRIVATE, edge, size, newpane=None):
     # TODO: Edge could also represent a combined edge of panes.  The panes would have to be adjacent, but it would
     # allow for the insertion of panes into the middle of windows.  Would require a bit of recursive acrobatics to
     # scale the surrounding panes to support the insertion, but it could be done.  This is the insert command, and
     # the accommodation logic is the same as clone.
-    if not wg_PRIVATE:
-        return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
-    wg = wg_PRIVATE
-    newpane, error = wg.Panes_GetNewPaneId( newpane )
+    if not fpp_PRIVATE.wg:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+    wg_work = fpp_PRIVATE.wg
+    newpane, error = wg_work.Panes_GetNewPaneId( newpane )
     if error:
-        return flexsense['notices'].append( FlexError( "Unable to secure a new pane id: " + error ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to secure a new pane id: " + error ) )
     # Convert axis-flag to ix to avoid rewrite
     axis_as_vh, negate_flag = direction_to_axiswithflag(edge)
     if axis_as_vh == "v" and negate_flag == False: ix = 0   # Top
@@ -1506,12 +1517,12 @@ def cmd_add(wg_PRIVATE, edge, size, newpane=None):
     # Process
     if ix is not None:
         # ix = 0123 == TBRL | NSEW
-        windowgram_lines = wg.Export_Lines()
+        windowgram_lines = wg_work.Export_Lines()
         axis_length = len(windowgram_lines) if (ix == 0 or ix == 1) else len(windowgram_lines[0])
         axis_width = len(windowgram_lines) if (ix == 2 or ix == 3) else len(windowgram_lines[0])
         size_chars = size_ConvertToCharacters( size, axis_length )
         if size_chars is None:
-            return flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
+            return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
         if ix == 0: # Top
             for _ in range( size_chars ): windowgram_lines.insert( 0, newpane * axis_width )
         elif ix == 1: # Bottom
@@ -1521,17 +1532,17 @@ def cmd_add(wg_PRIVATE, edge, size, newpane=None):
         elif ix == 3: # Left
             windowgram_lines = [ (newpane * size_chars) + line for line in windowgram_lines ]
         # Detect when addition doesn't register and notify user as warning
-        wg_compare_before = wg.Export_String()
-        wg.Import_Lines( windowgram_lines )
-        wg_compare_after = wg.Export_String()
+        wg_compare_before = wg_work.Export_String()
+        wg_work.Import_Lines( windowgram_lines )
+        wg_compare_after = wg_work.Export_String()
         if wg_compare_before == wg_compare_after:
-            return flexsense['notices'].append( FlexWarning( "Addition was too small to register" ) )
+            return fpp_PRIVATE.flexsense['notices'].append( FlexWarning( "Addition was too small to register" ) )
         # Replace windowgram
-        wg_PRIVATE.Import_Wg( wg )
+        fpp_PRIVATE.wg.Import_Wg( wg_work )
         # Done
         return
     # Edge not found
-    return flexsense['notices'].append( FlexError(
+    return fpp_PRIVATE.flexsense['notices'].append( FlexError(
         "The edge you specified is invalid, please specify either: top, bottom, left, or right" ) )
 
 @flex(
@@ -1543,7 +1554,7 @@ def cmd_add(wg_PRIVATE, edge, size, newpane=None):
                   "parameter is an optional starting pane id, or pane rename sequence.",
     aliases     = [ ["grid", "break "], ["panes", "break "], ],
 )
-def cmd_break(wg_PRIVATE, pane, grid, newpanes=None):
+def cmd_break(fpp_PRIVATE, pane, grid, newpanes=None):
     # Analogues:
     #       Break may be used for split 50%
     # Notes:
@@ -1553,18 +1564,18 @@ def cmd_break(wg_PRIVATE, pane, grid, newpanes=None):
     #       Besides, such situations are easily managed by the user of flex; simply break them one by one in a sequence
     #       that yields personally satisfactory results.  Because this is already possible with flex, such a feature
     #       would only add complexity without achieving a practical function.
-    if not wg_PRIVATE:
-        return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+    if not fpp_PRIVATE.wg:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     # In order to produce a break of even proportions, we have to scale this windowgram up to next best fit.  It
     # could go one step further and find the most optimal size, being a resolution that evenly scales the original
     # windowgram constituent panes, while simultaneously providing a grid of even sizes.  The problem is that common
     # use cases would result in massive sizes to accommodate; though accurate, it would not be very practical.
-    wg = wg_PRIVATE
+    wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
     if pane not in PANE_CHARACTERS:
-        return flexsense['notices'].append( FlexError( "The pane you specified is invalid" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The pane you specified is invalid" ) )
     elif pane in unused:
-        return flexsense['notices'].append( FlexError( "The pane you specified does not exist" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The pane you specified does not exist" ) )
     # Grid analysis and validity check
     gw = gh = panes = 0
     reason = "Grid parameter is invalid: " + grid
@@ -1583,7 +1594,7 @@ def cmd_break(wg_PRIVATE, pane, grid, newpanes=None):
             else:
                 reason = None # No error
     if reason is not None:
-        return flexsense['notices'].append( FlexError( reason ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( reason ) )
     # Extract the dimensions of the pane to determine requisite scale (if any)
     wg_w, wg_h = wg.Analyze_WidthHeight()
     px, py, pw, ph = wg.Panes_PaneXYWH( pane )
@@ -1599,7 +1610,7 @@ def cmd_break(wg_PRIVATE, pane, grid, newpanes=None):
     _, _, npw, nph = wg_new.Panes_PaneXYWH( pane )
     # Validate
     if (npw != scale_to_pane_w or nph != scale_to_pane_h):
-        return flexsense['notices'].append( FlexError( "The result is not the expected pane size" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The result is not the expected pane size" ) )
     # Swap
     wg = wg_new
     # Dimensions must be reloaded in the event that the windowgram was scaled
@@ -1617,7 +1628,7 @@ def cmd_break(wg_PRIVATE, pane, grid, newpanes=None):
         panes_in_use = "".join([ch for ch in newpanes if ch not in unused and ch != pane])
         panes_in_use_message = panes_in_use_message_generate( panes_in_use )
         if panes_in_use_message:
-            return flexsense['notices'].append( FlexError( panes_in_use_message ) )
+            return fpp_PRIVATE.flexsense['notices'].append( FlexError( panes_in_use_message ) )
         used, unused = newpanes_RebuildPaneListsInPreferentialOrder( used, unused, newpanes )
     # Replace pane with grid
     windowgram_lines = wg.Export_Lines()
@@ -1626,7 +1637,7 @@ def cmd_break(wg_PRIVATE, pane, grid, newpanes=None):
             for ix, ch in enumerate(list(line)) ] ) for iy, line in enumerate(windowgram_lines)
     ] )
     # Replace windowgram
-    wg_PRIVATE.Import_Wg( wg )
+    fpp_PRIVATE.wg.Import_Wg( wg )
 
 @flex(
     command     = "join",
@@ -1637,7 +1648,7 @@ def cmd_break(wg_PRIVATE, pane, grid, newpanes=None):
                   "the pane id.",
     aliases     = [ ["group", "join "], ["merge", "join "], ["glue", "join "], ],
 )
-def cmd_join(wg_PRIVATE, *groups_REQUIRED):
+def cmd_join(fpp_PRIVATE, *groups_REQUIRED):
     # Analogues:
     #       Join may be used for rename: join <old>.<new>
     #       Join may be used for swap: join <one>.<two> <two>.<one>
@@ -1645,9 +1656,9 @@ def cmd_join(wg_PRIVATE, *groups_REQUIRED):
     #       Join could be seen as a type of rename, and was used for rename and swap prior to those implementations
     groups = groups_REQUIRED # Readability
     argument = lambda ix: str(ix+1) + " (\"" + groups_REQUIRED[ix] + "\")" # Show the group that the user specified
-    if not wg_PRIVATE:
-        return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
-    wg = wg_PRIVATE
+    if not fpp_PRIVATE.wg:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+    wg = fpp_PRIVATE.wg
     # Repackage groups so all have the rename element
     work, groups = groups, []
     for group in work: groups.append( group if "." in group else (group + "." + group[0]) )
@@ -1673,7 +1684,7 @@ def cmd_join(wg_PRIVATE, *groups_REQUIRED):
             if notfound:
                 raise Exception("Windowgram does not have pane" + ("(s) " if len(notfound)-1 else " ") + notfound)
         except Exception as error:
-            return flexsense['notices'].append( FlexError(
+            return fpp_PRIVATE.flexsense['notices'].append( FlexError(
                 "Error with argument " + argument(ix) + ": " + str(error) ) )
     # Test the duplication of target panes by matching them against availability adjusted for panes clipped
     used, unused = wg.Panes_GetUsedUnused()
@@ -1686,7 +1697,7 @@ def cmd_join(wg_PRIVATE, *groups_REQUIRED):
                 raise Exception("Attempting to rename to pane " + group_r + " when it's in use")
             used += group_r
         except Exception as error:
-            return flexsense['notices'].append( FlexError(
+            return fpp_PRIVATE.flexsense['notices'].append( FlexError(
                 "Error with argument " + argument(ix) + ": " + str(error) ) )
     # Perform the joins, detecting pane gaps in the group, resulting windowgram is paired for later merging
     joins = []
@@ -1695,10 +1706,10 @@ def cmd_join(wg_PRIVATE, *groups_REQUIRED):
         group_l, group_r = group.split(".")
         result, suggestions = groupcore(wg, group_l)
         if result is GroupStatus.Invalid_Panes: # Occurs if groupcore() panes parameter is invalid
-            return flexsense['notices'].append( FlexError(
+            return fpp_PRIVATE.flexsense['notices'].append( FlexError(
                 "Group #" + argument(ix) + " contains invalid panes" ) )
         if result is GroupStatus.Insufficient_Panes:
-            return flexsense['notices'].append( FlexError(
+            return fpp_PRIVATE.flexsense['notices'].append( FlexError(
                 "Group #" + argument(ix) + " isn't whole, but it would be if you add: " + suggestions ) )
         # Join ... By now the group is fully vetted: entirely valid, rectangularly whole
         pair_w = Windowgram( wg.Export_String() )
@@ -1708,7 +1719,7 @@ def cmd_join(wg_PRIVATE, *groups_REQUIRED):
     # A separate merge step is required to prevent name conflicts where the user makes use of the rename option.
     wg.Import_Mosaic( ( wg, joins ) )
     # Replace windowgram
-    wg_PRIVATE.Import_Wg( wg )
+    fpp_PRIVATE.wg.Import_Wg( wg )
 
 @flex(
     command     = "split",
@@ -1718,7 +1729,7 @@ def cmd_join(wg_PRIVATE, *groups_REQUIRED):
                   "negation of size inverses the split.  Size parameter is optional, the default is 50%.  Optional " + \
                   "newpanes parameter will rename the panes in order of newest to oldest (2 panes maximum).",
 )
-def cmd_split(wg_PRIVATE, pane, how, size=None, newpanes=None):
+def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
     # Analogues:
     #       Break may be used for split 50%
     # Expectations (for testing):
@@ -1727,70 +1738,72 @@ def cmd_split(wg_PRIVATE, pane, how, size=None, newpanes=None):
     # TODO:
     #       Possible reordering detection, "split v h" (where "v" is the pane)
     #           Senses reordering, e.g. "split horz v", and if unable to determine defaults to pane first
-    if not wg_PRIVATE:
-        return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
-    wg = wg_PRIVATE
+    if not fpp_PRIVATE.wg:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+    wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
     axis = how # This argument is handled as an axis
     # Set the default size if unspecified
     if size is None: size = "50%"
     # Verify pane
     if pane not in PANE_CHARACTERS:
-        return flexsense['notices'].append( FlexError( "The pane you specified is invalid" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The pane you specified is invalid" ) )
     elif pane in unused:
-        return flexsense['notices'].append( FlexError( "The pane you specified does not exist" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The pane you specified does not exist" ) )
     # Verify axis and reduce to "v" or "h"
     inverse = "-" if size[0] == "-" else ""
     if is_axis_vert(axis): axis = "v"
     elif is_axis_horz(axis): axis = "h"
     else:
         if size[0] == "-":
-            return flexsense['notices'].append( FlexError( "Negative size only valid if `how` is vert or horz" ) )
+            return fpp_PRIVATE.flexsense['notices'].append(
+                FlexError( "Negative size only valid if `how` is vert or horz" ) )
         axis, negate_flag = direction_to_axiswithflag(axis)
         if axis is None or negate_flag is None:
-            return flexsense['notices'].append( FlexError( "The axis you specified is invalid" ) )
+            return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The axis you specified is invalid" ) )
         inverse = "-" if negate_flag else ""
     # Get axis_length
     px, py, pw, ph = wg.Panes_PaneXYWH(pane)
     axis_length = pw if axis == "h" else ph
     # Verify pane is large enough to split
     if pw < 2 and ph < 2: # Single character pane
-        return flexsense['notices'].append( FlexError( "Pane is too small to be split" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Pane is too small to be split" ) )
     if axis_length < 2: # Single character length on the specified axis
-        return flexsense['notices'].append( FlexError( "Pane is too small to be split in that way" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Pane is too small to be split in that way" ) )
     # Verify size
     original_size = size # Retain original for error messages
     while size and size[0] == "-": size = size[1:] # Strip negation
     size_type = size_GetType( size )
     if size_type is None:
-        return flexsense['notices'].append( FlexError( "Invalid size parameter: " + original_size ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Invalid size parameter: " + original_size ) )
     if size_GreaterOrEqualToBaseCharacters( size, axis_length ):
         rep = inverse
         if size_type == "characters": rep += str(axis_length)
         elif size_type == "percentage": rep += "100%"
         elif size_type == "multiplier": rep += "1x"
-        return flexsense['notices'].append( FlexError( "Specified size (" + original_size + \
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Specified size (" + original_size + \
             ") is greater or equal to the maximum range (" + rep + ") of this function" ) )
     size_chars = size_ConvertToCharacters( size, axis_length )
     if size_chars is None:
-        return flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
     if size_chars >= axis_length: # Shouldn't happen by now, but if it does
-        return flexsense['notices'].append( FlexError( "Resulting size (" + inverse + str(size_chars) + \
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Resulting size (" + inverse + str(size_chars) + \
             " characters) is greater or equal to the axis length (" + str(axis_length) + ")" ) )
     if inverse: size_chars = axis_length - size_chars # Flip
     # Verify newpanes ... Set to first available if not specified
-    if len(unused) < 1: return flexsense['notices'].append( FlexError( "Insufficient panes available for a split" ) )
+    if len(unused) < 1: return fpp_PRIVATE.flexsense['notices'].append(
+        FlexError( "Insufficient panes available for a split" ) )
     if newpanes is None: newpanes = ""
     if len(newpanes) == 0: newpanes += unused[0] # New pane is first available
     if len(newpanes) == 1: newpanes += pane # Base pane
-    if len(newpanes) > 2: return flexsense['notices'].append( FlexError(
+    if len(newpanes) > 2: return fpp_PRIVATE.flexsense['notices'].append( FlexError(
         "Parameter newpanes exceeds the function maximum of two panes" ) )
     for ch in set(newpanes):
-        if not ch in PANE_CHARACTERS: return flexsense['notices'].append( FlexError(
+        if not ch in PANE_CHARACTERS: return fpp_PRIVATE.flexsense['notices'].append( FlexError(
             "Invalid pane in newpanes parameter: " + ch ) )
     panes_in_use = "".join([ch for ch in newpanes if ch not in unused and ch != pane])
     panes_in_use_message = panes_in_use_message_generate( panes_in_use )
-    if panes_in_use_message: return flexsense['notices'].append( FlexError( panes_in_use_message ) )
+    if panes_in_use_message: return fpp_PRIVATE.flexsense['notices'].append( FlexError( panes_in_use_message ) )
     used, unused = newpanes_RebuildPaneListsInPreferentialOrder( used, unused, newpanes )
     # Reorder the newpanes to match fill logic expectations
     newpanes = newpanes[:2] if not inverse else newpanes[1::-1]
@@ -1805,7 +1818,7 @@ def cmd_split(wg_PRIVATE, pane, how, size=None, newpanes=None):
         dst_lines.append( line )
     wg.Import_Lines( dst_lines )
     # Replace windowgram
-    wg_PRIVATE.Import_Wg( wg )
+    fpp_PRIVATE.wg.Import_Wg( wg )
 
 @flex(
     command     = "rename",
@@ -1814,7 +1827,7 @@ def cmd_split(wg_PRIVATE, pane, how, size=None, newpanes=None):
     description = "Rename from one pane or group, to another pane or group, paired as <from> <to>.  Multiple " + \
                   "pairs may be specified.",
 )
-def cmd_rename(wg_PRIVATE, panes_from, *panes_to):
+def cmd_rename(fpp_PRIVATE, panes_from, *panes_to):
     # Analogues:
     #       Join may be used for rename: join <old>.<new>
     #       Rename may be used for swap: rename <old><new> <new><old>
@@ -1823,14 +1836,15 @@ def cmd_rename(wg_PRIVATE, panes_from, *panes_to):
     #       new rename.t2 ; break 1 3x2 ABCabc ; rename Aa Bb Bb Cc Cc Aa
     #       new rename.t3 ; break 1 2x2 1 ; rename 12 21 34 43
     #       new rename.t4 ; break 1 2x2 1 ; rename 1 2 2 1 3 4 4 3
-    if not wg_PRIVATE:
-        return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+    if not fpp_PRIVATE.wg:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     # This command could have wrapped join, but a native implementation has been made to reduce overhead somewhat
-    wg = wg_PRIVATE
+    wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
     pairs = [ panes_from ] + [ arg for arg in panes_to ]
     if len(pairs)&1:
-        return flexsense['notices'].append( FlexError( "Insufficient data, every <from> must be followed by <to>" ) )
+        return fpp_PRIVATE.flexsense['notices'].append(
+            FlexError( "Insufficient data, every <from> must be followed by <to>" ) )
     pairs = [ pairs[i*2:i*2+2] for i in range(len(pairs)>>1) ]
     # Ends parsed separately to allow for any pair ordering, this parallel effect is also supported by the join command
     def proc_list(which): # error or None
@@ -1867,10 +1881,10 @@ def cmd_rename(wg_PRIVATE, panes_from, *panes_to):
     # Validate pair lists in order of: from, to
     work_f = work_t = save_f = ""
     error = proc_list(0) # From
-    if error: return flexsense['notices'].append( FlexError( error ) )
+    if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( error ) )
     save_f, work_f, work_t = work_f, "", "" # Retention required for second pass validation
     error = proc_list(1) # To
-    if error: return flexsense['notices'].append( FlexError( error ) )
+    if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( error ) )
     # Perform the renames independently, result is paired with a mask and stored in a list for use in a mosaic
     renames = []
     for f, t in pairs:
@@ -1883,7 +1897,7 @@ def cmd_rename(wg_PRIVATE, panes_from, *panes_to):
     # A separate merge step is required
     wg.Import_Mosaic( ( wg, renames ) )
     # Replace windowgram
-    wg_PRIVATE.Import_Wg( wg )
+    fpp_PRIVATE.wg.Import_Wg( wg )
 
 @flex(
     command     = "swap",
@@ -1892,21 +1906,22 @@ def cmd_rename(wg_PRIVATE, panes_from, *panes_to):
     description = "Swaps one pane or group, with another pane or group, paired as <from> <to>.  Multiple " + \
                   "pairs may be specified.",
 )
-def cmd_swap(wg_PRIVATE, panes_from, *panes_to):
+def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
     # Analogues:
     #       Join may be used for swap: join <one>.<two> <two>.<one>
     #       Rename may be used for swap: rename <old><new> <new><old>
     # Notes:
     #       This was going to be simple single pane swap, but decided to go for the same flexibility as rename
     #       Because of this, much of the code between rename and swap is the same or similar
-    if not wg_PRIVATE:
-        return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+    if not fpp_PRIVATE.wg:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     # This command could have wrapped join, but a native implementation has been made to reduce overhead somewhat
-    wg = wg_PRIVATE
+    wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
     pairs = [ panes_from ] + [ arg for arg in panes_to ]
     if len(pairs)&1:
-        return flexsense['notices'].append( FlexError( "Insufficient data, every <from> must be followed by <to>" ) )
+        return fpp_PRIVATE.flexsense['notices'].append(
+            FlexError( "Insufficient data, every <from> must be followed by <to>" ) )
     pairs = [ pairs[i*2:i*2+2] for i in range(len(pairs)>>1) ]
     # Check for errors
     swaplist = ""
@@ -1937,7 +1952,7 @@ def cmd_swap(wg_PRIVATE, panes_from, *panes_to):
             swaplist += f + t
             pair = str( int(pair) + 1 )
     except Exception as error:
-        return flexsense['notices'].append( FlexError( str(error) ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( str(error) ) )
     # Merge all arguments into a single unified from and to that contains both, so only one direction (f->t) is needed
     master_f, master_t = "".join([f for f, _ in pairs]), "".join([t for _, t in pairs])
     master_f, master_t = master_f + master_t, master_t + master_f
@@ -1947,35 +1962,35 @@ def cmd_swap(wg_PRIVATE, panes_from, *panes_to):
         [ ch if ch not in master_f else master_t[master_f.find(ch)] for ch in list(line) ]
         ) for line in windowgram_lines ] )
     # Replace windowgram
-    wg_PRIVATE.Import_Wg( wg )
+    fpp_PRIVATE.wg.Import_Wg( wg )
 
 @flex(
     command     = "mirror",
     group       = "modifiers",
     description = "Reverse horizontally (left/right)",
 )
-def cmd_mirror(wg_PRIVATE):
+def cmd_mirror(fpp_PRIVATE):
     # TODO: Optional pane group mirror
-    if not wg_PRIVATE:
-        return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
-    wg = wg_PRIVATE
+    if not fpp_PRIVATE.wg:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+    wg = fpp_PRIVATE.wg
     windowgram_lines = wg.Export_Lines()
     wg.Import_Lines( [ "".join( [ ch for ch in reversed(list(line)) ] ) for line in windowgram_lines ] )
-    wg_PRIVATE.Import_Wg( wg )
+    fpp_PRIVATE.wg.Import_Wg( wg )
 
 @flex(
     command     = "flip",
     group       = "modifiers",
     description = "Reverse vertically (top/bottom)",
 )
-def cmd_flip(wg_PRIVATE):
+def cmd_flip(fpp_PRIVATE):
     # TODO: Optional pane group flip
-    if not wg_PRIVATE:
-        return flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
-    wg = wg_PRIVATE
+    if not fpp_PRIVATE.wg:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+    wg = fpp_PRIVATE.wg
     windowgram_lines = wg.Export_Lines()
     wg.Import_Lines( reversed(windowgram_lines) )
-    wg_PRIVATE.Import_Wg( wg )
+    fpp_PRIVATE.wg.Import_Wg( wg )
 
 
 

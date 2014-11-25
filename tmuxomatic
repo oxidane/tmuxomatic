@@ -1409,7 +1409,7 @@ def flex_shell(session, serial=0):
                             wg = None
                             if group == "modifiers":
                                 if flexmenu_session.Serial_Is_Valid(serial): wg = flexmenu_session.Get_Wg(serial)
-                                arguments.append( wg )
+                                arguments.append( FlexPointersParameter(wg, flexsense) )
                             if argcount: arguments += thisinput_lst[1:]
                             cmd_dict['funcs'][ix]( *arguments ) # Run this command
                             if wg is not None:
