@@ -28,27 +28,134 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Unit Testing
-##
-##      Flex unit testing
-##
-##      Windowgram unit testing
-##
-## Hashes should not be used in place of windowgrams, they're needed for comparison in case of failure in testing.
-##
-## A change in source indentation will cause some tests to fail because multiline strings are widely used.
+## Windowgram Unit Testing
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## TODO: The runTest() method should sense tests from its class, ordered by line.  Doing so will eliminate need to add
-## the test to that method, which is something that is easy to forget when adding tests at a later date.  Should sense
-## only the methods that start with "test_" so the custom assert method is not mistakenly included in the tests.
+## These tests are ordered; both the test classes and their test methods are run in the order they appear.  This is
+## processed automatically using the wrapper class (see code).
+##
+##      Classes with names starting with "Test", processed in the order they appear
+##
+##      From these recognized classes, methods with names starting with "test_", processed in the order they appear
+##
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Tests are ordered lowest level to highest level:
+##
+##      Windowgram classes
+##      Flex modifiers
+##      Readme demonstrations
+##
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Notes:
+##
+##      Hashes should not be used in place of windowgrams, they're needed for comparison in case of failure in testing.
+##
+##      A change of indentation of the windowgram groups in this source will cause tests to fail because multiline
+##      strings are widely used.
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-import unittest, io
+import unittest, io, inspect, sys
 
 from windowgram import *
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Keeps the flex modifier unit test producer and validator in sync
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+FLEXUNIT_MAXWIDTH = 120
+FLEXUNIT_INDENT = 12
+FLEXUNIT_SPACE = 1
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Unit Testing :: Main
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+def UnitTests():
+
+    ##
+    ## Run unit test classes in the order they appear
+    ##
+
+    classes = inspect.getmembers(sys.modules[__name__])
+    classes = [ classobj for classname, classobj in classes if classname.startswith("Test") ]
+    # Pair with line numbers
+    classes = [ (classobj, inspect.getsourcelines(classobj)[1]) for classobj in classes ]
+    # Sort by line numbers
+    classes = sorted(classes, key=lambda tup: tup[1])
+    # Run
+    stream = io.StringIO()
+    runner = unittest.TextTestRunner( stream=stream )
+    error = ""
+    for tup in classes:
+        result = runner.run( tup[0]() )
+        if not result.wasSuccessful():
+            if not error: error = "\n"
+            if result.failures: error = error + result.failures[0][1]
+            else: error = error + "Unspecified error"
+    return error if error else None
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Wrapper class, includes a runTest() that automatically senses tests and executes them
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+class SenseTestCase(unittest.TestCase):
+
+    def runTest(self):
+        # Sense test methods
+        methods = inspect.getmembers(self.__class__(), predicate=inspect.ismethod)
+        methods = [ method for method in methods if method[0].startswith("test_") ]
+        # Pair with line numbers
+        methods = [ (method[1], inspect.getsourcelines(method[1])[1]) for method in methods ]
+        # Sort by line numbers
+        methods = sorted(methods, key=lambda tup: tup[1])
+        # Execute tests in the order they appear
+        for method in methods: method[0]()
+
+    ##----------------------------------------------------------------------------------------------------------
+    ##
+    ##  Performs flex commands and compares the resulting windowgrams with those specified
+    ##
+    ##  Commands        List of strings, each string may have multiple commands but corresponds to one windowgram
+    ##  Pattern         Windowgram pattern, where they are ordered left to right, top to bottom, with first line 1-N
+    ##  Build           OPTIONAL: If specified it will add the new windowgram(s) into the existing one and print it
+    ##
+    ##----------------------------------------------------------------------------------------------------------
+
+    def assertFlexSequence(self, commands, pattern, build=None):
+        windowgramgroup_list = WindowgramGroup_Convert.Pattern_To_List( pattern )
+        cmdlen, ptnlen = len(commands), len(windowgramgroup_list)
+        if cmdlen != ptnlen:
+            raise Exception( "Mismatch: commands (" + str(cmdlen) + ") and windowgrams (" + str(ptnlen) + ")" )
+        wg = Windowgram( "1" ) # Specified in case the default changes
+        wlist = []
+        for ix, (command, windowgram) in enumerate( zip( commands, windowgramgroup_list ) ):
+            errors = flex_processor( wg, command )
+            self.assertTrue( not errors, errors )
+            self.assertTrue( wg.Export_String() == windowgram, 
+                "The resulting windowgram for sequence #" + str(ix+1) + " does not match: \n\n" + wg.Export_String() )
+            wlist.append( wg.Export_String() )
+        pattern_produced = WindowgramGroup_Convert.List_To_Pattern( \
+            wlist, FLEXUNIT_MAXWIDTH, FLEXUNIT_INDENT, FLEXUNIT_SPACE )
+        pattern_produced = pattern_produced.rstrip(" \t\n").lstrip("\n")
+        pattern = pattern.rstrip(" \t\n").lstrip("\n")
+        self.assertTrue( pattern_produced == pattern,
+            "The resulting pattern does not match specification: \n\n" + pattern_produced + "\n!=\n" + pattern )
 
 
 
@@ -60,17 +167,7 @@ from windowgram import *
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-class TestWindowgramClasses(unittest.TestCase):
-
-    ##----------------------------------------------------------------------------------------------------------
-    ##
-    ## Run
-    ##
-    ##----------------------------------------------------------------------------------------------------------
-
-    def runTest(self):
-        self.test_WindowgramGroupConversions_ListToPattern()
-        self.test_WindowgramGroupConversions_PatternToList()
+class TestWindowgramClasses(SenseTestCase):
 
     ##----------------------------------------------------------------------------------------------------------
     ##
@@ -176,73 +273,13 @@ class TestWindowgramClasses(unittest.TestCase):
 ##
 ## Unit Testing :: Flex Modifiers
 ##
-## TODO: Test all commands comprehensively.
-##
-##----------------------------------------------------------------------------------------------------------------------
-##
-## Keep this note for adding new unit tests for flex
-##
-##   flex> new unittest ScaleCommand    # When created, the output switches to a convenient code dump
-##   flex> scale 25x10                  # Run commands and the unittest code will be built as you go
-##   flex> scale 20x20                  # When finished just paste the generated code into this class
-##
 ##----------------------------------------------------------------------------------------------------------------------
 
-FLEXUNIT_MAXWIDTH = 120
-FLEXUNIT_INDENT = 12
-FLEXUNIT_SPACE = 1
-
-class TestFlexModifiers(unittest.TestCase):
+class TestFlexModifiers(SenseTestCase):
 
     ##----------------------------------------------------------------------------------------------------------
     ##
-    ##  Performs flex commands and compares the resulting windowgrams with those specified
-    ##
-    ##  Commands        List of strings, each string may have multiple commands but corresponds to one windowgram
-    ##  Pattern         Windowgram pattern, where they are ordered left to right, top to bottom, with first line 1-N
-    ##  Build           OPTIONAL: If specified it will add the new windowgram(s) into the existing one and print it
-    ##
-    ##----------------------------------------------------------------------------------------------------------
-
-    def assertFlexSequence(self, commands, pattern, build=None):
-        windowgramgroup_list = WindowgramGroup_Convert.Pattern_To_List( pattern )
-        cmdlen, ptnlen = len(commands), len(windowgramgroup_list)
-        if cmdlen != ptnlen:
-            raise Exception( "Mismatch: commands (" + str(cmdlen) + ") and windowgrams (" + str(ptnlen) + ")" )
-        wg = Windowgram( "1" ) # Specified in case the default changes
-        wlist = []
-        for ix, (command, windowgram) in enumerate( zip( commands, windowgramgroup_list ) ):
-            errors = flex_processor( wg, command )
-            self.assertTrue( not errors, errors )
-            self.assertTrue( wg.Export_String() == windowgram, 
-                "The resulting windowgram for sequence #" + str(ix+1) + " does not match: \n\n" + wg.Export_String() )
-            wlist.append( wg.Export_String() )
-        pattern_produced = WindowgramGroup_Convert.List_To_Pattern( \
-            wlist, FLEXUNIT_MAXWIDTH, FLEXUNIT_INDENT, FLEXUNIT_SPACE )
-        pattern_produced = pattern_produced.rstrip(" \t\n").lstrip("\n")
-        pattern = pattern.rstrip(" \t\n").lstrip("\n")
-        self.assertTrue( pattern_produced == pattern,
-            "The resulting pattern does not match specification: \n\n" + pattern_produced + "\n!=\n" + pattern )
-
-    ##----------------------------------------------------------------------------------------------------------
-    ##
-    ## Run
-    ##
-    ##----------------------------------------------------------------------------------------------------------
-
-    def runTest(self):
-        self.test_Scale_OneParameter_DupCharacters()
-        self.test_Scale_OneParameter_DupPercentages()
-        self.test_Scale_OneParameter_DupMultipliers()
-        self.test_Scale_OneParameter_MixedJoin1()
-        self.test_Scale_OneParameter_MixedJoin2()
-        self.test_Scale_TwoParameter_Mixed()
-        self.test_ReadmeDemonstration1()
-        self.test_ReadmeDemonstration2()
-
-    ##----------------------------------------------------------------------------------------------------------
-    ##
-    ## Flex Scale
+    ## Flex Modifier: Scale
     ##
     ##----------------------------------------------------------------------------------------------------------
 
@@ -405,9 +442,23 @@ class TestFlexModifiers(unittest.TestCase):
 
     ##----------------------------------------------------------------------------------------------------------
     ##
-    ## Readme Demonstration
+    ## Keep this note for adding new unit tests for flex
+    ##
+    ##   flex> new unittest ScaleCommand    # When created, the output switches to a convenient code dump
+    ##   flex> scale 25x10                  # Run commands and the unittest code will be built as you go
+    ##   flex> scale 20x20                  # When finished just paste the generated code into this class
     ##
     ##----------------------------------------------------------------------------------------------------------
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Unit Testing :: Readme Demonstrations
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+class TestReadmeDemonstrations(SenseTestCase):
 
     def test_ReadmeDemonstration1(self): # Created in flex using "new unittest ReadmeDemonstration1"
         self.assertFlexSequence( [
@@ -468,39 +519,6 @@ class TestFlexModifiers(unittest.TestCase):
             sssssssssssssssssssssssssbbbblllldddd zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
             sssssssssssssssssssssssssbbbblllldddd zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
         """ )
-
-
-
-##----------------------------------------------------------------------------------------------------------------------
-##
-## Unit Testing :: Main
-##
-##----------------------------------------------------------------------------------------------------------------------
-
-def UnitTests():
-
-    ##
-    ## Unit tests (low level first)
-    ##
-
-    groups = [
-        TestWindowgramClasses(),
-        TestFlexModifiers(),
-    ]
-
-    ##
-    ## Iterate
-    ##
-
-    stream = io.StringIO()
-    runner = unittest.TextTestRunner( stream=stream )
-    error = ""
-    for group in groups:
-        result = runner.run( group )
-        if not result.wasSuccessful():
-            if not error: error = "\n"
-            error = error + result.failures[0][1]
-    return error if error else None
 
 
 
