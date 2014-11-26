@@ -15,10 +15,12 @@ import re, os, sys
 
 lines = open("tmuxomatic", "r").read().split("\n")
 extract = lambda what: [re.search(r'"([^"]*)"', line).group() for line in lines if line.startswith(what)][0][1:-1]
+def fullfile(filename): f = open(filename, "r") ; text = f.read() ; f.close() ; return f
 
 version = extract("VERSION")
 homepage = extract("HOMEPAGE")
 description = extract("DESCRIPTION")
+long_description = fullfile("README.rst")
 
 KEYWORDS = "tmux, session manager, screen, shell, command line, iterm, xterm, split"
 keywords = [ key.strip() for key in KEYWORDS.split(",") ] # "1, 2, 3" -> ["1", "2", "3"]
@@ -72,6 +74,7 @@ setup(
 	version=version,
 
 	description=description,
+	long_description=long_description,
 	license="BSD 3-Clause",
 	url=homepage,
 	download_url="https://pypi.python.org/pypi/tmuxomatic",

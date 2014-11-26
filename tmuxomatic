@@ -63,7 +63,9 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DESCRIPTION = "Intelligent tmux session management"
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
-VERSION = "2.9" # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.10" # x.y: x = Major feature, y = Minor feature or bug fix
+##
+##  2.10    TBD         TBD
 ##
 ##  2.9     2014-11-26  Added PyPI compatible readme file
 ##                      Flex scale single parameter mixed type support
@@ -1188,7 +1190,6 @@ def cmd_exit(fpp_PRIVATE):
 ##
 ## Flex Shell
 ##
-## TODO: Reload the xterm dimensions before printing the buffer to support resize during use
 ## TODO: Support "again" that repeats the last command
 ##
 
