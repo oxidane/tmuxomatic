@@ -1160,9 +1160,9 @@ class FlexError(FlexNotice):
 ## Lists of commands ... Commands are ordered by appearance in source
 ##
 
-flexmenu = []                       # List of all commands and aliases (recognition)
-flexmenu_aliases = []               # List of all aliases (recognized not displayed)
-flexmenu_list = []                  # List of primary commands (displayed at prompt)
+flexmenu_top = []                   # List of all commands and aliases (top: user commands)
+flexmenu_bot = []                   # List of all commands and aliases (bottom: modifiers + user commands)
+flexmenu_aliases = []               # List of all aliases (recognized but not displayed)
 flexmenu_grouped = {}               # List of grouped commands (for the short menus)
 
 ##
@@ -1171,7 +1171,12 @@ flexmenu_grouped = {}               # List of grouped commands (for the short me
 
 flexmenu_session = None             # Session object in global scope for modification by commands
 flexmenu_index = [ 0 ]              # Selected window, list is for reference purposes only
-flexsense = {
+
+##
+## Flex sense (TODO: Make this a class)
+##
+
+flexsense_reset = {
     'finished': False,              # User exit
     'restore': False,               # User exit: Restore original
     'execute': False,               # User exit: Run session
@@ -1179,7 +1184,6 @@ flexsense = {
     'notices': [],                  # Command notices: Print and continue (FlexWarning, FlexError)
     'errors': [],                   # Command errors: Print and exit
 }
-flexsense_reset = copy.deepcopy( flexsense )
 
 ##
 ## Flex: Conversion of windowgram metrics
@@ -1290,12 +1294,13 @@ def panes_in_use_message_generate(panes_in_use):
 ##
 
 class flex(object):
-    def __init__(self, command="", examples=[], description=None, aliases=[], group=""):
+    def __init__(self, command="", examples=[], description=None, aliases=[], group="", insert=False):
         self.command_only = command
         self.description = description
         self.examples = examples
         self.aliases = aliases
         self.group = group
+        self.insert = insert
     def __call__(self, function):
         # From function build usage
         self.usage = self.command_only
@@ -1339,20 +1344,22 @@ class flex(object):
         # Adds new menu item, or appends usage and examples if it already exists
         # Description is only used on first occurrence of the command, successive commands append without description
         append = False
-        for entdict in flexmenu:
+        for entdict in flexmenu_top + flexmenu_bot:
             if entdict['about'][0] == self.command_only:
                 entdict['funcs'] += [ function ]
                 entdict['usage'] += [ self.usage, self.examples, self.arglens ]
                 entdict['group'] += [ self.group ]
                 append = True
         if not append:
-            flexmenu.append( {
+            obj = {
                 'funcs': [ function ],
                 'about': [ self.command_only, self.description ],
                 'usage': [ self.usage, self.examples, self.arglens ],
                 'group': [ self.group ]
-            } )
-            if not self.command_only in flexmenu_list: flexmenu_list.append( self.command_only )
+            }
+            if self.insert: menu = flexmenu_top
+            else: menu = flexmenu_bot
+            menu.append( obj )
         # Add aliases if any
         for ix, alias_tup in enumerate(self.aliases):
             if type(alias_tup) is not list:
@@ -1376,7 +1383,8 @@ class flex(object):
 ##
 
 class FlexPointersParameter(object):
-    def __init__(self, wg_ptr, flexsense_ptr):
+    def __init__(self, flexmenu_session, wg_ptr, flexsense_ptr):
+        self.flexmenu_session = flexmenu_session
         self.wg = wg_ptr
         self.flexsense = flexsense_ptr
         return None
@@ -1397,7 +1405,7 @@ def flex_processor(wg, commands): # -> error
     for command in commands.split(";"):
         command = command.strip()
         command, arguments = re.split(r"[ \t]+", command)[:1][0], re.split(r"[ \t]+", command)[1:]
-        for cmd_dict in flexmenu:
+        for cmd_dict in flexmenu_top + flexmenu_bot:
             for ix, triplet in enumerate(usage_triplets(cmd_dict)):
                 usage, examples, arglens = triplet
                 group = cmd_dict['group'][ix]
@@ -1407,10 +1415,9 @@ def flex_processor(wg, commands): # -> error
                         found = True
                         if len(arguments) >= arglens[0] and (len(arguments) <= arglens[1] or arglens[1] == -1):
                             # Prepare for new command
-                            global flexsense
                             flexsense = copy.deepcopy( flexsense_reset )
                             # Execute
-                            args = [ FlexPointersParameter(wg, flexsense) ] + arguments
+                            args = [ FlexPointersParameter( None, wg, flexsense ) ] + arguments
                             cmd_dict['funcs'][ix]( *args )
                             # Error handler
                             if flexsense['notices']:
@@ -1430,10 +1437,12 @@ def flex_processor(wg, commands): # -> error
 @flex(
     command     = "scale",
     group       = "modifiers",
-    examples    = [ "scale 25", "scale 500%", "scale 2x", "scale 64:36" ],
+    examples    = [ "scale 25", "scale 500%", "scale 2x", "scale 64:36", "scale 64x36" ],
     description = "Scale the windowgram.  Valid parameters are multipliers (x), percentages (%), exact character " + \
                   "dimensions, or any combination thereof.  Use a space ( ), colon (:), or times (x) to separate " + \
-                  "the x and y axis.  If only one axis is specified then the value will be applied to both x and y.",
+                  "the x and y axis.  If only one axis is specified then the value will be applied to both x and " + \
+                  "y.  When specifying both, any valid combination will work, including mixing multipliers with " + \
+                  "the times separator, for example \"2xx2x\", \"200%x2x\", \"2xx200%\", etc.",
     aliases     = [ ["resize", "scale "],
                     ["half", "scale 50%"], ["double", "scale 2x"],
                     ["wider", "scale 200%:100%"], ["thinner", "scale 50%:100%"],

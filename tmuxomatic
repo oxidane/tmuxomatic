@@ -962,24 +962,26 @@ def table(output, markers, marklines, title, contents):
     command     = "help",
     group       = "helpers",
     description = "Show information for one or more commands",
+    insert      = True,
 )
-def cmd_help_0():
-    return cmd_help_N() # Wrapper
+def cmd_help_0(fpp_PRIVATE):
+    return cmd_help_N( fpp_PRIVATE ) # Wrapper
 
 @flex(
     command     = "help",
     group       = "helpers",
     examples    = [ "help new scale" ],
     aliases     = [ ["?", "help "], ["/", "help "] ],
+    insert      = True,
 )
-def cmd_help_N(*commands):
+def cmd_help_N(fpp_PRIVATE, *commands):
     # Filter specified commands into a list of unique commands, sorted by the official command order
     args = commands
     commands = []
     for arg in args:
         if arg not in commands:
             commands.append(arg)
-    commands = [ cmd_dict['about'][0] for cmd_dict in flexmenu if cmd_dict['about'][0] in commands ]
+    commands = [ cmd_dict['about'][0] for cmd_dict in flexmenu_top + flexmenu_bot if cmd_dict['about'][0] in commands ]
     # Macros
     lengths = lambda name, about, usage, example: [ len(name), len(about), len(usage), len(example) ]
     # All menus are four columns representing: name, about, usage, example
@@ -987,7 +989,7 @@ def cmd_help_N(*commands):
     menu_lines = [] # Printed columns, not padded
     # Build menu print list from all known commands
     add = lambda name="", about="", usage="", example="": menu_lines.append( [ name, about, usage, example ] )
-    for cmd_dict in flexmenu:
+    for cmd_dict in flexmenu_top + flexmenu_bot:
         if commands and cmd_dict['about'][0] not in commands: continue
         fnew = True
         name, about = cmd_dict['about']
@@ -1036,10 +1038,11 @@ def cmd_help_N(*commands):
             return carry
         carry = recursive_carry( carry, name, about, usage, example )
     # Print introduction
-    flexsense['output'].append( "  Flex menu" + ((" (" + ", ".join(commands) + ")") if len(commands) else "") + ":" )
-    flexsense['output'].append( "" )
+    fpp_PRIVATE.flexsense['output'].append( "  Flex menu" + ((" (" + ", ".join(commands) + ")") \
+        if len(commands) else "") + ":" )
+    fpp_PRIVATE.flexsense['output'].append( "" )
     # Print menu table
-    table( flexsense['output'], ["    ", "    "], [], menu_title, menu_lines )
+    table( fpp_PRIVATE.flexsense['output'], ["    ", "    "], [], menu_title, menu_lines )
 
 ##
 ## Commands: Selectors
@@ -1049,83 +1052,87 @@ def cmd_help_N(*commands):
     command     = "list",
     group       = "selectors",
     description = "List all available windows in this tmuxomatic session",
+    insert      = True,
 )
-def cmd_list():
-    flexsense['output'].append( "  Available windows in this session file (use serial number or name):" )
-    flexsense['output'].append( "" )
+def cmd_list(fpp_PRIVATE):
+    fpp_PRIVATE.flexsense['output'].append( "  Available windows in this session file (use serial number or name):" )
+    fpp_PRIVATE.flexsense['output'].append( "" )
     list_lines = [] # Printed columns, not padded
-    for serial in range(1, flexmenu_session.Count_Windows()+1):
+    for serial in range(1, fpp_PRIVATE.flexmenu_session.Count_Windows()+1):
         number_str = str(serial)
-        name = flexmenu_session.Get_Name(serial)
-        dimensions_int = flexmenu_session.Get_WindowgramDimensions_Int(serial) # Use this to avoid reinitialization
+        name = fpp_PRIVATE.flexmenu_session.Get_Name(serial)
+        dimensions_int = fpp_PRIVATE.flexmenu_session.Get_WindowgramDimensions_Int(serial) # Avoid reinitialization
         dimensions_str = str(dimensions_int[0]) + "x" + str(dimensions_int[1])
-        wg = flexmenu_session.Get_Wg( serial )
+        wg = fpp_PRIVATE.flexmenu_session.Get_Wg( serial )
         used, unused = wg.Panes_GetUsedUnused()
         panecount = str(len(used))
         list_lines.append( [ number_str, dimensions_str, panecount, name ] )
     if not list_lines:
-        flexsense['output'].append( "    There are no windows, create one with: new <name>" )
-        flexsense['output'].append( "" )
+        fpp_PRIVATE.flexsense['output'].append( "    There are no windows, create one with: new <name>" )
+        fpp_PRIVATE.flexsense['output'].append( "" )
     else:
         selected = []
         if flexmenu_index[0]: selected.append( flexmenu_index[0] + 1 ) # Skip title line
         list_title = [ "Window", "Dimensions", "Panes", "Name" ]
-        table( flexsense['output'], ["    ", " -> "], selected, list_title, list_lines )
+        table( fpp_PRIVATE.flexsense['output'], ["    ", " -> "], selected, list_title, list_lines )
 
 @flex(
     command     = "use",
     group       = "selectors",
     examples    = [ "use my example", "use 1" ],
     description = "Select the window you would like to modify",
+    insert      = True,
 )
-def cmd_use(*name_or_serial_REQUIRED):
+def cmd_use(fpp_PRIVATE, *name_or_serial_REQUIRED):
     global unittesting_run
     if unittesting_run: unittesting_run = 0 # Turn off unit testing mode
     name_or_serial = " ".join(name_or_serial_REQUIRED)
     def using(serial):
         flexmenu_index[0] = serial
-        wg = flexmenu_session.Get_Wg(serial)
+        wg = fpp_PRIVATE.flexmenu_session.Get_Wg(serial)
         if wg.Analyze_IsBlank():
-            flexmenu_session.Replace_Windowgram(serial, "1")
-            wg = flexmenu_session.Get_Wg(serial)
-            return flexsense['notices'].append( FlexWarning( "The windowgram was blank and required initialization" ) )
+            fpp_PRIVATE.flexmenu_session.Replace_Windowgram(serial, "1")
+            wg = fpp_PRIVATE.flexmenu_session.Get_Wg(serial)
+            return fpp_PRIVATE.flexsense['notices'].append( FlexWarning( \
+                "The windowgram was blank and required initialization" ) )
     if name_or_serial.isdigit():
         serial = int(name_or_serial)
-        if flexmenu_session.Serial_Is_Valid(serial): return using(serial)               # Serial match
-    for serial in range(1, flexmenu_session.Count_Windows()+1):
-        if name_or_serial == flexmenu_session.Get_Name(serial): return using(serial)    # Exact string match
+        if fpp_PRIVATE.flexmenu_session.Serial_Is_Valid(serial): return using(serial)               # Serial match
+    for serial in range(1, fpp_PRIVATE.flexmenu_session.Count_Windows()+1):
+        if name_or_serial == fpp_PRIVATE.flexmenu_session.Get_Name(serial): return using(serial)    # Exact string match
     matches = matched = 0
-    for serial in range(1, flexmenu_session.Count_Windows()+1):
-        if flexmenu_session.Get_Name(serial).startswith(name_or_serial):
+    for serial in range(1, fpp_PRIVATE.flexmenu_session.Count_Windows()+1):
+        if fpp_PRIVATE.flexmenu_session.Get_Name(serial).startswith(name_or_serial):
             matched = serial ; matches += 1
     if matches == 1: return using(matched)                                              # Starting string match
     if matches:
-        return flexsense['notices'].append( FlexError( "The name \"" + \
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The name \"" + \
             name_or_serial + "\" is ambiguous (" + str(matches) + " matches)" ) )       # Name ambiguous
     else:
-        return flexsense['notices'].append( FlexError( \
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
             "This name or serial is invalid: " + name_or_serial ) )                     # No match
-    flexsense['output'].append( "" )
+    fpp_PRIVATE.flexsense['output'].append( "" )
 
 @flex(
     command     = "new",
     group       = "selectors",
     examples    = [ "new some feeds" ],
     description = "Create a new window, initialized to '1'",
+    insert      = True,
 )
-def cmd_new(*window_name_REQUIRED):
+def cmd_new(fpp_PRIVATE, *window_name_REQUIRED):
     global unittesting_run
     if unittesting_run: unittesting_run = 0 # Turn off unit testing mode
     name = " ".join(window_name_REQUIRED)
-    for serial in range(1, flexmenu_session.Count_Windows()+1):
-        if name == flexmenu_session.Get_Name(serial):
-            return flexsense['notices'].append( FlexError( \
+    for serial in range(1, fpp_PRIVATE.flexmenu_session.Count_Windows()+1):
+        if name == fpp_PRIVATE.flexmenu_session.Get_Name(serial):
+            return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
                 "The name \"" + name + "\" is already in use, try another" ) )
     # Create window
     comments = "## Window added by tmuxomatic flex " + VERSION + "\n\n"
-    serial = flexmenu_session.Add_Windowgram( comments, name, "1" )
+    serial = fpp_PRIVATE.flexmenu_session.Add_Windowgram( comments, name, "1" )
     # Use it (note that for unittesting this function clears the flag so it should be run first)
-    cmd_use(*[str(serial)])
+    cmd_use(fpp_PRIVATE, *[str(serial)])
     # Activate unit testing mode if the window begins with "unittest"
     if name.startswith("unittest"): unittesting_run = 1
 
@@ -1138,12 +1145,13 @@ def cmd_new(*window_name_REQUIRED):
     group       = "printers",
     description = "Display windowgram (automatic if there is no other output)",
     aliases     = [ [".", "print "], ],
+    insert      = True,
 )
-def cmd_print():
+def cmd_print(fpp_PRIVATE):
     serial = flexmenu_index[0]
-    if flexmenu_session.Serial_Is_Valid(serial):
-        flexsense['output'].append( "\n".join([ "    " + l \
-            for l in flexmenu_session.Get_Windowgram(serial).split("\n") ]) )
+    if fpp_PRIVATE.flexmenu_session.Serial_Is_Valid(serial):
+        fpp_PRIVATE.flexsense['output'].append( "\n".join([ "    " + l \
+            for l in fpp_PRIVATE.flexmenu_session.Get_Windowgram(serial).split("\n") ]) )
 
 ##
 ## Commands: Terminators
@@ -1154,8 +1162,8 @@ def cmd_print():
     group       = "terminators",
     description = "Restore the original session, then exit without execution",
 )
-def cmd_oops():
-    flexsense['finished'] = flexsense['restore'] = True
+def cmd_oops(fpp_PRIVATE):
+    fpp_PRIVATE.flexsense['finished'] = fpp_PRIVATE.flexsense['restore'] = True
 
 @flex(
     command     = "done",
@@ -1163,8 +1171,8 @@ def cmd_oops():
     description = "Keep changes to session, then execute",
     aliases     = [ ["run", "done"], ["go", "done"] ],
 )
-def cmd_done():
-    flexsense['finished'] = flexsense['execute'] = True
+def cmd_done(fpp_PRIVATE):
+    fpp_PRIVATE.flexsense['finished'] = fpp_PRIVATE.flexsense['execute'] = True
 
 @flex(
     command     = "exit",
@@ -1172,8 +1180,8 @@ def cmd_done():
     description = "Keep changes to session, but do not execute",
     aliases     = [ ["x", "exit"] ],
 )
-def cmd_exit():
-    flexsense['finished'] = True
+def cmd_exit(fpp_PRIVATE):
+    fpp_PRIVATE.flexsense['finished'] = True
 
 ##
 ## Flex Shell
@@ -1206,17 +1214,17 @@ def flex_shell(session, serial=0):
     ##
     ## Session setup
     ##
-    global flexmenu_session
     flexmenu_session = session
     session_original = copy.deepcopy(session) # Original copy
+    fpp = FlexPointersParameter( flexmenu_session, None, copy.deepcopy( flexsense_reset ) )
     ##
     ## Show list of windows, or assign selected window
     ##
     if serial is 0:
-        cmd_list()
+        cmd_list(fpp)
     else:
         flexmenu_index[0] = serial
-        cmd_use(*[str(serial)]) # By calling this we assure blank windowgrams are properly initialized
+        cmd_use(fpp, *[str(serial)]) # By calling this we assure blank windowgrams are properly initialized
     ##
     ## Easily generate flex unit tests by creating a new window starting with the name "unittest"
     ##
@@ -1232,7 +1240,6 @@ def flex_shell(session, serial=0):
     split_check = lambda: True \
         if not sc_serial or session.Get_Wg(sc_serial).Analyze_Type(ARGS.relative) == "split" else False
     while True:
-        global flexsense
         label_w = 12
         labeler = lambda name: name + ( (" "*(label_w-len(name))) if len(name) < label_w else name ) + ": "
         if not flexmenu_session.Serial_Is_Valid(flexmenu_index[0]): flexmenu_index[0] = 0 # Serial is invalid, clear it
@@ -1240,12 +1247,12 @@ def flex_shell(session, serial=0):
         string_to_list = lambda string: [ x.strip() for x in string.strip().split() ]
         filter_input = lambda string: ( string_to_list( string ), " ".join( string_to_list( string ) ) )
         # Multiple commands are expected to be without output
-        if flexsense['output'] and queue:
-            flexsense['notices'].append( FlexError( "Command \"" + lastcmd + "\" had output, " + \
+        if fpp.flexsense['output'] and queue:
+            fpp.flexsense['notices'].append( FlexError( "Command \"" + lastcmd + "\" had output, " + \
             "commands with output interrupt multiple commands mode" ) )
         # Prepare for new command
-        output = flexsense['output']
-        warnings += flexsense['notices']
+        output = fpp.flexsense['output']
+        warnings += fpp.flexsense['notices']
         # Check errors
         errors = True if [ 1 for warn in warnings if warn.GetLvl() ] else False
         # Flush queue if an error occurred
@@ -1268,7 +1275,7 @@ def flex_shell(session, serial=0):
             flexout("")
             flexout(None) # The fill marker used for later padding to keep header consistently on top
         # Always show windowgram as long as: the command produced no output, and no commands are enqueued
-        if not flexsense['output'] and not queue:
+        if not fpp.flexsense['output'] and not queue:
             if unittesting_run == 1:
                 unittesting_run = 2 # 0 = Not Used / 1 = Initialization Required / 2 = Process Normally
                 unittesting_fcl = []
@@ -1292,11 +1299,11 @@ def flex_shell(session, serial=0):
                 flexout("")
             else:
                 # Print the selected windowgram
-                cmd_print()
+                cmd_print(fpp)
         # Show output if there was any
-        if flexsense['output']:
+        if fpp.flexsense['output']:
             line = ""
-            for line in flexsense['output']:
+            for line in fpp.flexsense['output']:
                 for line in line.split("\n"):
                     flexout(line)
             if line.strip():
@@ -1324,8 +1331,8 @@ def flex_shell(session, serial=0):
                 flexout( labeler("Window") + "None ... Try \"list\" or \"use <window>\"" )
             else:
                 name = flexmenu_session.Get_Name(serial)
-                wg = flexmenu_session.Get_Wg( serial )
-                used, unused = wg.Panes_GetUsedUnused()
+                fpp.wg = flexmenu_session.Get_Wg( serial )
+                used, unused = fpp.wg.Panes_GetUsedUnused()
                 flexout( labeler("Window") + "#" + str(serial) + " (" + name + ")" )
                 flexout( labeler("Panes") + used + " < used " + str(len(used)) + " ... " + \
                     str(len(unused)) + " unused > " + unused )
@@ -1364,7 +1371,7 @@ def flex_shell(session, serial=0):
         thisinput_lst, thisinput_str = filter_input( thisinput_str )
         lastcmd = thisinput_lst[0] if len(thisinput_lst) else lastcmd
         # Prepare for new command
-        flexsense = copy.deepcopy( flexsense_reset )
+        fpp.flexsense = copy.deepcopy( flexsense_reset )
         # Command specified
         if len(thisinput_lst):
             invoked = False
@@ -1379,12 +1386,12 @@ def flex_shell(session, serial=0):
             for alias_tup in flexmenu_aliases:
                 of = alias_tup[0]
                 if AmbiguityMatch( lastcmd, of ): hits.append( of )
-            for cmd_dict in flexmenu:
+            for cmd_dict in flexmenu_top + flexmenu_bot:
                 of = cmd_dict['about'][0]
                 if AmbiguityMatch( lastcmd, of ): hits.append( of )
             if len(hits) == 1: lastcmd = hits[0]
             elif len(hits) > 1:
-                flexsense['notices'].append( FlexError( "Ambiguous command \"" + lastcmd + "\" has " + \
+                fpp.flexsense['notices'].append( FlexError( "Ambiguous command \"" + lastcmd + "\" has " + \
                     str(len(hits)) + " matches: " + ", ".join(hits) ) )
                 continue
             # Alias handler (repackages input)
@@ -1399,7 +1406,7 @@ def flex_shell(session, serial=0):
             # Command handler (based on provided arguments and matching function)
             finished = False
             argcount = len(thisinput_lst) - 1
-            for cmd_dict in flexmenu:
+            for cmd_dict in flexmenu_top + flexmenu_bot:
                 if cmd_dict['about'][0] == lastcmd:
                     availability = [] # Available arguments if user error: [ [from, to], [from, to], ... ]
                     for ix, triplet in enumerate(usage_triplets(cmd_dict)):
@@ -1408,14 +1415,13 @@ def flex_shell(session, serial=0):
                         if argcount >= arglens[0] and (argcount <= arglens[1] or arglens[1] == -1):
                             serial = flexmenu_index[0]
                             arguments = []
-                            wg = None
-                            if group == "modifiers":
-                                if flexmenu_session.Serial_Is_Valid(serial): wg = flexmenu_session.Get_Wg(serial)
-                                arguments.append( FlexPointersParameter(wg, flexsense) )
+                            if flexmenu_session.Serial_Is_Valid(serial): fpp.wg = flexmenu_session.Get_Wg(serial)
+                            else: fpp.wg = None
+                            arguments.append( fpp ) # Now applies to every command
                             if argcount: arguments += thisinput_lst[1:]
                             cmd_dict['funcs'][ix]( *arguments ) # Run this command
-                            if wg is not None:
-                                flexmenu_session.Replace_Windowgram( serial, wg.Export_String() )
+                            if fpp.wg is not None:
+                                flexmenu_session.Replace_Windowgram( serial, fpp.wg.Export_String() )
                             invoked = True
                             if not queue and serial:
                                 if unittesting_run:
@@ -1426,27 +1432,27 @@ def flex_shell(session, serial=0):
                             break
                     if not invoked:
                         # No invocation, could show available parameter counts, but showing help may be more useful
-                        flexsense['notices'].append( FlexError( "Parameter mismatch for valid command \"" + \
+                        fpp.flexsense['notices'].append( FlexError( "Parameter mismatch for valid command \"" + \
                             lastcmd + "\", displaying help instead" ) )
-                        cmd_help_N( lastcmd )
+                        cmd_help_N( fpp, lastcmd )
                         finished = True
                     break
             if finished: continue
             # Invalid command handler
             if not invoked:
                 # Throw it in the warnings queue as an error and it will flush the queue on the next pass
-                flexsense['notices'].append( FlexError( "Invalid command \"" + lastcmd + "\"" ) )
+                fpp.flexsense['notices'].append( FlexError( "Invalid command \"" + lastcmd + "\"" ) )
             # Save if session modified and print next pass
             if session.Modified():
                 # TODO: Add to stack if command resulted in a modification
                 session.Save()
                 sc_support = split_check()
             # Finish handler
-            if flexsense['finished']:
-                if flexsense['restore']:
+            if fpp.flexsense['finished']:
+                if fpp.flexsense['restore']:
                     session = session_original
                     session.Save()
-                if flexsense['execute']:
+                if fpp.flexsense['execute']:
                     return session # Return object in case of restore
                 exit()
         # Previous block assumes nothing follows, so it may continue to next command
