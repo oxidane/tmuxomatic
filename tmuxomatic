@@ -63,7 +63,9 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DESCRIPTION = "Intelligent tmux session management"
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
-VERSION = "2.8" # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.9" # x.y: x = Major feature, y = Minor feature or bug fix
+##
+##  2.9     TBD         TBD
 ##
 ##  2.8     2014-11-24  Added some unit tests, full testing for flex and main classes to be added in 2.x
 ##                      Windowgram group conversion between pattern and list representations

@@ -1759,6 +1759,7 @@ def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The pane you specified does not exist" ) )
     # Verify axis and reduce to "v" or "h"
     inverse = "-" if size[0] == "-" else ""
+    showinv = inverse # Show inverse flag by default
     if is_axis_vert(axis): axis = "v"
     elif is_axis_horz(axis): axis = "h"
     else:
@@ -1769,6 +1770,7 @@ def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
         if axis is None or negate_flag is None:
             return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The axis you specified is invalid" ) )
         inverse = "-" if negate_flag else ""
+        showinv = "" # For TBRL do not show inverse flag
     # Get axis_length
     px, py, pw, ph = wg.Panes_PaneXYWH(pane)
     axis_length = pw if axis == "h" else ph
@@ -1784,22 +1786,23 @@ def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
     if size_type is None:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Invalid size parameter: " + original_size ) )
     if size_GreaterOrEqualToBaseCharacters( size, axis_length ):
-        rep = inverse
-        if size_type == "characters": rep += str(axis_length)
-        elif size_type == "percentage": rep += "100%"
-        elif size_type == "multiplier": rep += "1x"
+        if size_type == "characters": rep = showinv + str(axis_length)
+        elif size_type == "percentage": rep = showinv + "100%"
+        else: rep = showinv + "1x" # elif size_type == "multiplier"
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Specified size (" + original_size + \
             ") is greater or equal to the maximum range (" + rep + ") of this function" ) )
     size_chars = size_ConvertToCharacters( size, axis_length )
     if size_chars is None:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
     if size_chars >= axis_length: # Shouldn't happen by now, but if it does
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Resulting size (" + inverse + str(size_chars) + \
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Resulting size (" + showinv + str(size_chars) + \
             " characters) is greater or equal to the axis length (" + str(axis_length) + ")" ) )
+    if size_chars < 1:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Resulting size (" + showinv + str(size_chars) + \
+            " characters) is not valid" ) )
     if inverse: size_chars = axis_length - size_chars # Flip
     # Verify newpanes ... Set to first available if not specified
-    if len(unused) < 1: return fpp_PRIVATE.flexsense['notices'].append(
-        FlexError( "Insufficient panes available for a split" ) )
+    if len(unused) < 1: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Insufficient panes to split" ) )
     if newpanes is None: newpanes = ""
     if len(newpanes) == 0: newpanes += unused[0] # New pane is first available
     if len(newpanes) == 1: newpanes += pane # Base pane
