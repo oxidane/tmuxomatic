@@ -1441,14 +1441,21 @@ def flex_processor(wg, commands): # -> error
                     ["higher", "scale 100%:200%"], ["lower", "scale 100%:50%"], ],
 )
 def cmd_scale_1(fpp_PRIVATE, xy_how): # 1 parameter
-    # Split directives like "64:36" and "64x36" into "64 36", also works using percentages "200%:50%", or using
-    # multipliers "2x:2x" as long as ":" is used instead of "x" as there would be a conflict with the multiplier
-    # TODO: This could be more flexible to cover cases like "2xx2" and "2x2x" by using regex
-    xy_spl = None
-    if xy_how.count("x") == 1 and xy_how[-1:] != "x": xy_spl = xy_how.split("x")
-    elif xy_how.count(":") == 1: xy_spl = xy_how.split(":")
-    if xy_spl and len(xy_spl) == 2: return cmd_scale_2( fpp_PRIVATE, *xy_spl )
-    # Others are simply cloned like "2x" into "2x 2x"
+    # Split "64:36" and "64x36" into "64 36".  Works with percentages "200%:50%" and multipliers "2x:2x".  Any
+    # combination works, including 2xx2x" and "2xx200%".
+    if ":" in xy_how:
+        if xy_how.count(":") == 1: return cmd_scale_2( fpp_PRIVATE, *xy_how.split(":") )
+    elif "x" in xy_how:
+        count = xy_how.count("x")
+        endwx = xy_how.endswith("x")
+        if count == 1 and not endwx: return cmd_scale_2( fpp_PRIVATE, *xy_how.split("x") )
+        if count == 2:
+            if endwx: return cmd_scale_2( fpp_PRIVATE, *xy_how.split("x", 1) )
+            else: return cmd_scale_2( fpp_PRIVATE, *xy_how.rsplit("x", 1) )
+        if count == 3 and endwx:
+            parts = xy_how.split("x", 2)
+            return cmd_scale_2( fpp_PRIVATE, parts[0]+"x", parts[2] )
+    # All others are simply cloned like "2x" into "2x 2x"
     return cmd_scale_2( fpp_PRIVATE, xy_how, xy_how )
 
 @flex(
