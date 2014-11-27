@@ -15,7 +15,7 @@ import re, os, sys
 
 lines = open("tmuxomatic", "r").read().split("\n")
 extract = lambda what: [re.search(r'"([^"]*)"', line).group() for line in lines if line.startswith(what)][0][1:-1]
-def fullfile(filename): f = open(filename, "r") ; text = f.read() ; f.close() ; return f
+def fullfile(filename): f = open(filename, "r") ; text = f.read() ; f.close() ; return text
 
 version = extract("VERSION")
 homepage = extract("HOMEPAGE")
