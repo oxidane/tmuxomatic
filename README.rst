@@ -3,21 +3,22 @@ tmuxomatic |image0| |image1|
 
 A completely different kind of tmux session manager.
 
-1.  `Introduction <https://github.com/oxidane/tmuxomatic#introduction>`__
-2.  `Learn by
-    example <https://github.com/oxidane/tmuxomatic#learn-by-example>`__
-3.  `Flex <https://github.com/oxidane/tmuxomatic#flex>`__
-4.  `Flex
-    concepts <https://github.com/oxidane/tmuxomatic#flex-concepts>`__
-5.  `Flex demonstration #1 -- Create a new
-    windowgram <https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram>`__
-6.  `Flex demonstration #2 -- Extend the
-    windowgram <https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-the-windowgram>`__
-7.  `Installation <https://github.com/oxidane/tmuxomatic#installation>`__
-8.  `Options <https://github.com/oxidane/tmuxomatic#options>`__
-9.  `Notes <https://github.com/oxidane/tmuxomatic#notes>`__
-10. `Copyright and
-    License <https://github.com/oxidane/tmuxomatic#copyright-and-license>`__
+1. `Introduction <https://github.com/oxidane/tmuxomatic#introduction>`__
+2. `Learn by
+   example <https://github.com/oxidane/tmuxomatic#learn-by-example>`__
+3. `Flex <https://github.com/oxidane/tmuxomatic#flex>`__ ... ( i.
+   `Concepts <https://github.com/oxidane/tmuxomatic#flex-concepts>`__,
+   ii. `Demo
+   #1 <https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram>`__,
+   iii. `Demo
+   #2 <https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-the-windowgram>`__
+   )
+4. `Installation <https://github.com/oxidane/tmuxomatic#installation>`__
+5. `Options <https://github.com/oxidane/tmuxomatic#options>`__
+6. `Notes on
+   tmux <https://github.com/oxidane/tmuxomatic#notes-on-tmux>`__
+7. `Copyright and
+   License <https://github.com/oxidane/tmuxomatic#copyright-and-license>`__
 
 Introduction
 ------------
@@ -395,8 +396,8 @@ These packages should be installed if you want additional features:
 
 -  ``pip-python3 install pyyaml`` ... For YAML session file support
 
-Notes
------
+Notes on tmux
+-------------
 
 To use tmuxomatic, you don't have to know everything about `how to use
 tmux <http://net.tutsplus.com/tutorials/tools-and-tips/intro-to-tmux/>`__,
