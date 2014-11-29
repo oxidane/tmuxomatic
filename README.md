@@ -9,9 +9,9 @@ A completely different kind of tmux session manager.
 1. [Introduction](https://github.com/oxidane/tmuxomatic#introduction)
 2. [Learn by example](https://github.com/oxidane/tmuxomatic#learn-by-example)
 3. [Flex](https://github.com/oxidane/tmuxomatic#flex) ... ( i. [Concepts](https://github.com/oxidane/tmuxomatic#flex-concepts), ii. [Demo #1](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram), iii. [Demo #2](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-the-windowgram) )
-4. [Installation](https://github.com/oxidane/tmuxomatic#installation)
-5. [Options](https://github.com/oxidane/tmuxomatic#options)
-6. [Notes on tmux](https://github.com/oxidane/tmuxomatic#notes-on-tmux)
+4. [Installation](https://github.com/oxidane/tmuxomatic#installation) ... ( i. [Installation Guide](https://github.com/oxidane/tmuxomatic#installation-guide), ii. [Optional Packages](https://github.com/oxidane/tmuxomatic#optional-packages) )
+5. [Notes on tmux](https://github.com/oxidane/tmuxomatic#notes-on-tmux)
+6. [Contributor Agreement](https://github.com/oxidane/tmuxomatic#contributor-agreement)
 7. [Copyright and License](https://github.com/oxidane/tmuxomatic#copyright-and-license)
 
 
@@ -277,6 +277,8 @@ This application requires:
   * [Python 3](http://www.python.org/getit/) +
   * [tmux 1.8](http://tmux.sourceforge.net/) +
 
+#### Installation Guide
+
 There are three ways to install tmuxomatic, in order of convenience:
 
   * **Automatically** (pip)
@@ -299,19 +301,23 @@ There are three ways to install tmuxomatic, in order of convenience:
 
 Verify that the version reported by `tmuxomatic -V` matches the latest release.  [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
+#### Optional Packages
 
+The following packages are optional; install if you want the additional features.
 
-## Options
-
-These packages should be installed if you want additional features:
-
-  * `pip-python3 install pyyaml` ... For YAML session file support
+  * `pip-python3 install pyyaml` ... YAML session file support
 
 
 
 ## Notes on tmux
 
 To use tmuxomatic, you don't have to know everything about [how to use tmux](http://net.tutsplus.com/tutorials/tools-and-tips/intro-to-tmux/), but the knowledge is useful for [customizing the tmux status bar](http://me.veekun.com/blog/2012/03/21/tmux-is-sweet-as-heck/), or [changing the default key bindings](https://wiki.archlinux.org/index.php/tmux#Key_bindings).  These are tmux user preferences, and typically placed in a personal `.tmux.conf` file.
+
+
+
+## Contributor Agreement
+
+Pull requests must be original source, or properly attributed public domain source.  By submitting, you agree that your contribution will inherit the current copyright and license, and will be subject to future changes.
 
 
 

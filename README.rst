@@ -14,9 +14,15 @@ A completely different kind of tmux session manager.
    #2 <https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-the-windowgram>`__
    )
 4. `Installation <https://github.com/oxidane/tmuxomatic#installation>`__
-5. `Options <https://github.com/oxidane/tmuxomatic#options>`__
-6. `Notes on
+   ... ( i. `Installation
+   Guide <https://github.com/oxidane/tmuxomatic#installation-guide>`__,
+   ii. `Optional
+   Packages <https://github.com/oxidane/tmuxomatic#optional-packages>`__
+   )
+5. `Notes on
    tmux <https://github.com/oxidane/tmuxomatic#notes-on-tmux>`__
+6. `Contributor
+   Agreement <https://github.com/oxidane/tmuxomatic#contributor-agreement>`__
 7. `Copyright and
    License <https://github.com/oxidane/tmuxomatic#copyright-and-license>`__
 
@@ -363,6 +369,9 @@ This application requires:
 -  `Python 3 <http://www.python.org/getit/>`__ +
 -  `tmux 1.8 <http://tmux.sourceforge.net/>`__ +
 
+Installation Guide
+^^^^^^^^^^^^^^^^^^
+
 There are three ways to install tmuxomatic, in order of convenience:
 
 -  **Automatically** (pip)
@@ -389,12 +398,13 @@ There are three ways to install tmuxomatic, in order of convenience:
 Verify that the version reported by ``tmuxomatic -V`` matches the latest
 release. |image2|
 
-Options
--------
+Optional Packages
+^^^^^^^^^^^^^^^^^
 
-These packages should be installed if you want additional features:
+The following packages are optional; install if you want the additional
+features.
 
--  ``pip-python3 install pyyaml`` ... For YAML session file support
+-  ``pip-python3 install pyyaml`` ... YAML session file support
 
 Notes on tmux
 -------------
@@ -407,6 +417,14 @@ bar <http://me.veekun.com/blog/2012/03/21/tmux-is-sweet-as-heck/>`__, or
 bindings <https://wiki.archlinux.org/index.php/tmux#Key_bindings>`__.
 These are tmux user preferences, and typically placed in a personal
 ``.tmux.conf`` file.
+
+Contributor Agreement
+---------------------
+
+Pull requests must be original source, or properly attributed public
+domain source. By submitting, you agree that your contribution will
+inherit the current copyright and license, and will be subject to future
+changes.
 
 Copyright and License
 ---------------------
