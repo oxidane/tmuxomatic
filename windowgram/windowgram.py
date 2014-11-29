@@ -57,7 +57,9 @@ import sys, argparse, re, math, copy, inspect
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Globals
+## Definitions
+##
+## TODO: Move these into a class
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
@@ -332,9 +334,13 @@ def SplitProcessor( sw, wg, iw, ih, list_panes ): # list_split, list_links
     # Return useful elements
     return list_split, list_links
 
+
+
+##----------------------------------------------------------------------------------------------------------------------
 ##
-## Miscellaneous
+## Windowgram miscellaneous
 ##
+##----------------------------------------------------------------------------------------------------------------------
 
 def SortPanes(layout): # list_panes, layout
     # Sort top to bottom, left to right, move into list (layout[] -> list_panes[])
@@ -1054,60 +1060,7 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Planned modifiers:
-##
-##          When dragging an edge, it will be forced to stop for pane preservation
-##          When dragging a group edge, the internal edges are scaled, only the group edge is contiguous
-##          Drags specified edges, keeps opposing edges pinned, and scales the inner edges
-##          May need a specialized scaler for this command
-##          Maximum scale range depends whether a pane disappears or not
-##          Dragging pushing edges was considered, but this would get messy and probably unnecessary
-##
-##      drag <panes> <dir> <how>                    drags edge, panes == xyz / dir == up / how == 50%
-##      drag <edge> <panes> <dir> <how>             drags group edge, edge == top, bottom, left, right
-##
-##          Modifiers insert and clone need to differentiate between a deduced edge (1 parameter), a specified edge (2),
-##          and the cardinal edge of a specified group (2).  Each of these is handled by one master function that will
-##          infer the intent by the specified arguments and their originating function.  This may even allow some degree
-##          of reordering of arguments, e.g., axis-edge and direction-group.  Also maybe support as edge:axis and
-##          group:direction, this would assist the highlighter when it's implemented.
-##
-##          Both insert and clone uses the [axis] parameter as quasi-optional.  If the edge is ambiguous, it requests it
-##          for clarification.
-##
-##          Both insert and clone requires the edge-group parameter to have holes, all that is important the specified
-##          edge and that it is unambiguous.
-##
-##          Already supported mid-stream optional arguments, to use from flex function, specify "axis_OPTIONAL".  Note
-##          that there will still need to be two distinct functions, but they will both be wrappers for a core function.
-##
-##      insert [axis] <edge> <size> [newpanes]      insert pane at edge of panes, just like add but with panes
-##      insert <direction> <group> <size> [newpanes]
-##
-##          The clone command takes the first group of panes (forming a full rectangle), and along the specified edge,
-##          it stretches (like scale) the surrounding windowgram to accommodate, and inserts it in.  Most useful for
-##          rapidly expanding common windowgram patterns.
-##
-##          The [newpanes] argument follows the same order as the first <group> parameter.
-##
-##          Clone could be thought of as:
-##              1) insert <pane> ...        Axis 1 stretch/scale and insert
-##              2) scale ...                Axis 2 scale to fit
-##              Then copy the group into the new pane.  This is pretty easy to implement.
-##
-##          Requires 3 functions: public by edge, public by group, hidden internal that is core of both wrappers
-##
-##      clone <group> [axis] <edge> [newpanes]
-##      clone <group> <direction> <group> [newpanes]
-##
-##          Other commands
-##
-##      delete <pane>                               remove pane from edge of window (del, clip, remove, drop, rm)
-##      mirror <group>                              mirrors a group, supports *
-##      flip <group>                                flips a group, supports *
-##      rotate <how>                                how == cw, ccw, 180, interpret 1..3 and -1..-3 as multiples of 90
-##
-## Improvements:
+## Possible improvements:
 ##
 ##      Proportional scale, using the following aliases:
 ##
@@ -1394,7 +1347,7 @@ class FlexPointersParameter(object):
 ##
 ##      * Intended for unit testing, may also be used for macros
 ##      * Supports multiple commands ("cmd 1 ; cmd 2 ; cmd 3")
-##      * Only the flex group "modifiers" is supported
+##      * Only commands from the flex group "modifiers" are supported
 ##      * No command ambiguity
 ##      * No command aliases
 ##      * Processing halts on flex warning or error
@@ -1431,7 +1384,7 @@ def flex_processor(wg, commands): # -> error
     return None
 
 ##
-## Commands: Modifiers
+## Flex: Scale
 ##
 
 @flex(
@@ -1450,14 +1403,14 @@ def flex_processor(wg, commands): # -> error
                     ["higher", "scale 100%:200%"], ["lower", "scale 100%:50%"], ],
 )
 def cmd_scale_1(fpp_PRIVATE, xy_how): # 1 parameter
-    # Split "64:36" and "64x36" into "64 36".  Works with percentages "200%:50%" and multipliers "2x:2x".  Any
-    # combination works, including 2xx2x" and "2xx200%".
+    # Wrapper for two parameter scale, splits "64:36" and "64x36" into "64 36", works with percentages and multipliers
     if ":" in xy_how:
         if xy_how.count(":") == 1: return cmd_scale_2( fpp_PRIVATE, *xy_how.split(":") )
     elif "x" in xy_how:
         count = xy_how.count("x")
         endwx = xy_how.endswith("x")
-        if count == 1 and not endwx: return cmd_scale_2( fpp_PRIVATE, *xy_how.split("x") )
+        if count == 1 and not endwx:
+            return cmd_scale_2( fpp_PRIVATE, *xy_how.split("x") )
         if count == 2:
             if endwx: return cmd_scale_2( fpp_PRIVATE, *xy_how.split("x", 1) )
             else: return cmd_scale_2( fpp_PRIVATE, *xy_how.rsplit("x", 1) )
@@ -1502,6 +1455,15 @@ def cmd_scale_2(fpp_PRIVATE, x_how, y_how): # 2 parameters
     # Replace windowgram
     fpp_PRIVATE.wg.Import_Wg( wg_after )
 
+##
+## Flex: Add
+##
+## TODO: Edge could also represent a combined edge of panes.  The panes would have to be adjacent, but it would
+## allow for the insertion of panes into the middle of windows.  Would require scaling the surrounding panes to
+## support the insertion, but it could be done.  This is the insert command, and the accommodation logic is the
+## same as clone.
+##
+
 @flex(
     command     = "add",
     group       = "modifiers",
@@ -1513,10 +1475,6 @@ def cmd_scale_2(fpp_PRIVATE, x_how, y_how): # 2 parameters
     aliases     = [ ["append", "add "], ["app", "add "] ],
 )
 def cmd_add(fpp_PRIVATE, edge, size, newpane=None):
-    # TODO: Edge could also represent a combined edge of panes.  The panes would have to be adjacent, but it would
-    # allow for the insertion of panes into the middle of windows.  Would require a bit of recursive acrobatics to
-    # scale the surrounding panes to support the insertion, but it could be done.  This is the insert command, and
-    # the accommodation logic is the same as clone.
     if not fpp_PRIVATE.wg:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     wg_work = fpp_PRIVATE.wg
@@ -1561,6 +1519,23 @@ def cmd_add(fpp_PRIVATE, edge, size, newpane=None):
     return fpp_PRIVATE.flexsense['notices'].append( FlexError(
         "The edge you specified is invalid, please specify either: top, bottom, left, or right" ) )
 
+##
+## Flex: Break
+##
+## Analogues:
+##
+##      Break may be used for split 50%
+##
+## Notes:
+##
+##      Avoiding unnecessary complexity.  It's easy to incorporate support for group as target.  Such an algorithm would
+##      break all panes in the group equally and apply the newpanes linearly.  This becomes complicated if avoiding size
+##      explosions from finding the most efficient break sequence (common divisors).  Besides, such situations are more
+##      easily managed by the user of flex; simply perform the breaks in a sequence that yields personally satisfactory
+##      results.  Since this is already possible with flex, implementing such a feature would not add much practical
+##      benefit and only complicate the function.
+##
+
 @flex(
     command     = "break",
     group       = "modifiers",
@@ -1571,15 +1546,6 @@ def cmd_add(fpp_PRIVATE, edge, size, newpane=None):
     aliases     = [ ["grid", "break "], ["panes", "break "], ],
 )
 def cmd_break(fpp_PRIVATE, pane, grid, newpanes=None):
-    # Analogues:
-    #       Break may be used for split 50%
-    # Notes:
-    #       An example of avoiding unnecessary complexity: It's easy to incorporate support for group as target.  Such
-    #       an algorithm would break all panes in group equally and apply newpanes linearly.  But things become complex
-    #       quickly if it were to avoid size explosions by finding the most efficient break sequence (common divisors).
-    #       Besides, such situations are easily managed by the user of flex; simply break them one by one in a sequence
-    #       that yields personally satisfactory results.  Because this is already possible with flex, such a feature
-    #       would only add complexity without achieving a practical function.
     if not fpp_PRIVATE.wg:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     # In order to produce a break of even proportions, we have to scale this windowgram up to next best fit.  It
@@ -1655,6 +1621,19 @@ def cmd_break(fpp_PRIVATE, pane, grid, newpanes=None):
     # Replace windowgram
     fpp_PRIVATE.wg.Import_Wg( wg )
 
+##
+## Flex: Join
+##
+## Analogues:
+##
+##      Join may be used for rename: join <old>.<new>
+##      Join may be used for swap: join <one>.<two> <two>.<one>
+##
+## Notes:
+##
+##      Join could be seen as a type of rename, and was used for rename and swap prior to those implementations
+##
+
 @flex(
     command     = "join",
     group       = "modifiers",
@@ -1665,11 +1644,6 @@ def cmd_break(fpp_PRIVATE, pane, grid, newpanes=None):
     aliases     = [ ["group", "join "], ["merge", "join "], ["glue", "join "], ],
 )
 def cmd_join(fpp_PRIVATE, *groups_REQUIRED):
-    # Analogues:
-    #       Join may be used for rename: join <old>.<new>
-    #       Join may be used for swap: join <one>.<two> <two>.<one>
-    # Notes:
-    #       Join could be seen as a type of rename, and was used for rename and swap prior to those implementations
     groups = groups_REQUIRED # Readability
     argument = lambda ix: str(ix+1) + " (\"" + groups_REQUIRED[ix] + "\")" # Show the group that the user specified
     if not fpp_PRIVATE.wg:
@@ -1737,6 +1711,24 @@ def cmd_join(fpp_PRIVATE, *groups_REQUIRED):
     # Replace windowgram
     fpp_PRIVATE.wg.Import_Wg( wg )
 
+##
+## Flex: Split
+##
+## Analogues:
+##
+##      Break may be used for split 50%
+##
+## Expectations (for testing):
+##
+##      If any of the specified newpanes are invalid, return error
+##      A negative flag for edges (tblr) is ignored, but used for axis (vh)
+##
+## TODO:
+##
+##      Possible reordering detection, "split v h" (where "v" is the pane)
+##      Senses reordering, e.g. "split horz v", and if unable to determine defaults to pane first
+##
+
 @flex(
     command     = "split",
     group       = "modifiers",
@@ -1746,14 +1738,6 @@ def cmd_join(fpp_PRIVATE, *groups_REQUIRED):
                   "newpanes parameter will rename the panes in order of newest to oldest (2 panes maximum).",
 )
 def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
-    # Analogues:
-    #       Break may be used for split 50%
-    # Expectations (for testing):
-    #       If any of the specified newpanes are invalid, return error
-    #       A negative flag for edges (tblr) is ignored, but used for axis (vh)
-    # TODO:
-    #       Possible reordering detection, "split v h" (where "v" is the pane)
-    #           Senses reordering, e.g. "split horz v", and if unable to determine defaults to pane first
     if not fpp_PRIVATE.wg:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     wg = fpp_PRIVATE.wg
@@ -1839,6 +1823,22 @@ def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
     # Replace windowgram
     fpp_PRIVATE.wg.Import_Wg( wg )
 
+##
+## Flex: Rename
+##
+## Analogues:
+##
+##      Join may be used for rename: join <old>.<new>
+##      Rename may be used for swap: rename <old><new> <new><old>
+##
+## Tests:
+##
+##      new rename.t1 ; break 1 3x2 ABCabc ; rename AaBb BbAa
+##      new rename.t2 ; break 1 3x2 ABCabc ; rename Aa Bb Bb Cc Cc Aa
+##      new rename.t3 ; break 1 2x2 1 ; rename 12 21 34 43
+##      new rename.t4 ; break 1 2x2 1 ; rename 1 2 2 1 3 4 4 3
+##
+
 @flex(
     command     = "rename",
     group       = "modifiers",
@@ -1847,14 +1847,6 @@ def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
                   "pairs may be specified.",
 )
 def cmd_rename(fpp_PRIVATE, panes_from, *panes_to):
-    # Analogues:
-    #       Join may be used for rename: join <old>.<new>
-    #       Rename may be used for swap: rename <old><new> <new><old>
-    # Tests:
-    #       new rename.t1 ; break 1 3x2 ABCabc ; rename AaBb BbAa
-    #       new rename.t2 ; break 1 3x2 ABCabc ; rename Aa Bb Bb Cc Cc Aa
-    #       new rename.t3 ; break 1 2x2 1 ; rename 12 21 34 43
-    #       new rename.t4 ; break 1 2x2 1 ; rename 1 2 2 1 3 4 4 3
     if not fpp_PRIVATE.wg:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     # This command could have wrapped join, but a native implementation has been made to reduce overhead somewhat
@@ -1918,6 +1910,20 @@ def cmd_rename(fpp_PRIVATE, panes_from, *panes_to):
     # Replace windowgram
     fpp_PRIVATE.wg.Import_Wg( wg )
 
+##
+## Flex: Swap
+##
+## Analogues:
+##
+##      Join may be used for swap: join <one>.<two> <two>.<one>
+##      Rename may be used for swap: rename <old><new> <new><old>
+##
+## Notes:
+##
+##      This was going to be simple single pane swap, but decided to go for the same flexibility as rename
+##      Because of this, much of the code between rename and swap is the same or similar
+##
+
 @flex(
     command     = "swap",
     group       = "modifiers",
@@ -1926,12 +1932,6 @@ def cmd_rename(fpp_PRIVATE, panes_from, *panes_to):
                   "pairs may be specified.",
 )
 def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
-    # Analogues:
-    #       Join may be used for swap: join <one>.<two> <two>.<one>
-    #       Rename may be used for swap: rename <old><new> <new><old>
-    # Notes:
-    #       This was going to be simple single pane swap, but decided to go for the same flexibility as rename
-    #       Because of this, much of the code between rename and swap is the same or similar
     if not fpp_PRIVATE.wg:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
     # This command could have wrapped join, but a native implementation has been made to reduce overhead somewhat
@@ -1983,6 +1983,84 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
     # Replace windowgram
     fpp_PRIVATE.wg.Import_Wg( wg )
 
+##
+## Flex: Drag
+##
+##          When dragging an edge, it will be forced to stop for pane preservation
+##          When dragging a group edge, the internal edges are scaled, only the group edge is contiguous
+##          Drags specified edges, keeps opposing edges pinned, and scales the inner edges
+##          May need a specialized scaler for this command
+##          Maximum scale range depends whether a pane disappears or not
+##          Dragging pushing edges was considered, but this would get messy and probably unnecessary
+##
+##      drag <panes> <dir> <how>                    drags edge, panes == xyz / dir == up / how == 50%
+##      drag <edge> <panes> <dir> <how>             drags group edge, edge == top, bottom, left, right
+##
+
+# TODO
+
+##
+## Flex: Insert
+##
+##          Modifiers insert and clone need to differentiate between a deduced edge (1 parameter), a specified edge (2),
+##          and the cardinal edge of a specified group (2).  Each of these is handled by one master function that will
+##          infer the intent by the specified arguments and their originating function.  This may even allow some degree
+##          of reordering of arguments, e.g., axis-edge and direction-group.  Also maybe support as edge:axis and
+##          group:direction, this would assist the highlighter when it's implemented.
+##
+##          Both insert and clone uses the [axis] parameter as quasi-optional.  If the edge is ambiguous, it requests it
+##          for clarification.
+##
+##          Both insert and clone requires the edge-group parameter to have holes, all that is important the specified
+##          edge and that it is unambiguous.
+##
+##          Already supported mid-stream optional arguments, to use from flex function, specify "axis_OPTIONAL".  Note
+##          that there will still need to be two distinct functions, but they will both be wrappers for a core function.
+##
+##      insert [axis] <edge> <size> [newpanes]      insert pane at edge of panes, just like add but with panes
+##      insert <direction> <group> <size> [newpanes]
+##
+
+# TODO
+
+##
+## Flex: Clone
+##
+##          The clone command takes the first group of panes (forming a full rectangle), and along the specified edge,
+##          it stretches (like scale) the surrounding windowgram to accommodate, and inserts it in.  Most useful for
+##          rapidly expanding common windowgram patterns.
+##
+##          The [newpanes] argument follows the same order as the first <group> parameter.
+##
+##          Clone could be thought of as:
+##              1) insert <pane> ...        Axis 1 stretch/scale and insert
+##              2) scale ...                Axis 2 scale to fit
+##              Then copy the group into the new pane.  This is pretty easy to implement.
+##
+##          Requires 3 functions: public by edge, public by group, hidden internal that is core of both wrappers
+##
+##      clone <group> [axis] <edge> [newpanes]
+##      clone <group> <direction> <group> [newpanes]
+##
+
+# TODO
+
+##
+## Flex: Delete
+##
+##      delete <pane>                               remove pane from edge of window (del, clip, remove, drop, rm)
+##
+
+# TODO
+
+##
+## Flex: Mirror
+##
+##      mirror <group>                              mirrors a group, supports *
+##
+
+# TODO: Group
+
 @flex(
     command     = "mirror",
     group       = "modifiers",
@@ -1997,6 +2075,14 @@ def cmd_mirror(fpp_PRIVATE):
     wg.Import_Lines( [ "".join( [ ch for ch in reversed(list(line)) ] ) for line in windowgram_lines ] )
     fpp_PRIVATE.wg.Import_Wg( wg )
 
+##
+## Flex: Flip
+##
+##      flip <group>                                flips a group, supports *
+##
+
+# TODO: Group
+
 @flex(
     command     = "flip",
     group       = "modifiers",
@@ -2010,6 +2096,14 @@ def cmd_flip(fpp_PRIVATE):
     windowgram_lines = wg.Export_Lines()
     wg.Import_Lines( reversed(windowgram_lines) )
     fpp_PRIVATE.wg.Import_Wg( wg )
+
+##
+## Flex: Rotate
+##
+##      rotate <how>                                how == cw, ccw, 180, interpret 1..3 and -1..-3 as multiples of 90
+##
+
+# TODO
 
 
 
