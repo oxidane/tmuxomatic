@@ -2005,20 +2005,21 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
 ##          Modifiers insert and clone need to differentiate between a deduced edge (1 parameter), a specified edge (2),
 ##          and the cardinal edge of a specified group (2).  Each of these is handled by one master function that will
 ##          infer the intent by the specified arguments and their originating function.  This may even allow some degree
-##          of reordering of arguments, e.g., axis-edge and direction-group.  Also maybe support as edge:axis and
-##          group:direction, this would assist the highlighter when it's implemented.
+##          of reordering of arguments, e.g., axis-edge and how-group.  Also maybe support as edge:axis and group:how,
+##          this would assist the highlighter when it's implemented.
 ##
-##          Both insert and clone uses the [axis] parameter as quasi-optional.  If the edge is ambiguous, it requests it
+##          Both insert and clone uses the <how> parameter as quasi-optional.  If the edge is ambiguous, it requests it
 ##          for clarification.
 ##
-##          Both insert and clone requires the edge-group parameter to have holes, all that is important the specified
-##          edge and that it is unambiguous.
+##          Both insert and clone requires the edge/group parameter to have holes, all that's important is the specified
+##          edge and that it's unambiguous.
 ##
-##          Already supported mid-stream optional arguments, to use from flex function, specify "axis_OPTIONAL".  Note
-##          that there will still need to be two distinct functions, but they will both be wrappers for a core function.
+##          Mid-stream optional arguments (e.g. how) is probably not necessary, since the other function without this
+##          parameter will cover that application.  There will still need to be two distinct functions, but they will
+##          both be wrappers for a single core function.
 ##
-##      insert [axis] <edge> <size> [newpanes]      insert pane at edge of panes, just like add but with panes
-##      insert <direction> <group> <size> [newpanes]
+##      insert <edge> <size> [newpanes]      insert pane at edge of panes, just like add but with panes
+##      insert <how> <group> <size> [newpanes]
 ##
 
 # TODO
@@ -2039,8 +2040,8 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
 ##
 ##          Requires 3 functions: public by edge, public by group, hidden internal that is core of both wrappers
 ##
-##      clone <group> [axis] <edge> [newpanes]
-##      clone <group> <direction> <group> [newpanes]
+##      clone <group> <edge> [newpanes]
+##      clone <group> <how> <group> [newpanes]
 ##
 
 # TODO
