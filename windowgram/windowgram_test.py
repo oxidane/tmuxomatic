@@ -43,9 +43,16 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 ## Tests are ordered lowest level to highest level:
 ##
-##      Windowgram classes
-##      Flex modifiers
-##      Readme demonstrations
+##      Windowgram Convert
+##      WindowgramGroup Convert
+##      Flex Modifiers
+##      Readme Demonstrations
+##
+## TODO:
+##
+##      Windowgram
+##      Windowgram_Mask
+##      PaneList
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 ##
@@ -83,18 +90,14 @@ FLEXUNIT_SPACE = 1
 ##----------------------------------------------------------------------------------------------------------------------
 
 def UnitTests():
-
-    ##
-    ## Run unit test classes in the order they appear
-    ##
-
+    # Sense test classes
     classes = inspect.getmembers(sys.modules[__name__])
     classes = [ classobj for classname, classobj in classes if classname.startswith("Test") ]
     # Pair with line numbers
     classes = [ (classobj, inspect.getsourcelines(classobj)[1]) for classobj in classes ]
     # Sort by line numbers
     classes = sorted(classes, key=lambda tup: tup[1])
-    # Run
+    # Run tests in the order they appear
     stream = io.StringIO()
     runner = unittest.TextTestRunner( stream=stream )
     error = ""
@@ -161,21 +164,120 @@ class SenseTestCase(unittest.TestCase):
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Unit Testing :: Windowgram Classes
-##
-## TODO: Add support for the other windowgram classes and functions.
+## Unit Testing :: Windowgram_Convert
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-class TestWindowgramClasses(SenseTestCase):
+class Test_Windowgram_Convert(SenseTestCase):
 
     ##----------------------------------------------------------------------------------------------------------
     ##
-    ## WindowgramGroup class
+    ## Windowgram_Convert class
     ##
     ##----------------------------------------------------------------------------------------------------------
 
-    def test_WindowgramGroupConversions_ListToPattern(self):
+    def test_Windowgram_Convert_StringToLines(self):
+        data_i = "1135\n1145\n2245\n"
+        data_o = [ "1135", "1145", "2245" ]
+        data_x = Windowgram_Convert.String_To_Lines( data_i )
+        self.assertTrue( data_x == data_o )
+
+    def test_Windowgram_Convert_LinesToString(self):
+        data_i = [ "1135", "1145", "2245" ]
+        data_o = "1135\n1145\n2245\n"
+        data_x = Windowgram_Convert.Lines_To_String( data_i )
+        self.assertTrue( data_x == data_o )
+
+    def test_Windowgram_Convert_StringToChars(self):
+        data_i = "1135\n1145\n2245\n"
+        data_o = [ [ "1", "1", "3", "5" ], [ "1", "1", "4", "5" ], [ "2", "2", "4", "5" ] ]
+        data_x = Windowgram_Convert.String_To_Chars( data_i )
+        self.assertTrue( data_x == data_o )
+
+    def test_Windowgram_Convert_CharsToString(self):
+        data_i = [ [ "1", "1", "3", "5" ], [ "1", "1", "4", "5" ], [ "2", "2", "4", "5" ] ]
+        data_o = "1135\n1145\n2245\n"
+        data_x = Windowgram_Convert.Chars_To_String( data_i )
+        self.assertTrue( data_x == data_o )
+
+    def test_Windowgram_Convert_StringToParsed(self):
+        data_i = "1135\n1145\n2245\n"
+        data_o = {
+            '1': {'y': 1, 'x': 1, 'w': 2, 'n': '1', 'h': 2},
+            '2': {'y': 3, 'x': 1, 'w': 2, 'n': '2', 'h': 1},
+            '3': {'y': 1, 'x': 3, 'w': 1, 'n': '3', 'h': 1},
+            '4': {'y': 2, 'x': 3, 'w': 1, 'n': '4', 'h': 2},
+            '5': {'y': 1, 'x': 4, 'w': 1, 'n': '5', 'h': 3}, }
+        data_x, error_string, error_line = Windowgram_Convert.String_To_Parsed( data_i )
+        self.assertTrue( error_string is None )
+        self.assertTrue( error_line is None )
+        self.assertTrue( data_x == data_o )
+
+    def test_Windowgram_Convert_ParsedToString(self):
+        data_i = {
+            '1': {'y': 1, 'x': 1, 'w': 2, 'n': '1', 'h': 2},
+            '2': {'y': 3, 'x': 1, 'w': 2, 'n': '2', 'h': 1},
+            '3': {'y': 1, 'x': 3, 'w': 1, 'n': '3', 'h': 1},
+            '4': {'y': 2, 'x': 3, 'w': 1, 'n': '4', 'h': 2},
+            '5': {'y': 1, 'x': 4, 'w': 1, 'n': '5', 'h': 3}, }
+        data_o = "1135\n1145\n2245\n"
+        data_x = Windowgram_Convert.Parsed_To_String( data_i )
+        self.assertTrue( data_x == data_o )
+
+    def test_Windowgram_Convert_StringToMosaic(self):
+        data_i = "1135\n1145\n2245\n"
+        data_m = [
+            "@@::\n@@::\n::::\n",
+            "::::\n::::\n@@::\n",
+            "::@:\n::::\n::::\n",
+            "::::\n::@:\n::@:\n",
+            ":::@\n:::@\n:::@\n",
+        ]
+        data_o = (
+            Windowgram("1135\n1145\n2245\n"),
+            [
+                [ Windowgram("11..\n11..\n....\n"), Windowgram("@@::\n@@::\n::::\n") ],
+                [ Windowgram("....\n....\n22..\n"), Windowgram("::::\n::::\n@@::\n") ],
+                [ Windowgram("..3.\n....\n....\n"), Windowgram("::@:\n::::\n::::\n") ],
+                [ Windowgram("....\n..4.\n..4.\n"), Windowgram("::::\n::@:\n::@:\n") ],
+                [ Windowgram("...5\n...5\n...5\n"), Windowgram(":::@\n:::@\n:::@\n") ],
+            ],
+        )
+        data_x = Windowgram_Convert.String_To_Mosaic( data_i, data_m )
+        self.assertTrue( Mosaics_Equal( data_x, data_o ) )
+
+    def test_Windowgram_Convert_MosaicToString(self):
+        data_i = (
+            Windowgram("xxxx\nxxxx\nxxxx\n"), # This will be completely overwritten by the following mask pairs
+            [
+                [ Windowgram("11..\n11..\n....\n"), Windowgram("@@::\n@@::\n::::\n") ],
+                [ Windowgram("....\n....\n22..\n"), Windowgram("::::\n::::\n@@::\n") ],
+                [ Windowgram("..3.\n....\n....\n"), Windowgram("::@:\n::::\n::::\n") ],
+                [ Windowgram("....\n..4.\n..4.\n"), Windowgram("::::\n::@:\n::@:\n") ],
+                [ Windowgram("...5\n...5\n...5\n"), Windowgram(":::@\n:::@\n:::@\n") ],
+            ],
+        )
+        data_o = "1135\n1145\n2245\n"
+        data_x = Windowgram_Convert.Mosaic_To_String( data_i )
+        self.assertTrue( data_x == data_o )
+
+    def test_Windowgram_Convert_Purify(self):
+        data_i = "\n\n1135      \n1145 # etc\n2245\n\n"
+        data_o = "1135\n1145\n2245\n"
+        data_x = Windowgram_Convert.Purify( data_i )
+        self.assertTrue( data_x == data_o )
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Unit Testing :: WindowgramGroup_Convert
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+class Test_WindowgramGroup_Convert(SenseTestCase):
+
+    def test_WindowgramGroup_Convert_ListToPattern(self):
 
         # Inclusion of blank lines
         group_i = ['1\n', '2\n2\n']
@@ -226,7 +328,7 @@ class TestWindowgramClasses(SenseTestCase):
         group_x = WindowgramGroup_Convert.List_To_Pattern( group_i, 100, 12, 1, testmode=8 )
         self.assertTrue( group_o == group_x )
 
-    def test_WindowgramGroupConversions_PatternToList(self):
+    def test_WindowgramGroup_Convert_PatternToList(self):
 
         # Test basic height differences
         group_i = """
@@ -275,7 +377,7 @@ class TestWindowgramClasses(SenseTestCase):
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-class TestFlexModifiers(SenseTestCase):
+class Test_FlexModifiers(SenseTestCase):
 
     ##----------------------------------------------------------------------------------------------------------
     ##
@@ -283,7 +385,7 @@ class TestFlexModifiers(SenseTestCase):
     ##
     ##----------------------------------------------------------------------------------------------------------
 
-    def test_Scale_OneParameter_DupCharacters(self): # Created in flex using "new unittest Scale_OneParameter_DupCharacters"
+    def test_Scale_One_DupCharacters(self): # Created in flex using "new unittest Scale_One_DupCharacters"
         self.assertFlexSequence( [
             "scale 1",
             "scale 19",
@@ -312,7 +414,7 @@ class TestFlexModifiers(SenseTestCase):
                                       11111111111111111111
         """ )
 
-    def test_Scale_OneParameter_DupPercentages(self): # Created in flex using "new unittest Scale_OneParameter_DupPercentages"
+    def test_Scale_One_DupPercentages(self): # Created in flex using "new unittest Scale_One_DupPercentages"
         self.assertFlexSequence( [
             "scale 200%",
             "scale 400%",
@@ -338,7 +440,7 @@ class TestFlexModifiers(SenseTestCase):
                                                       1111111111
         """ )
 
-    def test_Scale_OneParameter_DupMultipliers(self): # Created in flex using "new unittest Scale_OneParameter_DupMultipliers"
+    def test_Scale_One_DupMultipliers(self): # Created in flex using "new unittest Scale_One_DupMultipliers"
         self.assertFlexSequence( [
             "scale 2x",
             "scale 1x",
@@ -369,7 +471,7 @@ class TestFlexModifiers(SenseTestCase):
                                                            1111111111111111
         """ )
 
-    def test_Scale_OneParameter_MixedJoin1(self): # Created in flex using "new unittest Scale_OneParameter_MixedJoin1"
+    def test_Scale_One_MixedJoin1(self): # Created in flex using "new unittest Scale_One_MixedJoin1"
         self.assertFlexSequence( [
             "scale 5:10",
             "scale 10:5",
@@ -391,7 +493,7 @@ class TestFlexModifiers(SenseTestCase):
             11111            11111111111111111111                  11111
         """ )
 
-    def test_Scale_OneParameter_MixedJoin2(self): # Created in flex using "new unittest Scale_OneParameter_MixedJoin2"
+    def test_Scale_One_MixedJoin2(self): # Created in flex using "new unittest Scale_One_MixedJoin2"
         self.assertFlexSequence( [
             "scale 5x10",
             "scale 10x5",
@@ -413,7 +515,7 @@ class TestFlexModifiers(SenseTestCase):
             11111            11111111111111111111                  11111
         """ )
 
-    def test_Scale_TwoParameter_Mixed(self): # Created in flex using "new unittest Scale_TwoParameter_Mixed"
+    def test_Scale_Two_Mixed(self): # Created in flex using "new unittest Scale_Two_Mixed"
         self.assertFlexSequence( [
             "scale 5 10",
             "scale 10 5",
@@ -464,7 +566,7 @@ class TestFlexModifiers(SenseTestCase):
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-class TestReadmeDemonstrations(SenseTestCase):
+class Test_ReadmeDemonstrations(SenseTestCase):
 
     def test_ReadmeDemonstration1(self): # Created in flex using "new unittest ReadmeDemonstration1"
         self.assertFlexSequence( [
