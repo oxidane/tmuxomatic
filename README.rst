@@ -65,7 +65,7 @@ Compare this window from ``session_example``, with its screenshot from
     Q run figlet "Q"
     A foc
 
-.. figure:: https://github.com/oxidane/tmuxomatic/blob/master/img/example.png
+.. figure:: https://github.com/oxidane/tmuxomatic/blob/master/screenshots/screenshot_example.png
    :alt: 
 
 With tmuxomatic, you'll never have to manually split, position, or size
