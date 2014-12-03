@@ -36,9 +36,10 @@ package_dir = {}
 package_data = {}
 data_files = [
 	( "bin", [ "tmuxomatic" ] ),
-# Add readme after it's ported to pypi+github friendly format, add example sessions after install has been sorted out
+	( sysconfig.get_python_lib() + "/tmuxomatic", [ "README.rst" ] ),
+# TODO: Add example sessions after install has been sorted out
 #	( sysconfig.get_python_lib() + "/tmuxomatic",
-#		[ "README.md", "session_example", "session_practical", "session_unsupported", "session_yaml" ] ),
+#		[ "session_example", "session_practical", "session_unsupported", "session_yaml" ] ),
 ]
 
 classifiers = [
