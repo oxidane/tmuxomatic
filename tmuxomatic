@@ -63,7 +63,10 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DESCRIPTION = "Intelligent tmux session management"
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
-VERSION = "2.10" # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.11" # x.y: x = Major feature, y = Minor feature or bug fix
+##
+##  2.11    2014-12-03  Fixed PyPI distribution
+##                      This version is otherwise identical to the previous release
 ##
 ##  2.10    2014-12-03  Better screenshot
 ##                      Added contributor agreement
