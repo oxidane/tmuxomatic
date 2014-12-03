@@ -474,6 +474,7 @@ class Windowgram_Convert():
     @staticmethod
     def String_To_Lines(windowgram):
         return [ linestrip(line) for line in list(filter(None, (windowgram+"\n").split("\n"))) ] # No blank lines
+
     @staticmethod
     def Lines_To_String(windowgram_lines):
         return "\n".join([ line for line in windowgram_lines ]) + "\n" # Each line has one \n
@@ -484,6 +485,7 @@ class Windowgram_Convert():
     def String_To_Chars(windowgram):
         # A list of lists, each containing one or more single characters representing a line
         return [ [ ch for ch in list(ln) ] for ix, ln in enumerate(windowgram.split("\n")[:-1]) ]
+
     @staticmethod
     def Chars_To_String(windowgram_chars):
         return Windowgram_Convert.Lines_To_String( [ "".join(line_chars) for line_chars in windowgram_chars ] )
@@ -532,6 +534,7 @@ class Windowgram_Convert():
         except Exception as error:
             return None, str(error), panes_y
         return windowgram_parsed, None, None
+
     @staticmethod
     def Parsed_To_String(windowgram_parsed): # windowgram_string
         # TODO: Probably should do error handling
@@ -567,6 +570,7 @@ class Windowgram_Convert():
             windowgram_pairs.append( [ pair_w, Windowgram(mask_string) ] )
         windowgram_mosaic = [ Windowgram(windowgram_string), windowgram_pairs ]
         return windowgram_mosaic
+
     @staticmethod
     def Mosaic_To_String(windowgram_mosaic): # windowgram_string
         # Merges pairs of [ wg_data, wg_mask ] onto wg_base, ordered bottom to top
@@ -718,6 +722,7 @@ class Windowgram():
         self.NoChange()
 
     def __eq__(self, other):
+        # Needed by Mosaics_Equal()
         return True if self.Export_String() == other.Export_String() else False
 
     def Reset(self):

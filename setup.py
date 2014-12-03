@@ -22,7 +22,7 @@ homepage = extract("HOMEPAGE")
 description = extract("DESCRIPTION")
 long_description = fullfile("README.rst")
 
-KEYWORDS = "tmux, session manager, screen, shell, command line, iterm, xterm, split"
+KEYWORDS = "tmux, session manager, screen, shell, command line, iterm, xterm, split, windowgram"
 keywords = [ key.strip() for key in KEYWORDS.split(",") ] # "1, 2, 3" -> ["1", "2", "3"]
 
 # Maybe someone could help get this sorted out properly.  I don't want to use a subdirectory or a manifest file.  When

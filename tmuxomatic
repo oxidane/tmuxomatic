@@ -65,7 +65,9 @@ DESCRIPTION = "Intelligent tmux session management"
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
 VERSION = "2.10" # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.10    TBD         TBD
+##  2.10    2014-12-03  Better screenshot
+##                      Added contributor agreement
+##                      Added the readme to PyPI
 ##
 ##  2.9     2014-11-26  Added PyPI compatible readme file
 ##                      Flex scale single parameter mixed type support

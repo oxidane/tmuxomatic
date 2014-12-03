@@ -136,11 +136,10 @@ class SenseTestCase(unittest.TestCase):
     ##
     ##  Commands        List of strings, each string may have multiple commands but corresponds to one windowgram
     ##  Pattern         Windowgram pattern, where they are ordered left to right, top to bottom, with first line 1-N
-    ##  Build           OPTIONAL: If specified it will add the new windowgram(s) into the existing one and print it
     ##
     ##----------------------------------------------------------------------------------------------------------
 
-    def assertFlexSequence(self, commands, pattern, build=None):
+    def assertFlexSequence(self, commands, pattern):
         windowgramgroup_list = WindowgramGroup_Convert.Pattern_To_List( pattern )
         cmdlen, ptnlen = len(commands), len(windowgramgroup_list)
         if cmdlen != ptnlen:

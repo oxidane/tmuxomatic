@@ -11,7 +11,7 @@ A completely different kind of tmux session manager.
 3. [Flex](https://github.com/oxidane/tmuxomatic#flex) ... ( i. [Concepts](https://github.com/oxidane/tmuxomatic#flex-concepts), ii. [Demo #1](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram), iii. [Demo #2](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-the-windowgram) )
 4. [Installation](https://github.com/oxidane/tmuxomatic#installation) ... ( i. [Installation Guide](https://github.com/oxidane/tmuxomatic#installation-guide), ii. [Optional Packages](https://github.com/oxidane/tmuxomatic#optional-packages) )
 5. [Notes on tmux](https://github.com/oxidane/tmuxomatic#notes-on-tmux)
-6. [Contributor Agreement](https://github.com/oxidane/tmuxomatic#contributor-agreement)
+6. [Contributor agreement](https://github.com/oxidane/tmuxomatic#contributor-agreement)
 7. [Copyright and License](https://github.com/oxidane/tmuxomatic#copyright-and-license)
 
 
@@ -315,9 +315,9 @@ To use tmuxomatic, you don't have to know everything about [how to use tmux](htt
 
 
 
-## Contributor Agreement
+## Contributor agreement
 
-Pull requests must be original source, or properly attributed public domain source.  By submitting, you agree that your contribution will inherit the current copyright and license, and will be subject to future changes.
+Pull requests must be original source, or properly attributed public domain source.  By submitting, you agree that your contribution will inherit the current copyright and license, and will be subject to future changes in tmuxomatic or related projects.
 
 
 
