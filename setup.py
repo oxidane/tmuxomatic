@@ -19,7 +19,8 @@ def fullfile(filename): f = open(filename, "r") ; text = f.read() ; f.close() ; 
 
 version = extract("VERSION")
 homepage = extract("HOMEPAGE")
-description = extract("DESCRIPTION")
+hashtags = "#tmux"
+description = extract("DESCRIPTION") + " " + hashtags
 long_description = fullfile("README.rst")
 
 KEYWORDS = "tmux, session manager, screen, shell, command line, iterm, xterm, split, windowgram"
@@ -76,7 +77,7 @@ setup(
 
 	description=description,
 	long_description=long_description,
-	license="BSD 3-Clause",
+	license="BSD 3-Clause (tmuxomatic), Other (windowgram)",
 	url=homepage,
 	download_url="https://pypi.python.org/pypi/tmuxomatic",
 

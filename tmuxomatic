@@ -61,9 +61,12 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##     Revisions     |
 ##-------------------+
 ##
-DESCRIPTION = "Intelligent tmux session management"
+DESCRIPTION = "Intelligent tmux session management" # Maybe add: "using windowgrams"
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
-VERSION = "2.11" # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.12" # x.y: x = Major feature, y = Minor feature or bug fix
+##
+##  2.12    2014-12-05  Various PyPI fixes
+##                      Fixed the screenshot link and index links
 ##
 ##  2.11    2014-12-03  Fixed PyPI distribution
 ##                      This version is otherwise identical to the previous release
@@ -125,8 +128,6 @@ VERSION = "2.11" # x.y: x = Major feature, y = Minor feature or bug fix
 ##
 ##      Finish flex console
 ##
-##      PyPI compatible readme file
-##
 ##      License and release windowgram library
 ##
 ## Minor:
@@ -135,7 +136,9 @@ VERSION = "2.11" # x.y: x = Major feature, y = Minor feature or bug fix
 ##      quite awesome for usability, and makes demonstrations easier to follow.  A toggle for edge mode could show
 ##      background colors on neighboring panes to illustrate edges.  Maybe this could be an objective for 3.x.
 ##      When ncurses support is added, the flex shell should highlight panes for relevant flex modifier parameters as
-##      they're being typed.
+##      they're being typed.  Normal pane display is white text on color background.  Highlight is color text on white
+##      background.  Use gray for secondary highlight, e.g. the optional scale panes parameter for the commands drag,
+##      insert, and clone.
 ##
 ##      Video demonstration of tmuxomatic, including the "--scale" feature and how it's used for rapid development
 ##      and modification of windowgrams ("12\n34" -> 4x -> add small windows).  Keep it short, fast paced,
