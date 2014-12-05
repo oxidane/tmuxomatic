@@ -43,7 +43,7 @@ Compare this window from `session_example`, with its screenshot from `tmuxomatic
 	Q run figlet "Q"
 	A foc
 
-![](https://github.com/oxidane/tmuxomatic/blob/master/screenshots/screenshot_example.png)
+![](https://raw.github.com/oxidane/tmuxomatic/master/screenshots/screenshot_example.png)
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
 
