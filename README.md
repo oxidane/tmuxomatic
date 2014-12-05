@@ -9,10 +9,10 @@ A completely different kind of tmux session manager.
 1. [Introduction](#introduction)
 2. [Learn by example](#learn-by-example)
 3. [Flex](#flex) ... ( i. [Concepts](#flex-concepts), ii. [Demo #1](#flex-demonstration-1----create-a-new-windowgram), iii. [Demo #2](#flex-demonstration-2----extend-the-windowgram) )
-4. [Installation](#installation) ... ( i. [Installation Guide](#installation-guide), ii. [Optional Packages](#optional-packages) )
+4. [Installation](#installation) ... ( i. [Requirements](#installation-requirements), ii. [Guide](#installation-guide), iii. [Optional packages](#optional-packages) )
 5. [Notes on tmux](#notes-on-tmux)
 6. [Contributor agreement](#contributor-agreement)
-7. [Copyright and License](#copyright-and-license)
+7. [Legal](#legal) ... ( i. [Copyright](#copyright), ii. [License](#license) )
 
 
 
@@ -59,8 +59,6 @@ In tmuxomatic 2, **flex** was added to automate the construction and modificatio
 
 Flex is an object-oriented windowgram editor.  It is visually expressive, naturally worded, logically ordered, minimal, and powerful.  Its short command set may be combined to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who desire detailed windowgrams without the tedium of manual entry.
 
-
-
 #### Flex concepts
 
 Before proceeding with the flex demonstration, take a moment to review the following key concepts.
@@ -72,8 +70,6 @@ Before proceeding with the flex demonstration, take a moment to review the follo
   * **Direction**: Cardinal directions (up, down, left, right) for movement or to specify object edge
 
 In the demonstrations below, the flex shell is represented by the `flex>` prompt.  For a detailed list of all flex commands, type `help` from the shell at any time.
-
-
 
 #### Flex demonstration #1 -- Create a new windowgram
 
@@ -180,8 +176,6 @@ That's it.  Our windowgram is ready to use.
 
 Either type `done` and flex will open this session file in tmux, or type `exit` and add some directions to the session file.  The directions specify run commands, home directories, and focus state.  For more information on directions, see the example session at the start of this readme.
 
-
-
 #### Flex demonstration #2 -- Extend the windowgram
 
 In this demonstration is presented in summary form.  Here we modify the windowgram from the previous demonstration, using a different set of flex commands.
@@ -272,7 +266,9 @@ In this demonstration is presented in summary form.  Here we modify the windowgr
 
 ## Installation
 
-This application requires:
+#### Installation Requirements
+
+This application requires the following:
 
   * [Python 3](http://www.python.org/getit/) +
   * [tmux 1.8](http://tmux.sourceforge.net/) +
@@ -321,11 +317,15 @@ Pull requests must be original source, or properly attributed public domain sour
 
 
 
-## Copyright and License
+## Legal
+
+#### Copyright
 
 Copyright 2013-2014, Oxidane.  All rights reserved.
 
+#### License
+
 The `windowgram` module is presently not licensed for use outside the tmuxomatic project.  For more information, including future plans for an open source license, please see the file `windowgram.py`.
 
-All other source is distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution of the source.  See the license for details.
+Everything else is distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution.  See the license for details.
 
