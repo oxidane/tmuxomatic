@@ -1438,7 +1438,7 @@ def flex_processor(wg, commands): # -> error
                   "the x and y axis.  If only one axis is specified then the value will be applied to both x and " + \
                   "y.  When specifying both, any valid combination will work, including mixing multipliers with " + \
                   "the times separator, for example \"2xx2x\", \"200%x2x\", \"2xx200%\", etc.",
-    aliases     = [ ["resize", "scale "],
+    aliases     = [ ["size", "scale "], # Resize conflicts with rename for two character ambiguity, replaced with size
                     ["half", "scale 50%"], ["double", "scale 2x"],
                     ["wider", "scale 200%:100%"], ["thinner", "scale 50%:100%"],
                     ["taller", "scale 100%:200%"], ["shorter", "scale 100%:50%"],
@@ -2067,6 +2067,14 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
 ##
 ##      insert <edge> <size> [newpanes]      insert pane at edge of panes, just like add but with panes
 ##      insert <how> <group> <size> [newpanes]
+##
+##          +---------------+---------------------------------------------------------------------------------------+
+##          |   original    |       insert 12 2 X       insert r 3 1 X      insert r * 1 X      insert v 1245 1 X   |
+##          +---------------+---------------------------------------------------------------------------------------+
+##          |   123         |       1XX23               123X                123X                1X23                |
+##          |   456         |       44556               4566                456X                4X56                |
+##          |   789         |       77889               7899                789X                7789                |
+##          +---------------+---------------------------------------------------------------------------------------+
 ##
 
 # TODO
