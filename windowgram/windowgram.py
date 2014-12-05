@@ -13,8 +13,8 @@ An exception has been granted to the official tmuxomatic project, originating fr
     https://github.com/oxidane/tmuxomatic
     https://pypi.python.org/pypi/tmuxomatic
 
-A proper open source license is expected to be applied on or before the release of this windowgram module as a separate
-project.  Please check this source at a later date for these changes.
+A proper open source license is expected to be applied sometime after the release of this windowgram module as a
+separate project.  Please check this source at a later date for these changes.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
 INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
