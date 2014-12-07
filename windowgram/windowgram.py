@@ -967,6 +967,7 @@ def PaneList_AssimilatedSorted(this, that): # this_plus_that_assimilated_and_sor
 def scalecore_v1(windowgram_string, w_chars, h_chars):
     ##
     ## Based on the scale code used in tmuxomatic 1.x
+    ## Used until 2.0, then reactivated in 2.3
     ##
     def scale_one(element, multiplier):
         # Scale element using integer rounding, multiplier must be float
@@ -1001,6 +1002,7 @@ def scalecore_v1(windowgram_string, w_chars, h_chars):
 def scalecore_v2(windowgram, w_chars, h_chars):
     ##
     ## Simpler but less accurate scale code added in tmuxomatic 2.0
+    ## Used briefly from 2.0 to 2.2
     ##
     from_w, from_h = Windowgram(windowgram).Analyze_WidthHeight()
     x_mul = float(w_chars) / float(from_w)
@@ -1020,7 +1022,7 @@ def scalecore(windowgram, w_chars, h_chars, retry=None): # TODO: Scale by wg to 
     windowgram_scaled = "" # Scope, and reset in case of error
     # Retry with necessary increment and/or decrement until desired pane dimensions are reached.  This is required for
     # commands like "break", which need to scale to a specific pane size.  There's likely a way to derive these metrics
-    # reliably, but this works too.  Verify that two resizes are necessary with the following commands:
+    # directly, but this works.  The following verifies that two resizes are necessary.  This is scale core case two:
     #       "new 1 ; scale 42x42 ; break 1 6x6 ; break 1 3x3"
     tries = 0
     tries_max = 16 # An infinite loop is unlikely, but this maximum will prevent such an occurrence
@@ -1033,9 +1035,9 @@ def scalecore(windowgram, w_chars, h_chars, retry=None): # TODO: Scale by wg to 
     if tries < 1: tries = 1
     try_w, try_h = w_chars, h_chars
     while tries:
-        # Scale core discrepancy example, note that v2 loses 3 panes, but v1 does not:
+        # Scale core discrepancy example, note that v2 loses 3 panes, but v1 does not.  This is scale core case one:
         #       "new 1 ; break 1 2x2 ; scale 3x3 ; scale 2x2"
-        windowgram_scaled = scalecore_v1( windowgram, try_w, try_h ) # Using v1 as of 2.3
+        windowgram_scaled = scalecore_v1( windowgram, try_w, try_h ) # Must be v1, see tests
         if paneid:
             _, _, new_w, new_h = Windowgram( windowgram_scaled ).Panes_PaneXYWH( paneid )
             if new_w == exp_w and new_h == exp_h: break

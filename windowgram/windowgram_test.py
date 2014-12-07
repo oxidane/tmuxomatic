@@ -45,6 +45,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 ##      Windowgram Convert
 ##      WindowgramGroup Convert
+##      Flex Cores
 ##      Flex Modifiers
 ##      Readme Demonstrations
 ##
@@ -372,17 +373,108 @@ class Test_WindowgramGroup_Convert(SenseTestCase):
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Unit Testing :: Flex Modifiers
+## Unit Testing :: Flex Cores
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-class Test_FlexModifiers(SenseTestCase):
+class Test_FlexCores(SenseTestCase):
 
-    ##----------------------------------------------------------------------------------------------------------
-    ##
-    ## Flex Modifier: Scale
-    ##
-    ##----------------------------------------------------------------------------------------------------------
+    def test_ScaleCore(self):
+        group_i = """
+            111223
+            111223
+            111223
+            xxxyyz
+            xxxyyz
+            XXXYYZ
+        """
+        group_o = [ "111111222233", "111111222233", "xxxxxxyyyyzz" ]
+        group_x = scalecore( group_i, 12, 3 )
+        self.assertTrue( Windowgram_Convert.Lines_To_String(group_o) == group_x )
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Unit Testing :: Flex Modifier :: Scale
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+class Test_FlexModifier_Scale(SenseTestCase):
+
+    ## Enforces the use of scale core v1, and will fail if v2 is reactivated.  See notes in scale core.
+
+    def test_Scale_ScaleCore_CaseOne(self): # Created in flex using "new unittest Scale_ScaleCore_CaseOne"
+        self.assertFlexSequence( [
+            "break 1 2x2 ; scale 3x3 ; scale 2x2",
+        ], """
+            01
+            23
+        """ )
+
+    ## Tests the scale core multiple resizing that's necessary in some situations.  See notes in scale core.
+
+    def test_Scale_ScaleCore_CaseTwo(self): # Created in flex using "new unittest Scale_ScaleCore_CaseTwo"
+        self.assertFlexSequence( [
+            "scale 42x42 ; break 1 6x6 ; break 1 3x3",
+        ], """
+            000000000111AAABBB222222222333333333444444444555555555
+            000000000111AAABBB222222222333333333444444444555555555
+            000000000111AAABBB222222222333333333444444444555555555
+            000000000CCCDDDEEE222222222333333333444444444555555555
+            000000000CCCDDDEEE222222222333333333444444444555555555
+            000000000CCCDDDEEE222222222333333333444444444555555555
+            000000000FFFGGGHHH222222222333333333444444444555555555
+            000000000FFFGGGHHH222222222333333333444444444555555555
+            000000000FFFGGGHHH222222222333333333444444444555555555
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+        """ )
+
+    ## General use
 
     def test_Scale_One_DupCharacters(self): # Created in flex using "new unittest Scale_One_DupCharacters"
         self.assertFlexSequence( [
@@ -547,15 +639,17 @@ class Test_FlexModifiers(SenseTestCase):
                                         11111111111111111111
         """ )
 
-    ##----------------------------------------------------------------------------------------------------------
-    ##
-    ## Keep this note for adding new unit tests for flex
-    ##
-    ##   flex> new unittest ScaleCommand    # When created, the output switches to a convenient code dump
-    ##   flex> scale 25x10                  # Run commands and the unittest code will be built as you go
-    ##   flex> scale 20x20                  # When finished just paste the generated code into this class
-    ##
-    ##----------------------------------------------------------------------------------------------------------
+
+
+##----------------------------------------------------------------------------------------------------------
+##
+## Keep this note for adding new unit tests for flex
+##
+##   flex> new unittest ScaleCommand    # When created, the output switches to a convenient code dump
+##   flex> scale 25x10                  # Run commands and the unittest code will be built as you go
+##   flex> scale 20x20                  # When finished just paste the generated code into this class
+##
+##----------------------------------------------------------------------------------------------------------
 
 
 
