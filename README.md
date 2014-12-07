@@ -6,13 +6,13 @@
 
 A completely different kind of tmux session manager.
 
-1. [Introduction](#introduction)
-2. [Learn by example](#learn-by-example)
-3. [Flex](#flex) ... ( i. [Concepts](#flex-concepts), ii. [Demo #1](#flex-demonstration-1----create-a-new-windowgram), iii. [Demo #2](#flex-demonstration-2----extend-the-windowgram) )
-4. [Installation](#installation) ... ( i. [Requirements](#installation-requirements), ii. [Guide](#installation-guide), iii. [Optional packages](#optional-packages) )
-5. [Notes on tmux](#notes-on-tmux)
-6. [Contributor agreement](#contributor-agreement)
-7. [Legal](#legal) ... ( i. [Copyright](#copyright), ii. [License](#license) )
+1. [Introduction](https://github.com/oxidane/tmuxomatic#introduction)
+2. [Learn by example](https://github.com/oxidane/tmuxomatic#learn-by-example)
+3. [Flex](https://github.com/oxidane/tmuxomatic#flex) ... ( i. [Concepts](https://github.com/oxidane/tmuxomatic#flex-concepts), ii. [Demo #1](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram), iii. [Demo #2](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-the-windowgram) )
+4. [Installation](https://github.com/oxidane/tmuxomatic#installation) ... ( i. [Requirements](https://github.com/oxidane/tmuxomatic#installation-requirements), ii. [Guide](https://github.com/oxidane/tmuxomatic#installation-guide), iii. [Optional packages](https://github.com/oxidane/tmuxomatic#optional-packages) )
+5. [Notes on tmux](https://github.com/oxidane/tmuxomatic#notes-on-tmux)
+6. [Contributor agreement](https://github.com/oxidane/tmuxomatic#contributor-agreement)
+7. [Legal](https://github.com/oxidane/tmuxomatic#legal) ... ( i. [Copyright](https://github.com/oxidane/tmuxomatic#copyright), ii. [License](https://github.com/oxidane/tmuxomatic#license) )
 
 
 
