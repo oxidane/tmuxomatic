@@ -20,7 +20,7 @@ def fullfile(filename): f = open(filename, "r") ; text = f.read() ; f.close() ; 
 version = extract("VERSION")
 homepage = extract("HOMEPAGE")
 hashtags = "#tmux"
-description = extract("DESCRIPTION") + " " + hashtags
+description = extract("DESCRIPTION") + " ... " + hashtags
 long_description = fullfile("README.rst")
 
 KEYWORDS = "tmux, session manager, screen, shell, command line, iterm, xterm, split, windowgram"

@@ -63,7 +63,10 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DESCRIPTION = "Intelligent tmux session management" # Maybe add: "using windowgrams"
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
-VERSION = "2.12" # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.13" # x.y: x = Major feature, y = Minor feature or bug fix
+##
+##  2.13    2014-12-06  Fixed PyPI long description by setting the index links to absolute
+##                      PyPI does not support relative links (see https://stackoverflow.com/q/16367770)
 ##
 ##  2.12    2014-12-05  Various PyPI fixes
 ##                      Fixed the screenshot link and index links
