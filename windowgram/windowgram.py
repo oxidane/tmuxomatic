@@ -956,12 +956,20 @@ def PaneList_AssimilatedSorted(this, that): # this_plus_that_assimilated_and_sor
 ##
 ## These functions are shared by multiple flex commands.
 ##
+##      --------------- ----------------------- ----------------------------------------------------------
+##      Cores           Functions               Upcoming
+##      --------------- ----------------------- ----------------------------------------------------------
+##      scalecore       scale, break            2.x: drag, insert, clone
+##      groupcore       join                    2.x: drag, insert, clone, delete, flip, mirror, rotate
+##      edgecore                                2.x: drag, insert, clone, delete
+##      --------------- ----------------------- ----------------------------------------------------------
+##
 ##----------------------------------------------------------------------------------------------------------------------
 
 ##
 ## Scale core ... Scales a windowgram
 ##
-## Used by ... scale, break
+## Callers: scale, break
 ##
 
 def scalecore_v1(windowgram_string, w_chars, h_chars):
@@ -1049,8 +1057,7 @@ def scalecore(windowgram, w_chars, h_chars, retry=None): # TODO: Scale by wg to 
 ##
 ## Group core ... Tests group of panes for contiguity, returns group capability, if panes are missing it suggests them
 ##
-## Used by ... join
-## Anticipating ... drag, insert, delete, flip (group), mirror (group)
+## Callers: join ... TODO: drag, insert, clone, delete, flip (group), mirror (group), rotate (group)
 ##
 
 class GroupStatus:
@@ -1062,7 +1069,7 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
     ##
     ## Groups the specified panes and returns the findings.  If the panes are valid, but there are gaps in the group,
     ## it recursively detects which panes need to be added to complete the group.  If a group is determined to be valid,
-    ## the windowgram may be trivially updated by the user using a simple search and replace.
+    ## the windowgram may be trivially updated by the caller using a simple search and replace.
     ##
     used, unused = wg.Panes_GetUsedUnused()
     # Pane validity
@@ -1111,9 +1118,9 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##          @   Size of user window proportional to counter axis
 ##          *   Size of current windowgram (just an alias for 1x/100%)
 ##
-##          scale 20x@          Scale y proportionally according to 20 x (200x100 -> 20x10)
-##          scale @:*           Scale x proportionally to current y (200x100, 100x25 -> 50x25)
-##          scale @             If @ is specified for both, it's 50% of the window (200x100 -> 100x50)
+##          scale 20:@          Scale y proportionally according to 20 x (200:100 -> 20:10)
+##          scale @:*           Scale x proportionally to current y (200:100, 100:25 -> 50:25)
+##          scale @             If @ is specified for both, it's 50% of the window (200:100 -> 100:50)
 ##
 ## Possible modifiers:
 ##
