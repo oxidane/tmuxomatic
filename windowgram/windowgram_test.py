@@ -388,9 +388,35 @@ class Test_FlexCores(SenseTestCase):
             xxxyyz
             XXXYYZ
         """
-        group_o = [ "111111222233", "111111222233", "xxxxxxyyyyzz" ]
+        group_o = Windowgram_Convert.Lines_To_String( [ "111111222233", "111111222233", "xxxxxxyyyyzz" ] )
         group_x = scalecore( group_i, 12, 3 )
-        self.assertTrue( Windowgram_Convert.Lines_To_String(group_o) == group_x )
+        self.assertTrue( group_o == group_x )
+
+    def test_GroupCore_Sufficient(self):
+        wg = Windowgram( """
+            qqwwee
+            qqwwee
+            rrttyy
+            rrttyy
+            uuiioo
+            uuiioo
+        """ )
+        result, suggestions = groupcore( wg, "qwrt" )
+        self.assertTrue( result == GroupStatus.Success )
+        self.assertTrue( suggestions == "" )
+
+    def test_GroupCore_Insufficient(self):
+        wg = Windowgram( """
+            1122xx
+            1122yy
+            33zzzz
+            33zzzz
+            rrzzzz
+            rrsstt
+        """ )
+        result, suggestions = groupcore( wg, "123" )
+        self.assertTrue( result == GroupStatus.Insufficient_Panes )
+        self.assertTrue( suggestions == PaneList_AssimilatedSorted( "rstxyz", "" ) )
 
 
 
