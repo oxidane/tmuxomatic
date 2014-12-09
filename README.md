@@ -43,11 +43,7 @@ Compare this window from `session_example`, with its screenshot from `tmuxomatic
 	Q run figlet "Q"
 	A foc
 
-<!-- Original markdown, replaced with html to fix image size when converted to rst on PyPI
-![](https://raw.githubusercontent.com/oxidane/tmuxomatic/master/screenshots/screenshot_example.png)
--->
-<!-- Original: 1210x604 ... Github: 728x363 -->
-<p style="display: table-row;"><a href="https://raw.githubusercontent.com/oxidane/tmuxomatic/master/screenshots/screenshot_example.png" target="_blank"><img src="https://raw.githubusercontent.com/oxidane/tmuxomatic/master/screenshots/screenshot_example.png" alt="" align="left" style="width: 728px; height: 363px;"></a></p>
+<p><div class="figure" style="display: table-row;"><a href="https://raw.githubusercontent.com/oxidane/tmuxomatic/master/screenshots/screenshot_example.png" target="_blank"><img src="https://raw.githubusercontent.com/oxidane/tmuxomatic/master/screenshots/screenshot_example.png" alt="" align="left" style="width: 728px; height: 363px;"></a></div></p><!-- Replaced the following markdown with html to fix image size when converted to rst on PyPI ... Original dimensions: 1210x604 ... Github approximate dimensions: 728x363 ... TODO: Revert back to markdown when PyPI supports it as a valid file format for long_description data ... ![](https://raw.githubusercontent.com/oxidane/tmuxomatic/master/screenshots/screenshot_example.png) -->
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
 
