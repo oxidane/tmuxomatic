@@ -46,10 +46,12 @@ Compare this window from `session_example`, with its screenshot from `tmuxomatic
 <!-- Original markdown, replaced with html to fix image size when converted to rst on PyPI
 ![](https://raw.githubusercontent.com/oxidane/tmuxomatic/master/screenshots/screenshot_example.png)
 -->
-<p style="display: table-row"> <!-- Prevents the following text from being formatted alongside image -->
-	<!-- Original: 1210x604 ... Github: 728x363 -->
+<!-- Prevents the following text from being formatted alongside image -->
+<!-- Original: 1210x604 ... Github: 728x363 -->
+<p style="display: table-row">
 	<img src="https://raw.githubusercontent.com/oxidane/tmuxomatic/master/screenshots/screenshot_example.png" align="left" width="728px" height="363px">
-</p><br>
+</p>
+<p> </p>
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
 
