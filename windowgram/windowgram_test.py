@@ -121,15 +121,21 @@ def UnitTests():
 class SenseTestCase(unittest.TestCase):
 
     def runTest(self):
-        # Sense test methods
-        methods = inspect.getmembers(self.__class__(), predicate=inspect.ismethod)
-        methods = [ method for method in methods if method[0].startswith("test_") ]
-        # Pair with line numbers
-        methods = [ (method[1], inspect.getsourcelines(method[1])[1]) for method in methods ]
-        # Sort by line numbers
-        methods = sorted(methods, key=lambda tup: tup[1])
-        # Execute tests in the order they appear
-        for method in methods: method[0]()
+        try:
+            # Sense test methods
+            methods = inspect.getmembers(self.__class__(), predicate=inspect.ismethod)
+            methods = [ method for method in methods if method[0].startswith("test_") ]
+            # Pair with line numbers
+            methods = [ (method[1], inspect.getsourcelines(method[1])[1]) for method in methods ]
+            # Sort by line numbers
+            methods = sorted(methods, key=lambda tup: tup[1])
+            # Execute tests in the order they appear
+            for method in methods: method[0]()
+        except AssertionError as e:
+            raise e # Forward
+        except Exception as e:
+            error = "An error occurred during testing: " + repr(e) # Show the error in case of failure during test
+            raise AssertionError( e ) # Forward the exception to properly halt because of failure
 
     ##----------------------------------------------------------------------------------------------------------
     ##
@@ -267,6 +273,17 @@ class Test_Windowgram_Convert(SenseTestCase):
         data_x = Windowgram_Convert.Purify( data_i )
         self.assertTrue( data_x == data_o )
 
+    def test_Windowgram_Convert_TransposeCharacters(self):
+        data_i = [  [ "1", "1", "3", "5" ],
+                    [ "1", "1", "4", "5" ],
+                    [ "2", "2", "4", "5" ] ]
+        data_o = [  [ "1", "1", "2" ],
+                    [ "1", "1", "2" ],
+                    [ "3", "4", "4" ],
+                    [ "5", "5", "5" ] ]
+        data_x = Windowgram_Convert.Transpose_Chars( data_i )
+        self.assertTrue( data_x == data_o )
+
 
 
 ##----------------------------------------------------------------------------------------------------------------------
@@ -379,6 +396,8 @@ class Test_WindowgramGroup_Convert(SenseTestCase):
 
 class Test_FlexCores(SenseTestCase):
 
+    ## Scale Core
+
     def test_ScaleCore(self):
         group_i = """
             111223
@@ -391,6 +410,8 @@ class Test_FlexCores(SenseTestCase):
         group_o = Windowgram_Convert.Lines_To_String( [ "111111222233", "111111222233", "xxxxxxyyyyzz" ] )
         group_x = scalecore( group_i, 12, 3 )
         self.assertTrue( group_o == group_x )
+
+    ## Group Core
 
     def test_GroupCore_Sufficient(self):
         wg = Windowgram( """
@@ -417,6 +438,112 @@ class Test_FlexCores(SenseTestCase):
         result, suggestions = groupcore( wg, "123" )
         self.assertTrue( result == GroupStatus.Insufficient_Panes )
         self.assertTrue( suggestions == PaneList_AssimilatedSorted( "rstxyz", "" ) )
+
+    ## Edge Core
+
+    def test_EdgeCore_Merger(self):
+        #
+        # The merger algorithm should be obvious.  Required to merge the results of SwipeSide algorithm.
+        #
+        self.assertTrue( edgecore_merger( [[3, 3, 5], [9, 0, 2], [9, 3, 5], [9, 6, 8]] ) == [[3, 3, 5], [9, 0, 8]] )
+        self.assertTrue( edgecore_merger( [[9, 6, 8], [9, 3, 5], [3, 3, 5], [9, 0, 2]] ) == [[3, 3, 5], [9, 0, 8]] )
+
+    def test_EdgeCore_SideSwipe(self):
+        #
+        # SideSwipe algorithm (not to be confused with SwipeSide)
+        #
+        # This algorithm is axis-agnostic; illustrated tests are vertical, i.e., horizontal swaps parameters.
+        #
+        # TODO: More comprehensive with altering edges that produce disparate return values instead of [ 1, 1, 1 ].
+        # To produce these tests, inject the respective windowgram into edgecore() and print the results then exit.
+        # Note that both pairs will have to be yielded per test (@A with @E, @B with @F, etc).
+        #
+        # Successful    Successful    Fail    Fail
+        # @A @B @C @D   @E @F @G @H   @I @J   @K @L
+        # .2 1. .2 1.   .1 2. .1 2.   .2 1.   2. .1
+        # 12 12 12 12   21 21 21 21   .2 .2   2. 2.
+        # 1. 1. .2 .2   2. 2. .1 .1   1. .2   .1 2.
+        #
+        # Reminder of the parameters ....... p1x   p2x   p1y   p2y
+        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 2, 3, 1, 2 ) == [ 1, 1, 1 ] )  # @A
+        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 1, 3, 2, 2 ) == [ 1, 1, 1 ] )  # @B
+        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 2, 2, 1, 3 ) == [ 1, 1, 1 ] )  # @C
+        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 1, 2, 2, 3 ) == [ 1, 1, 1 ] )  # @D
+        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 1, 2, 2, 3 ) == [ 1, 1, 1 ] )  # @E
+        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 2, 2, 1, 3 ) == [ 1, 1, 1 ] )  # @F
+        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 1, 3, 2, 2 ) == [ 1, 1, 1 ] )  # @G
+        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 2, 3, 1, 2 ) == [ 1, 1, 1 ] )  # @H
+        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 3, 3, 1, 2 ) == None )         # @I
+        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 1, 1, 2, 3 ) == None )         # @J
+        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 1, 2, 3, 3 ) == None )         # @K
+        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 2, 3, 1, 1 ) == None )         # @L
+
+    def test_EdgeCore_SwipeSide(self):
+        #
+        # SwipeSide algorithm (not to be confused with SideSwipe)
+        #
+        # This algorithm is axis-agnostic; when using X major, the windowgram and pane must be transposed.
+        #
+        wg = Windowgram( """
+            xx000yyyy # xxx111333 (original, transposed)
+            xx000yyyy # xxx111333
+            xx000yyyy # 000zzz444
+            11zzz2222 # 000zzz444
+            11zzz2222 # 000zzz444
+            11zzz2222 # yyy444555
+            334445555 # yyy444555
+            334445555 # yyy444555
+            334445555 # yyy444555
+            """ )
+        windowgram_chars_yx = wg.Export_Chars()
+        windowgram_chars_xy = Windowgram_Convert.Transpose_Chars( windowgram_chars_yx )
+        windowgram_parsed = wg.Export_Parsed()
+        group = "012345"
+        # For cleaner processing
+        def edgescan_q(axis, direction, windowgram_parsed, group, windowgram_chars):
+            runs = []
+            for pane in list(group):
+                parsedpane = windowgram_parsed[pane]
+                if not axis: parsedpane = Windowgram_Convert.Transpose_Pane( parsedpane )
+                this_runs = edgecore_swipeside( direction, parsedpane, group, windowgram_chars )
+                for run in this_runs: runs.append( run )
+            return edgecore_merger( runs )
+        def edgescan_v(direction):
+            return edgescan_q( True, direction, windowgram_parsed, group, windowgram_chars_yx )
+        def edgescan_h(direction):
+            return edgescan_q( False, direction, windowgram_parsed, group, windowgram_chars_xy )
+        # TBLR
+        self.assertTrue( edgescan_v( True )  == [[0, 2, 4], [3, 0, 1], [3, 5, 8], [6, 2, 4]] )
+        self.assertTrue( edgescan_v( False ) == [[3, 2, 4], [9, 0, 8]] )
+        self.assertTrue( edgescan_h( True )  == [[0, 3, 8], [2, 0, 2], [5, 3, 5]] )
+        self.assertTrue( edgescan_h( False ) == [[2, 3, 5], [5, 0, 2], [9, 3, 8]] )
+
+    def test_EdgeCore_Group_Invalid(self):
+        wg = Windowgram( """
+            WX
+            1X
+            12
+            Y2
+            YZ
+        """ )
+        # Irrational
+        status, axis, minimal, optimal = edgecore( wg, "WZ" )
+        self.assertTrue( status is EdgeStatus.Irrational )
+        self.assertTrue( axis is None )
+        self.assertTrue( minimal is None )
+        self.assertTrue( optimal is None )
+        # Ambiguous
+        status, axis, minimal, optimal = edgecore( wg, "WX1" )
+        self.assertTrue( status is EdgeStatus.Ambiguous )
+        self.assertTrue( axis is None )
+        self.assertTrue( minimal is None )
+        self.assertTrue( optimal is None )
+        # Noncontiguous
+        status, axis, minimal, optimal = edgecore( wg, "WXYZ" )
+        self.assertTrue( status is EdgeStatus.Noncontiguous )
+        self.assertTrue( axis is None )
+        self.assertTrue( minimal is None )
+        self.assertTrue( optimal is None )
 
 
 
