@@ -51,7 +51,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-import sys, argparse, re, math, copy, inspect
+import sys, argparse, re, math, copy, inspect, operator
 
 
 
@@ -382,6 +382,9 @@ def PaneOverlap(list_panes): # overlap_pane1, overlap_pane2
 ##
 ## Interface for the general-purpose use of windowgram data.  Instances of this class should use the name wg.
 ##
+## Note: Most algorithms do not account for windowgrams of varying widths (e.g., "12\n123\n").  Such windowgrams are
+## considered invalid in most cases, and where affective they should be fixed or rejected prior to use.
+##
 ## TODO:
 ##
 ##          Update all uses of windowgram to use a wg instance, instead of instantiating to use a method
@@ -483,8 +486,8 @@ class Windowgram_Convert():
 
     @staticmethod
     def String_To_Chars(windowgram):
-        # A list of lists, each containing one or more single characters representing a line
-        return [ [ ch for ch in list(ln) ] for ix, ln in enumerate(windowgram.split("\n")[:-1]) ]
+        # A list of lists, each containing one or more single characters representing a line, strips empty runs
+        return [ r for r in [ [ ch for ch in list(ln) ] for ix, ln in enumerate(windowgram.split("\n")[:-1]) ] if r ]
 
     @staticmethod
     def Chars_To_String(windowgram_chars):
@@ -586,12 +589,31 @@ class Windowgram_Convert():
                 s_l.append(line)
         return Windowgram_Convert.Lines_To_String( s_l )
 
-    ## String -> Lines -> String ... Purifies the windowgram by stripping comments and whitespace
+    ## String -> Lines -> String ... Full cycle purification of the windowgram by stripping comments and whitespace
 
     @staticmethod
     def Purify(windowgram):
-        # Full cycle purification -- asserts consistency of form
         return Windowgram_Convert.Lines_To_String( Windowgram_Convert.String_To_Lines( windowgram ) )
+
+    ## Transpose Chars ... Swaps columns and rows, essentially mirror ccw90
+
+    @staticmethod
+    def Transpose_Chars(windowgram_chars):
+        windowgram_chars_transposed = []
+        for x in range( len(windowgram_chars[0]) ):
+            windowgram_chars_transposed += [ [ windowgram_chars[y][x] for y in range( len(windowgram_chars) ) ] ]
+        return windowgram_chars_transposed
+
+    ## Transpose Pane ... Swaps [x with y] and [w with h] in a parsed pane (dict entry of windowgram_parsed)
+
+    @staticmethod
+    def Transpose_Pane(windowgram_parsedpane):
+        windowgram_parsedpane_transposed = copy.deepcopy( windowgram_parsedpane )
+        windowgram_parsedpane_transposed['x'], windowgram_parsedpane_transposed['y'] = \
+        windowgram_parsedpane_transposed['y'], windowgram_parsedpane_transposed['x']
+        windowgram_parsedpane_transposed['w'], windowgram_parsedpane_transposed['h'] = \
+        windowgram_parsedpane_transposed['h'], windowgram_parsedpane_transposed['w']
+        return windowgram_parsedpane_transposed
 
 ##
 ## Mosaics Equal ... Used for comparison purposes in testing, would not be needed if windowgram_mosaic used strings
@@ -959,9 +981,9 @@ def PaneList_AssimilatedSorted(this, that): # this_plus_that_assimilated_and_sor
 ##      --------------- ----------------------- ----------------------------------------------------------
 ##      Cores           Functions               Upcoming
 ##      --------------- ----------------------- ----------------------------------------------------------
-##      scalecore       scale, break            2.x: drag, insert, clone
-##      groupcore       join                    2.x: drag, insert, clone, delete, flip, mirror, rotate
-##      edgecore                                2.x: drag, insert, clone, delete
+##      scalecore       scale, break, drag      2.x: insert, clone
+##      groupcore       join, drag              2.x: insert, clone, delete, flip, mirror, rotate
+##      edgecore        drag                    2.x: insert, clone, delete
 ##      --------------- ----------------------- ----------------------------------------------------------
 ##
 ##----------------------------------------------------------------------------------------------------------------------
@@ -969,7 +991,7 @@ def PaneList_AssimilatedSorted(this, that): # this_plus_that_assimilated_and_sor
 ##
 ## Scale core ... Scales a windowgram
 ##
-## Callers: scale, break
+## Callers: scale, break, drag
 ##
 
 def scalecore_v1(windowgram_string, w_chars, h_chars):
@@ -1057,7 +1079,7 @@ def scalecore(windowgram, w_chars, h_chars, retry=None): # TODO: Scale by wg to 
 ##
 ## Group core ... Tests group of panes for contiguity, returns group capability, if panes are missing it suggests them
 ##
-## Callers: join ... TODO: drag, insert, clone, delete, flip (group), mirror (group), rotate (group)
+## Callers: join, drag
 ##
 
 class GroupStatus:
@@ -1102,6 +1124,196 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
     # Result by now will be either of these
     if not suggestions: return GroupStatus.Success, ""
     return GroupStatus.Insufficient_Panes, suggestions
+
+##
+## Edge core ... Tests group of panes for contiguous edge and if valid reduces it to a common form for processing
+##
+## Callers: drag
+##
+
+class EdgeStatus:
+    Valid = 1
+    Irrational = 2      # No edge produced from data
+    Ambiguous = 3       # One or more edges were found (which may be on one or more axis)
+    Noncontiguous = 4   # The produced edge has one or more gaps
+
+def edgecore_set(runs):
+    # How one would expect list(set(runs)) to work if it were supported by the language (lists are incompatible)
+    # TODO: Possibly merge behavior into edgecore_merger() since invocation of both is so far mutually inclusive
+    setruns = []
+    for run in runs:
+        match = False
+        for setrun in setruns:
+            if run == setrun:
+                match = True
+        if not match: setruns += [ run ]
+    return setruns
+
+# Required for merging contiguous runs that are likely to be unordered ... Presently SwipeSide produces such runs
+
+def edgecore_merger(runs):
+    # Merges neighboring runs where possible
+    oruns = sorted( runs, key = operator.itemgetter( 0, 1 ) )
+    nruns = []
+    run = []
+    for (y, x1, x2) in oruns:
+        if run == []: run = [y, x1, x2]
+        elif run[0] == y and run[2] + 1 == x1: run[2] = x2
+        else: nruns += [run] ; run = [y, x1, x2]
+    if run != []: nruns += [run]
+    return nruns
+
+# SideSwipe and SwipeSide ... Though syllable-swapped, the names are accurate descriptions of the respective algorithms
+
+def edgecore_sideswipe(p1x1, p1x2, p2x1, p2x2, p1y1, p1y2, p2y1, p2y2): # [ axis_opposite, scan_a, scan_b ] or None
+    # SideSwipe == Edge bordering panes only if contiguous
+    decrement_run = lambda run: [ val-1 for val in run ] # How one might expect run-1 to work
+    if p2x1 == p1x2 + 1:
+        if p2y1 <= p1y1 and p2y2 <= p1y2 and p1y1 <= p2y2: return decrement_run( [ p2x1, p1y1, p2y2 ] )
+        if p1y1 <= p2y1 and p2y2 <= p1y2                 : return decrement_run( [ p2x1, p2y1, p2y2 ] )
+        if p2y1 <= p1y1 and p1y2 <= p2y2                 : return decrement_run( [ p2x1, p1y1, p1y2 ] )
+        if p1y1 <= p2y1 and p1y2 <= p2y2 and p2y1 <= p1y2: return decrement_run( [ p2x1, p2y1, p1y2 ] )
+    if p1x1 == p2x2 + 1:
+        if p1y1 <= p2y1 and p1y2 <= p2y2 and p2y1 <= p1y2: return decrement_run( [ p1x1, p2y1, p1y2 ] )
+        if p2y1 <= p1y1 and p1y2 <= p2y2                 : return decrement_run( [ p1x1, p1y1, p1y2 ] )
+        if p1y1 <= p2y1 and p2y2 <= p1y2                 : return decrement_run( [ p1x1, p2y1, p2y2 ] )
+        if p2y1 <= p1y1 and p2y2 <= p1y2 and p1y1 <= p2y2: return decrement_run( [ p1x1, p1y1, p2y2 ] )
+    return None
+
+def edgecore_swipeside(top, panedict, group, windowgram_chars): # [ [ axis_opposite, scan_a, scan_b ], ... ]
+    # SwipeSide == Edge of specified pane where neighbor is not in group ... TB only, LR use transposition
+    p1x1, p1y1 = panedict['x'], panedict['y']
+    p1x2, p1y2 = panedict['x'] + panedict['w'] - 1, panedict['y'] + panedict['h'] - 1
+    # Runs as [ [ axis_opposite, scan_a, scan_b ], [ axis_opposite, scan_a, scan_b ], ... ]
+    runs, run = [], []
+    for ix in range( p1x1-1, p1x2 ):
+        pair = None
+        if top and ( p1y1 == 1 or windowgram_chars[p1y1-2][ix] not in group ):
+            pair = [ p1y1-1, ix ]
+        if not top and ( p1y2 == len(windowgram_chars) or windowgram_chars[p1y2][ix] not in group ):
+            pair = [ p1y2, ix ]
+        if pair is not None:
+            if run == []: run = [ pair[0], pair[1], pair[1] ]
+            elif pair[1] == run[2] + 1: run[2] = pair[1]
+            else: runs += [run] ; run = [ pair[0], pair[1], pair[1] ]
+    if run != []: runs += [run]
+    return runs
+
+# The main entry for producing an edge from a specified group
+
+def edgecore(wg, group, direction=None): # status, axis, minimal, optimal
+    ##
+    ## An edge may be specified in either form:
+    ##
+    ##      group               Group of panes defines the edge by fully enclosing it with panes unambiguously
+    ##      group, direction    Direction clarifies the edge by specifying either: 1) cardinal direction, 2) axis
+    ##
+    ## The return types:
+    ##
+    ##      axis                This is "h" or "v" if unambiguous, None if ambiguous
+    ##      minimal             List of lists ordered: horizontal, vertical; start, stop
+    ##      optimal             Same as minimal but default extended to be compatible with split type windowgrams
+    ##
+    ## Note that the latter (group, direction) should be used for tmuxomatic, or the optimal return set should be used,
+    ## otherwise the result could produce windowgrams that are incompatible with tmux.  See test cases for examples.
+    ##
+    used, unused = wg.Panes_GetUsedUnused()
+    # Resolve direction to common form ("v", "h", "t", "b", "l", "r") for easier reference
+    if direction is not None:
+        if is_axis_vert(direction): direction = "v"
+        elif is_axis_horz(direction): direction = "h"
+        else: direction = axiswithflag_to_direction( *direction_to_axiswithflag( direction ) ) # "t", "b", "r", "l"
+    # Algorithm uses parsed and character formats for edge detection
+    windowgram_parsed = wg.Export_Parsed()
+    windowgram_chars_yx = wg.Export_Chars()
+    windowgram_chars_xy = Windowgram_Convert.Transpose_Chars( windowgram_chars_yx ) # Only used to simplify TBRL
+    # Unordered array of edge characters, to be sorted later; defined as right/bottom of N, where left/top origin is N=0
+    edgebits_v = [] # Vertical edges as ..... [ (X, y1, y2), (X, y1, y2), ... ]
+    edgebits_h = [] # Horizontal edges as ... [ (Y, x1, x2), (Y, x1, x2), ... ]
+    # Produce the minimal edge
+    for paneid1 in windowgram_parsed.keys():
+        pane1 = windowgram_parsed[paneid1]
+        if paneid1 in group:
+            # Side specification (TBLR) treats the group as a contiguous pattern, as if it were a single -- and possibly
+            # non-rectangular -- pane.  In other words, when scanning an edge, if the neighbor is within the specified
+            # group, that edge is simply ignored.  For example "12": "left 12" ignores the edge between "1" and "2",
+            # producing an edge that is identical to "left 1".  Any grouping that is non-contiguous or non-rectangular
+            # is permitted here, but will be rejected later due to the ambiguity.  There is no reason to allow such
+            # ambiguity for the anticipated callers.  For example "12\n34", some ambiguity occurs: "left 124" produces
+            # edges that are equivalent of two separate but combined calls, "left 1" and "left 4".  Multiple edges are
+            # not valid for the expected use of edge definitions within the windowgram context, so any panes tangential
+            # to the edge definition panes should not be included, as they would interfere with edgecore processing.
+            if direction == "t" or direction == "b":
+                # Side TB (explicit)
+                topleft = True if direction == "t" else False
+                parsedpane = pane1
+                edgebits_h += edgecore_swipeside( topleft, parsedpane, group, windowgram_chars_yx )
+            elif direction == "l" or direction == "r":
+                # Side LR (explicit)
+                topleft = True if direction == "l" else False
+                parsedpane = Windowgram_Convert.Transpose_Pane(pane1)
+                edgebits_v += edgecore_swipeside( topleft, parsedpane, group, windowgram_chars_xy )
+            else: # direction == "v" or direction == "h"
+                # Axis VH (implicit or explicit)
+                for paneid2 in windowgram_parsed.keys():
+                    pane2 = windowgram_parsed[paneid2]
+                    if paneid2 in group and paneid1 != paneid2:
+                        p1x1, p1y1 = pane1['x'],                  pane1['y']
+                        p1x2, p1y2 = pane1['x'] + pane1['w'] - 1, pane1['y'] + pane1['h'] - 1
+                        p2x1, p2y1 = pane2['x'],                  pane2['y']
+                        p2x2, p2y2 = pane2['x'] + pane2['w'] - 1, pane2['y'] + pane2['h'] - 1
+                        if direction == "v" or direction is None:
+                            run = edgecore_sideswipe( p1x1, p1x2, p2x1, p2x2, p1y1, p1y2, p2y1, p2y2 )
+                        if run is not None: edgebits_v += [ run ]
+                        else:
+                            if direction == "h" or direction is None:
+                                run = edgecore_sideswipe( p1y1, p1y2, p2y1, p2y2, p1x1, p1x2, p2x1, p2x2 )
+                            if run is not None: edgebits_h += [ run ]
+    # Merge runs ... Neighboring runs are possible since panes are processed independently in edgecore_swipeside
+    edgebits_v = edgecore_merger( edgecore_set( edgebits_v ) ) # Set is required since SideSwipe produces duplicates
+    edgebits_h = edgecore_merger( edgecore_set( edgebits_h ) ) # Set is required since SideSwipe produces duplicates
+    # Select edge ... Resolves implicit axis
+    minimal, axis = (edgebits_v, "v") if edgebits_v else (edgebits_h, "h") # Ambiguity is rejected below
+    # Drop if invalid, with reason
+    if not edgebits_v and not edgebits_h: return EdgeStatus.Irrational, None, None, None # Irrational == No results
+    if edgebits_v and edgebits_h: return EdgeStatus.Ambiguous, None, None, None # Ambiguous == Multiple axis
+    if len(minimal) > 1: return EdgeStatus.Noncontiguous, None, None, None # Noncontiguous == Gaps / Multiple edge
+    #
+    # Derive an optimal run from the produced minimal run
+    #
+    # The following are examples of minimal ("m"), optimal ("o"), and identical ("=") runs.  The "|" is just a reminder
+    # that this is an illustration of edges (as opposed to panes).  Dots are for irrelevant areas of the windowgram.
+    # Vertical edges are shown, but of course the same applies to horizontal.
+    #
+    #       ......| |......    ......| |......    ......| |......
+    #       ......| |......    ...qqq|o|xxx...    ...MMM|:|NNN...
+    #       ...aaa| |bbb...    ...111|o|xxx...    ...111|o|OOO...
+    #       ...111|=|222...    ...111|m|222...    ...111|m|222...
+    #       ...zzz| |yyy...    ...111|o|rrr...    ...PPP|o|222...
+    #       ......| |......    ...www|o|rrr...    ...QQQ|:|RRR...
+    #       ......| |......    ......| |......    ......| |......
+    #
+    #             E.1                E.2                E.3
+    #
+    # As far as which to use, that entirely depends on the caller.  An optimal run is produced by this function since
+    # the processing to find it is minimal, as we already have the parsed windowgram ready.  The caller may choose to
+    # discard it.  For a few examples of use, consider the following case descriptions accompanying the illustrations.
+    #
+    #       E.1 : The minimal edge is also the optimal edge.  If the caller needs just the edge, then minimal is used.
+    #
+    #       E.2 : The user of drag may have specified the vertical edge between "1" and "2", but as you can see, if
+    #             minimal is used then there will be shearing on "1", resulting in an irregular pane, this an invalid
+    #             windowgram, however if optimal is used then the drag will produce a valid windowgram.  There are of
+    #             course other concerns with the drag function, like disappearing panes when going too far, but these
+    #             are beyond the scope of this core.
+    #
+    #       E.3 : The user of a drag may have specified "vertical 12:MNOPQR", in which case both minimal and optimal
+    #             will be dropped in favor of tracing the edge to the bounds of the encapsulating rectangle, denoted
+    #             by ":".  The optimal will first be validated to assure that the specified edge is containable.
+    #
+    optimal = minimal
+    # Done
+    return EdgeStatus.Valid, axis, minimal, optimal
 
 
 
@@ -1238,6 +1450,8 @@ def size_ConvertToCharacters(arg, base_characters):
 ##
 ## Flex: Expressions ... See actual usage for examples
 ##
+## TODO: Move this to above cores since some of these commands are now used there
+##
 
 ## Directions
 
@@ -1256,6 +1470,13 @@ def direction_to_axiswithflag(direction): # axis_as_vh, negate_flag | None, None
             if ix == 2: return "h", True    # Right
             if ix == 3: return "h", False   # Left
     return None, None
+
+def axiswithflag_to_direction(axis, flag): # direction
+    if axis == "v" and flag == False: return "t"
+    if axis == "v" and flag == True : return "b"
+    if axis == "h" and flag == True : return "r"
+    if axis == "h" and flag == False: return "l"
+    return None
 
 ## Detections
 
