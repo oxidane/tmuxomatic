@@ -1311,7 +1311,39 @@ def edgecore(wg, group, direction=None): # status, axis, minimal, optimal
     #             will be dropped in favor of tracing the edge to the bounds of the encapsulating rectangle, denoted
     #             by ":".  The optimal will first be validated to assure that the specified edge is containable.
     #
-    optimal = minimal
+    optimal = copy.deepcopy(minimal)
+    affected = group
+    # Up to now the runs are defined as character-to-character, but they really should be edge-to-edge
+    minimal[0][2] += 1
+    optimal[0][2] += 1
+    # Build a list of qualifying edges that are perpendicular to the run
+    qedges = [] # Contains only the full run for the qualifying edge, as [ [ paneid, scan_a, scan_b ], ... ]
+    for paneid in windowgram_parsed.keys():
+        parsedpane = windowgram_parsed[paneid]
+        on_axis = optimal[0][0]
+        x1, x2 = parsedpane['x'] - 1, parsedpane['x'] + parsedpane['w'] - 1
+        y1, y2 = parsedpane['y'] - 1, parsedpane['y'] + parsedpane['h'] - 1
+        if axis == "v" and ( x1 == on_axis or x2 == on_axis ): qedges.append( [ paneid, y1, y2 ] )
+        if axis == "h" and ( y1 == on_axis or y2 == on_axis ): qedges.append( [ paneid, x1, x2 ] )
+    # Function to merge first overlapping edge into the existing run and remove it from further consideration
+    def edgemagnet(qedges, panes, run_as_runs): # changed, qedges, panes, run_as_runs
+        # An edge is included if and only if it overlaps at least one character of the existing edge
+        run = run_as_runs[0]
+        for qedge in qedges:
+            # Not the most efficient way to do this, but so easy to code...
+            sq = list(range(qedge[1], qedge[2] + 1))
+            sr = list(range(run  [1], run  [2] + 1))
+            sqr = list(sorted(set(sq+sr)))
+            if len(sq) + len(sr) - len(sqr) > 1: # Since these counts are edge-to-edge, +1 is not an actual overlap
+                run = [ run[0], sqr[0], sqr[-1] ]
+                if not qedge[0] in panes: panes += qedge[0]
+                qedges = [ _ for _ in qedges if _[0] != qedge[0] ]
+                return True, qedges, panes, [run]
+        return False, qedges, panes, run_as_runs
+    # One dimensional overlap assimilation loop that halts when no more additions are found
+    while True:
+        changed, qedges, affected, optimal = edgemagnet( qedges, affected, optimal )
+        if not changed: break
     # Done
     return EdgeStatus.Valid, axis, minimal, optimal
 
