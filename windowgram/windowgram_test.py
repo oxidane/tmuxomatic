@@ -453,8 +453,7 @@ class Test_FlexCores(SenseTestCase):
         # SideSwipe algorithm (not to be confused with SwipeSide)
         #
         # This algorithm is axis-agnostic; illustrated tests are vertical, i.e., horizontal swaps parameters.
-        #
-        # To produce these tests, inject the respective windowgram into edgecore() and print the results then exit.
+        # To produce new tests, interject the respective windowgram into edgecore(), print the results, then exit.
         #
         # Successful    Successful    Fail    Fail
         # @A @B @C @D   @E @F @G @H   @I @J   @K @L
@@ -583,6 +582,11 @@ class Test_FlexCores(SenseTestCase):
         self.assertTrue( axis == "v" )
         self.assertTrue( minimal == [ [2, 2, 4] ] )
         self.assertTrue( optimal == [ [2, 1, 4] ] )
+        status, axis, minimal, optimal = edgecore( wg, "X", "right" )
+        self.assertTrue( status is EdgeStatus.Valid )
+        self.assertTrue( axis == "v" )
+        self.assertTrue( minimal == [ [3, 1, 2] ] )
+        self.assertTrue( optimal == [ [3, 0, 5] ] )
 
     def test_EdgeCore_GroupDirection_Horizontal(self):
         wg = Windowgram( """
@@ -594,8 +598,14 @@ class Test_FlexCores(SenseTestCase):
         self.assertTrue( axis == "h" )
         self.assertTrue( minimal == [ [1, 1, 3] ] )
         self.assertTrue( optimal == [ [1, 0, 5] ] )
+        status, axis, minimal, optimal = edgecore( wg, "3", "top" )
+        self.assertTrue( status is EdgeStatus.Valid )
+        self.assertTrue( axis == "h" )
+        self.assertTrue( minimal == [ [1, 0, 2] ] )
+        self.assertTrue( optimal == [ [1, 0, 5] ] )
 
-    def test_EdgeCore_WindowgramEdge(self): # All edges here will be equal, there are no neighbors to extend optimal
+    def test_EdgeCore_WindowgramEdge(self):
+        # All edges here will have equal minimal and optimal since there are no neighboring panes
         wg = Windowgram( """
             011222
             344555
@@ -624,6 +634,45 @@ class Test_FlexCores(SenseTestCase):
         self.assertTrue( axis is "h" )
         self.assertTrue( minimal == [ [0, 1, 3] ] )
         self.assertTrue( optimal == [ [0, 1, 3] ] )
+
+    def test_EdgeCore_Examples(self):
+        wg = Windowgram( """
+            # E.1
+            aaabbb #
+            111222 # =
+            zzzyyy #
+        """ )
+        status, axis, minimal, optimal = edgecore( wg, "12" )
+        self.assertTrue( status is EdgeStatus.Valid )
+        self.assertTrue( axis is "v" )
+        self.assertTrue( minimal == [ [3, 1, 2] ] )
+        self.assertTrue( optimal == [ [3, 1, 2] ] )
+        wg = Windowgram( """
+            # E.2
+            qqqxxx # o
+            111xxx # o
+            111222 # m
+            111rrr # o
+            wwwrrr # o
+        """ )
+        status, axis, minimal, optimal = edgecore( wg, "12" )
+        self.assertTrue( status is EdgeStatus.Valid )
+        self.assertTrue( axis is "v" )
+        self.assertTrue( minimal == [ [3, 2, 3] ] )
+        self.assertTrue( optimal == [ [3, 0, 5] ] )
+        wg = Windowgram( """
+            # E.3
+            MMMNNN #
+            111OOO # o
+            111222 # m
+            PPP222 # o
+            QQQRRR #
+        """ )
+        status, axis, minimal, optimal = edgecore( wg, "12" )
+        self.assertTrue( status is EdgeStatus.Valid )
+        self.assertTrue( axis is "v" )
+        self.assertTrue( minimal == [ [3, 2, 3] ] )
+        self.assertTrue( optimal == [ [3, 1, 4] ] )
 
 
 
