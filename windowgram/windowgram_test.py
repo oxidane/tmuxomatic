@@ -454,29 +454,30 @@ class Test_FlexCores(SenseTestCase):
         #
         # This algorithm is axis-agnostic; illustrated tests are vertical, i.e., horizontal swaps parameters.
         #
-        # TODO: More comprehensive with altering edges that produce disparate return values instead of [ 1, 1, 1 ].
         # To produce these tests, inject the respective windowgram into edgecore() and print the results then exit.
-        # Note that both pairs will have to be yielded per test (@A with @E, @B with @F, etc).
         #
         # Successful    Successful    Fail    Fail
         # @A @B @C @D   @E @F @G @H   @I @J   @K @L
         # .2 1. .2 1.   .1 2. .1 2.   .2 1.   2. .1
-        # 12 12 12 12   21 21 21 21   .2 .2   2. 2.
+        # .2 1. 12 12   .1 2. 21 21   .2 1.   2. ..
+        # 12 1. 12 12   21 2. 21 21   .2 ..   2. 2.
+        # 12 12 12 12   21 21 21 21   .2 ..   .1 2.
+        # 12 12 12 .2   21 21 21 .1   .2 .2   .1 2.
+        # 12 12 .2 .2   21 21 .1 .1   1. .2   .1 2.
         # 1. 1. .2 .2   2. 2. .1 .1   1. .2   .1 2.
-        #
-        # Reminder of the parameters ....... p1x   p2x   p1y   p2y
-        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 2, 3, 1, 2 ) == [ 1, 1, 1 ] )  # @A
-        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 1, 3, 2, 2 ) == [ 1, 1, 1 ] )  # @B
-        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 2, 2, 1, 3 ) == [ 1, 1, 1 ] )  # @C
-        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 1, 2, 2, 3 ) == [ 1, 1, 1 ] )  # @D
-        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 1, 2, 2, 3 ) == [ 1, 1, 1 ] )  # @E
-        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 2, 2, 1, 3 ) == [ 1, 1, 1 ] )  # @F
-        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 1, 3, 2, 2 ) == [ 1, 1, 1 ] )  # @G
-        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 2, 3, 1, 2 ) == [ 1, 1, 1 ] )  # @H
-        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 3, 3, 1, 2 ) == None )         # @I
-        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 1, 1, 2, 3 ) == None )         # @J
-        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 1, 2, 3, 3 ) == None )         # @K
-        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 2, 3, 1, 1 ) == None )         # @L
+        #                                    p1x   p2x   p1y   p2y
+        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 3, 7, 1, 6 ) == [ 1, 2, 5 ] )  # @A
+        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 1, 7, 4, 6 ) == [ 1, 3, 5 ] )  # @B
+        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 2, 5, 1, 7 ) == [ 1, 1, 4 ] )  # @C
+        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 1, 4, 2, 7 ) == [ 1, 1, 3 ] )  # @D
+        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 1, 6, 3, 7 ) == [ 1, 2, 5 ] )  # @E
+        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 4, 6, 1, 7 ) == [ 1, 3, 5 ] )  # @F
+        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 1, 7, 2, 5 ) == [ 1, 1, 4 ] )  # @G
+        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 2, 7, 1, 4 ) == [ 1, 1, 3 ] )  # @H
+        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 6, 7, 1, 5 ) == None )         # @I
+        self.assertTrue( edgecore_sideswipe( 1, 1, 2, 2, 1, 2, 5, 7 ) == None )         # @J
+        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 4, 7, 1, 3 ) == None )         # @K
+        self.assertTrue( edgecore_sideswipe( 2, 2, 1, 1, 1, 1, 3, 7 ) == None )         # @L
 
     def test_EdgeCore_SwipeSide(self):
         #

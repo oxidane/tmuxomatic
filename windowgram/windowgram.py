@@ -1173,21 +1173,16 @@ class EdgeStatus:
     Ambiguous = 3       # One or more edges were found (which may be on one or more axis)
     Noncontiguous = 4   # The produced edge has one or more gaps
 
-def edgecore_set(runs):
-    # How one would expect list(set(runs)) to work if it were supported by the language (lists are incompatible)
-    # TODO: Possibly merge behavior into edgecore_merger() since invocation of both is so far mutually inclusive
-    setruns = []
-    for run in runs:
-        match = False
-        for setrun in setruns:
-            if run == setrun:
-                match = True
-        if not match: setruns += [ run ]
-    return setruns
-
 # Required for merging contiguous runs that are likely to be unordered ... Presently SwipeSide produces such runs
 
 def edgecore_merger(runs):
+    # Not always needed, but always expected: Strip duplicate runs, as how one would expect list(set(runs)) to work
+    runs, scanruns = [], runs
+    for run in scanruns:
+        match = False
+        for setrun in runs:
+            if run == setrun: match = True
+        if not match: runs += [ run ]
     # Merges neighboring runs where possible
     oruns = sorted( runs, key = operator.itemgetter( 0, 1 ) )
     nruns = []
@@ -1241,17 +1236,20 @@ def edgecore(wg, group, direction=None): # status, axis, minimal, optimal
     ##
     ## An edge may be specified in either form:
     ##
-    ##      group               Group of panes defines the edge by fully enclosing it with panes unambiguously
+    ##      group               Group of panes defines the edge by fully enclosing it with panes, unambiguously
     ##      group, direction    Direction clarifies the edge by specifying either: 1) cardinal direction, 2) axis
     ##
     ## The return types:
     ##
-    ##      axis                This is "h" or "v" if unambiguous, None if ambiguous
-    ##      minimal             List of lists ordered: horizontal, vertical; start, stop
-    ##      optimal             Same as minimal but default extended to be compatible with split type windowgrams
+    ##      status              EdgeStatus.Valid if successful, if unsuccessful other types will be None, see errors
+    ##      axis                This is either "h" or "v" for the edge axis
+    ##      minimal             A single run in form of [[ on_axis, from_edge, to_edge ]]
+    ##      optimal             Same as minimal but edge is extended to be compatible with split/grid windowgrams
     ##
-    ## Note that the latter (group, direction) should be used for tmuxomatic, or the optimal return set should be used,
-    ## otherwise the result could produce windowgrams that are incompatible with tmux.  See test cases for examples.
+    ## For tmuxomatic, (group, direction) should be used and/or the optimal edge favored, otherwise the result could
+    ## produce windowgrams that are incompatible with tmux.
+    ##
+    ## For difference between minimal and optimal, consider the unittests, or see the upcoming "drag" implementation.
     ##
     used, unused = wg.Panes_GetUsedUnused()
     # Resolve direction to common form ("v", "h", "t", "b", "l", "r") for easier reference
@@ -1264,8 +1262,8 @@ def edgecore(wg, group, direction=None): # status, axis, minimal, optimal
     windowgram_chars_yx = wg.Export_Chars()
     windowgram_chars_xy = Windowgram_Convert.Transpose_Chars( windowgram_chars_yx ) # Only used to simplify TBRL
     # Unordered array of edge characters, to be sorted later; defined as right/bottom of N, where left/top origin is N=0
-    edgebits_v = [] # Vertical edges as ..... [ (X, y1, y2), (X, y1, y2), ... ]
-    edgebits_h = [] # Horizontal edges as ... [ (Y, x1, x2), (Y, x1, x2), ... ]
+    edgeruns_v = [] # Vertical edges as ..... [ (X, y1, y2), (X, y1, y2), ... ]
+    edgeruns_h = [] # Horizontal edges as ... [ (Y, x1, x2), (Y, x1, x2), ... ]
     # Produce the minimal edge
     for paneid1 in windowgram_parsed.keys():
         pane1 = windowgram_parsed[paneid1]
@@ -1283,12 +1281,12 @@ def edgecore(wg, group, direction=None): # status, axis, minimal, optimal
                 # Side TB (explicit)
                 topleft = True if direction == "t" else False
                 parsedpane = pane1
-                edgebits_h += edgecore_swipeside( topleft, parsedpane, group, windowgram_chars_yx )
+                edgeruns_h += edgecore_swipeside( topleft, parsedpane, group, windowgram_chars_yx )
             elif direction == "l" or direction == "r":
                 # Side LR (explicit)
                 topleft = True if direction == "l" else False
                 parsedpane = Windowgram_Convert.Transpose_Pane(pane1)
-                edgebits_v += edgecore_swipeside( topleft, parsedpane, group, windowgram_chars_xy )
+                edgeruns_v += edgecore_swipeside( topleft, parsedpane, group, windowgram_chars_xy )
             else: # direction == "v" or direction == "h"
                 # Axis VH (implicit or explicit)
                 for paneid2 in windowgram_parsed.keys():
@@ -1300,26 +1298,26 @@ def edgecore(wg, group, direction=None): # status, axis, minimal, optimal
                         p2x2, p2y2 = pane2['x'] + pane2['w'] - 1, pane2['y'] + pane2['h'] - 1
                         if direction == "v" or direction is None:
                             run = edgecore_sideswipe( p1x1, p1x2, p2x1, p2x2, p1y1, p1y2, p2y1, p2y2 )
-                        if run is not None: edgebits_v += [ run ]
+                        if run is not None: edgeruns_v += [ run ]
                         else:
                             if direction == "h" or direction is None:
                                 run = edgecore_sideswipe( p1y1, p1y2, p2y1, p2y2, p1x1, p1x2, p2x1, p2x2 )
-                            if run is not None: edgebits_h += [ run ]
+                            if run is not None: edgeruns_h += [ run ]
     # Merge runs ... Neighboring runs are possible since panes are processed independently in edgecore_swipeside
-    edgebits_v = edgecore_merger( edgecore_set( edgebits_v ) ) # Set is required since SideSwipe produces duplicates
-    edgebits_h = edgecore_merger( edgecore_set( edgebits_h ) ) # Set is required since SideSwipe produces duplicates
+    edgeruns_v = edgecore_merger( edgeruns_v ) # Duplicate input runs are possible
+    edgeruns_h = edgecore_merger( edgeruns_h ) # Duplicate input runs are possible
     # Select edge ... Resolves implicit axis
-    minimal, axis = (edgebits_v, "v") if edgebits_v else (edgebits_h, "h") # Ambiguity is rejected below
+    minimal, axis = (edgeruns_v, "v") if edgeruns_v else (edgeruns_h, "h") # Ambiguity is rejected below
     # Drop if invalid, with reason
-    if not edgebits_v and not edgebits_h: return EdgeStatus.Irrational, None, None, None # Irrational == No results
-    if edgebits_v and edgebits_h: return EdgeStatus.Ambiguous, None, None, None # Ambiguous == Multiple axis
-    if len(minimal) > 1: return EdgeStatus.Noncontiguous, None, None, None # Noncontiguous == Gaps / Multiple edge
+    if not edgeruns_v and not edgeruns_h: return EdgeStatus.Irrational, None, None, None # Irrational == No results
+    if edgeruns_v and edgeruns_h: return EdgeStatus.Ambiguous, None, None, None # Ambiguous == Multiple axis
+    if len(minimal) > 1: return EdgeStatus.Noncontiguous, None, None, None # Noncontiguous == Multiple edge | Gaps
     #
     # Derive an optimal run from the produced minimal run
     #
     # The following are examples of minimal ("m"), optimal ("o"), and identical ("=") runs.  The "|" is just a reminder
     # that this is an illustration of edges (as opposed to panes).  Dots are for irrelevant areas of the windowgram.
-    # Vertical edges are shown, but of course the same applies to horizontal.
+    # Vertical edges are shown, but of course the same applies to horizontal when the windowgram is properly transposed.
     #
     #       ......| |......    ......| |......    ......| |......
     #       ......| |......    ...qqq|o|xxx...    ...MMM|:|NNN...
@@ -1331,25 +1329,29 @@ def edgecore(wg, group, direction=None): # status, axis, minimal, optimal
     #
     #             E.1                E.2                E.3
     #
-    # As far as which to use, that entirely depends on the caller.  An optimal run is produced by this function since
-    # the processing to find it is minimal, as we already have the parsed windowgram ready.  The caller may choose to
+    # As far as which of minimal and optimal to use, that entirely depends on the caller.  An optimal run is produced by
+    # this function since it's convenient to find it, as we already have the parsed windowgram ready.  The caller may
     # discard it.  For a few examples of use, consider the following case descriptions accompanying the illustrations.
     #
-    #       E.1 : The minimal edge is also the optimal edge.  If the caller needs just the edge, then minimal is used.
+    #       E.1 : The minimal edge is also the optimal edge.  Typically optimal will be used for mechanics in split and
+    #             grid platforms.  However for illustrating the edge, minimal will be used, or a combination of the two.
+    #             In this case it doesn't matter as they're the same.
     #
-    #       E.2 : The user of drag may have specified the vertical edge between "1" and "2", but as you can see, if
-    #             minimal is used then there will be shearing on "1", resulting in an irregular pane, this an invalid
-    #             windowgram, however if optimal is used then the drag will produce a valid windowgram.  There are of
-    #             course other concerns with the drag function, like disappearing panes when going too far, but these
-    #             are beyond the scope of this core.
+    #       E.2 : The user of "drag" may have specified the vertical edge between "1" and "2", but as you can see, if
+    #             minimal is used then there will be shearing on "1", resulting in an irregular pane, thus an invalid
+    #             windowgram.  However if optimal is used, then the drag will produce a valid windowgram.  There are
+    #             other concerns with the "drag" function, like disappearing panes when going too far, but these are
+    #             outside the scope of this core, see callers.
     #
-    #       E.3 : The user of a drag may have specified "vertical 12:MNOPQR", in which case both minimal and optimal
+    #       E.3 : The user of a "drag" may have specified "vertical 12:MNOPQR", in which case both minimal and optimal
     #             will be dropped in favor of tracing the edge to the bounds of the encapsulating rectangle, denoted
-    #             by ":".  The optimal will first be validated to assure that the specified edge is containable.
+    #             by ":".  The optimal will first be validated to assure that the specified edge is containable.  Again
+    #             this is outside the edge core scope, but note that sometimes the edges produced here will be extended
+    #             further by the caller if necessary.
     #
     optimal = copy.deepcopy(minimal)
     affected = group
-    # Up to now the runs are defined as character-to-character, but they really should be edge-to-edge
+    # Up to now the runs are defined as character-to-character, but they must be edge-to-edge from here on
     minimal[0][2] += 1
     optimal[0][2] += 1
     # Build a list of qualifying edges that are perpendicular to the run
