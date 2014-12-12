@@ -972,6 +972,42 @@ def PaneList_AssimilatedSorted(this, that): # this_plus_that_assimilated_and_sor
 
 
 
+##
+## Flex: Expressions ... See actual usage for examples
+##
+
+## Directions
+
+valid_directions = [ # These directions are recognized, the list is ordered 0123 == TBRL || NSEW
+    [ "top", "t", "tp",     "north", "n",   "up", "u", "over", "above",     ],  # ix == 0 -> Vertical +
+    [ "bottom", "b", "bt",  "south", "s",   "down", "d", "under", "below",  ],  # ix == 1 -> Vertical -
+    [ "right", "r", "rt",   "east", "e"                                     ],  # ix == 2 -> Horizontal -
+    [ "left", "l", "lt",    "west", "w"                                     ],  # ix == 3 -> Horizontal +
+]
+
+def direction_to_axiswithflag(direction): # axis_as_vh, negate_flag | None, None
+    for ix, directions_ent in enumerate(valid_directions):
+        if True in [True if d.lower().strip() == direction.lower().strip() else False for d in directions_ent]:
+            if ix == 0: return "v", False   # Top
+            if ix == 1: return "v", True    # Bottom
+            if ix == 2: return "h", True    # Right
+            if ix == 3: return "h", False   # Left
+    return None, None
+
+def axiswithflag_to_direction(axis, flag): # direction
+    if axis == "v" and flag == False: return "t"
+    if axis == "v" and flag == True : return "b"
+    if axis == "h" and flag == True : return "r"
+    if axis == "h" and flag == False: return "l"
+    return None
+
+## Detections
+
+is_axis_vert = lambda axis: True if axis in [ "v", "vertical", "vert" ] else False
+is_axis_horz = lambda axis: True if axis in [ "h", "horizontal", "horz" ] else False
+
+
+
 ##----------------------------------------------------------------------------------------------------------------------
 ##
 ## Flex cores
@@ -1478,42 +1514,6 @@ def size_ConvertToCharacters(arg, base_characters):
         if arg_is_percentage(arg): return int(float(base_characters) * (float(arg[:-1]) / 100.0))
         if arg_is_characters(arg): return int(arg)
     return None
-
-##
-## Flex: Expressions ... See actual usage for examples
-##
-## TODO: Move this to above cores since some of these commands are now used there
-##
-
-## Directions
-
-valid_directions = [ # These directions are recognized, the list is ordered 0123 == TBRL || NSEW
-    [ "top", "t", "tp",     "north", "n",   "up", "u", "over", "above",     ],  # ix == 0 -> Vertical +
-    [ "bottom", "b", "bt",  "south", "s",   "down", "d", "under", "below",  ],  # ix == 1 -> Vertical -
-    [ "right", "r", "rt",   "east", "e"                                     ],  # ix == 2 -> Horizontal -
-    [ "left", "l", "lt",    "west", "w"                                     ],  # ix == 3 -> Horizontal +
-]
-
-def direction_to_axiswithflag(direction): # axis_as_vh, negate_flag | None, None
-    for ix, directions_ent in enumerate(valid_directions):
-        if True in [True if d.lower().strip() == direction.lower().strip() else False for d in directions_ent]:
-            if ix == 0: return "v", False   # Top
-            if ix == 1: return "v", True    # Bottom
-            if ix == 2: return "h", True    # Right
-            if ix == 3: return "h", False   # Left
-    return None, None
-
-def axiswithflag_to_direction(axis, flag): # direction
-    if axis == "v" and flag == False: return "t"
-    if axis == "v" and flag == True : return "b"
-    if axis == "h" and flag == True : return "r"
-    if axis == "h" and flag == False: return "l"
-    return None
-
-## Detections
-
-is_axis_vert = lambda axis: True if axis in [ "v", "vertical", "vert" ] else False
-is_axis_horz = lambda axis: True if axis in [ "h", "horizontal", "horz" ] else False
 
 ##
 ## Flex: Handling of newpanes parameter
