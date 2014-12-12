@@ -518,7 +518,31 @@ class Test_FlexCores(SenseTestCase):
         self.assertTrue( edgescan_h( True )  == [[0, 3, 8], [2, 0, 2], [5, 3, 5]] )
         self.assertTrue( edgescan_h( False ) == [[2, 3, 5], [5, 0, 2], [9, 3, 8]] )
 
-    def test_EdgeCore_Group_Invalid(self):
+    def test_EdgeCore_Invalid(self):
+        wg = Windowgram( """
+            W11YY
+            XX22Z
+        """ )
+        # Irrational (W does not border Z)
+        status, axis, minimal, optimal = edgecore( wg, "WZ" )
+        self.assertTrue( status is EdgeStatus.Irrational )
+        self.assertTrue( axis is None )
+        self.assertTrue( minimal is None )
+        self.assertTrue( optimal is None )
+        # Ambiguous (vertical edge W1 and X, horizontal edge W and 1)
+        status, axis, minimal, optimal = edgecore( wg, "WX1" )
+        self.assertTrue( status is EdgeStatus.Ambiguous )
+        self.assertTrue( axis is None )
+        self.assertTrue( minimal is None )
+        self.assertTrue( optimal is None )
+        # Noncontiguous (a gap exists in the minimal edge between 1 and 2)
+        status, axis, minimal, optimal = edgecore( wg, "WXYZ" )
+        self.assertTrue( status is EdgeStatus.Noncontiguous )
+        self.assertTrue( axis is None )
+        self.assertTrue( minimal is None )
+        self.assertTrue( optimal is None )
+
+    def test_EdgeCore_Group_Vertical(self):
         wg = Windowgram( """
             WX
             1X
@@ -526,24 +550,79 @@ class Test_FlexCores(SenseTestCase):
             Y2
             YZ
         """ )
-        # Irrational
-        status, axis, minimal, optimal = edgecore( wg, "WZ" )
-        self.assertTrue( status is EdgeStatus.Irrational )
-        self.assertTrue( axis is None )
-        self.assertTrue( minimal is None )
-        self.assertTrue( optimal is None )
-        # Ambiguous
-        status, axis, minimal, optimal = edgecore( wg, "WX1" )
-        self.assertTrue( status is EdgeStatus.Ambiguous )
-        self.assertTrue( axis is None )
-        self.assertTrue( minimal is None )
-        self.assertTrue( optimal is None )
-        # Noncontiguous
-        status, axis, minimal, optimal = edgecore( wg, "WXYZ" )
-        self.assertTrue( status is EdgeStatus.Noncontiguous )
-        self.assertTrue( axis is None )
-        self.assertTrue( minimal is None )
-        self.assertTrue( optimal is None )
+        status, axis, minimal, optimal = edgecore( wg, "12" ) # Implicit vertical
+        self.assertTrue( status is EdgeStatus.Valid )
+        self.assertTrue( axis == "v" )
+        self.assertTrue( minimal == [ [1, 2, 3] ] )
+        self.assertTrue( optimal == [ [1, 0, 5] ] )
+
+    def test_EdgeCore_Group_Horizontal(self):
+        wg = Windowgram( """
+            1AA22
+            1AA22
+            33BB4
+            33BB4
+        """ )
+        status, axis, minimal, optimal = edgecore( wg, "AB" ) # Implicit horizontal
+        self.assertTrue( status is EdgeStatus.Valid )
+        self.assertTrue( axis == "h" )
+        self.assertTrue( minimal == [ [2, 2, 3] ] )
+        self.assertTrue( optimal == [ [2, 0, 5] ] )
+
+    def test_EdgeCore_GroupDirection_Vertical(self):
+        wg = Windowgram( """
+            OWbo
+            O1Xo
+            O12o
+            OY2o
+            OqZo
+        """ )
+        status, axis, minimal, optimal = edgecore( wg, "2", "left" )
+        self.assertTrue( status is EdgeStatus.Valid )
+        self.assertTrue( axis == "v" )
+        self.assertTrue( minimal == [ [2, 2, 4] ] )
+        self.assertTrue( optimal == [ [2, 1, 4] ] )
+
+    def test_EdgeCore_GroupDirection_Horizontal(self):
+        wg = Windowgram( """
+            1AA22
+            33BB4
+        """ )
+        status, axis, minimal, optimal = edgecore( wg, "A", "bottom" )
+        self.assertTrue( status is EdgeStatus.Valid )
+        self.assertTrue( axis == "h" )
+        self.assertTrue( minimal == [ [1, 1, 3] ] )
+        self.assertTrue( optimal == [ [1, 0, 5] ] )
+
+    def test_EdgeCore_WindowgramEdge(self): # All edges here will be equal, there are no neighbors to extend optimal
+        wg = Windowgram( """
+            011222
+            344555
+            344555
+            677888
+            677888
+            677888
+        """ )
+        status, axis, minimal, optimal = edgecore( wg, "5", "right" )
+        self.assertTrue( status is EdgeStatus.Valid )
+        self.assertTrue( axis is "v" )
+        self.assertTrue( minimal == [ [6, 1, 3] ] )
+        self.assertTrue( optimal == [ [6, 1, 3] ] )
+        status, axis, minimal, optimal = edgecore( wg, "0", "left" )
+        self.assertTrue( status is EdgeStatus.Valid )
+        self.assertTrue( axis is "v" )
+        self.assertTrue( minimal == [ [0, 0, 1] ] )
+        self.assertTrue( optimal == [ [0, 0, 1] ] )
+        status, axis, minimal, optimal = edgecore( wg, "8", "bottom" )
+        self.assertTrue( status is EdgeStatus.Valid )
+        self.assertTrue( axis is "h" )
+        self.assertTrue( minimal == [ [6, 3, 6] ] )
+        self.assertTrue( optimal == [ [6, 3, 6] ] )
+        status, axis, minimal, optimal = edgecore( wg, "1", "top" )
+        self.assertTrue( status is EdgeStatus.Valid )
+        self.assertTrue( axis is "h" )
+        self.assertTrue( minimal == [ [0, 1, 3] ] )
+        self.assertTrue( optimal == [ [0, 1, 3] ] )
 
 
 
