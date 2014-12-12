@@ -267,6 +267,12 @@ VERSION = "2.14" # x.y: x = Major feature, y = Minor feature or bug fix
 ##
 ## This was largely written when I was still new to Python, so not everything is pythonic.
 ##
+## Supporting PyPI has been problematic.  Porting the readme from markdown to rst would solve many of the problems,
+## since it's supported by both PyPI and Github.  However I prefer it to be in markdown format, and PyPI will probably
+## add support for it eventually.  The PyPI rst-to-html conversion (or rst itself) has the following issues: there's no
+## support for nested lists (main index), does not produce html/css for image fitting (screenshot size), no relative
+## linking (main index), and no inline html (screenshot scaling).
+##
 ##--------------------+-------------------------------------------------------------------------------------------------
 ##     Other Uses     |
 ##--------------------+
