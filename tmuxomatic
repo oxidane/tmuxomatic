@@ -63,10 +63,13 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DESCRIPTION = "Intelligent tmux session management" # Maybe add: "using windowgrams"
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
-VERSION = "2.14" # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.15" # x.y: x = Major feature, y = Minor feature or bug fix
+##
+##  2.15    2014-12-12  Fixed PyPI readme and screenshot
+##                      See PyPI information detailed in the notes section
 ##
 ##  2.14    2014-12-11  Applying screenshot scale fix to PyPI readme
-##                      Added edge core, required by the drag command
+##                      Added edge core, required by some upcoming flex commands
 ##
 ##  2.13    2014-12-06  Fixed PyPI long description by setting the index links to absolute
 ##                      PyPI does not support relative links (see https://stackoverflow.com/q/16367770)
@@ -271,7 +274,8 @@ VERSION = "2.14" # x.y: x = Major feature, y = Minor feature or bug fix
 ## since it's supported by both PyPI and Github.  However I prefer it to be in markdown format, and PyPI will probably
 ## add support for it eventually.  The PyPI rst-to-html conversion (or rst itself) has the following issues: there's no
 ## support for nested lists (main index), does not produce html/css for image fitting (screenshot size), no relative
-## linking (main index), and no inline html (screenshot scaling).
+## linking (main index), and no inline html (screenshot scaling).  Releases 2.10 to 2.15 primarily dealt with these
+## issues.
 ##
 ##--------------------+-------------------------------------------------------------------------------------------------
 ##     Other Uses     |
