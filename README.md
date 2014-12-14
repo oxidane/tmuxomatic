@@ -248,6 +248,21 @@ In this demonstration is presented in summary form.  Here we modify the windowgr
 
 **Drag**:
 
+> Drag the `right` edge of pane `1` (plus scale `BDLbdl`) to the `left` exactly `12` characters.
+
+	flex> drag right 1:BDLbdl left 12
+
+	1111111111111ssssssssssssssssssssssss
+	1111111111111ssssssssssssssssssssssss
+	1111111111111BBBBBBBBDDDDDDDDLLLLLLLL
+	1111111111111BBBBBBBBDDDDDDDDLLLLLLLL
+	1111111111111BBBBBBBBDDDDDDDDLLLLLLLL
+	1111111111111BBBBBBBBDDDDDDDDLLLLLLLL
+	1111111111111bbbbbbbbddddddddllllllll
+	zzzzzzzzzzzzzbbbbbbbbddddddddllllllll
+	zzzzzzzzzzzzzbbbbbbbbddddddddllllllll
+	zzzzzzzzzzzzzbbbbbbbbddddddddllllllll
+
 **Insert**:
 
 **Clone**:
