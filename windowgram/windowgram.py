@@ -973,10 +973,13 @@ def PaneList_AssimilatedSorted(this, that): # this_plus_that_assimilated_and_sor
 
 
 ##
-## Flex: Expressions ... See actual usage for examples
+## Flex: Macros ... See actual usage for examples
 ##
 
-## Directions
+is_long_axis_vert = lambda axis: True if axis in [ "v", "vertical", "vert" ] else False
+is_long_axis_horz = lambda axis: True if axis in [ "h", "horizontal", "horz" ] else False
+is_short_axis_vert_vhtblr = lambda axis: True if axis in [ "v", "t", "b" ] else False
+is_short_axis_horz_vhtblr = lambda axis: True if axis in [ "h", "l", "r" ] else False
 
 valid_directions = [ # These directions are recognized, the list is ordered 0123 == TBRL || NSEW
     [ "top", "t", "tp",     "north", "n",   "up", "u", "over", "above",     ],  # ix == 0 -> Vertical +
@@ -985,13 +988,13 @@ valid_directions = [ # These directions are recognized, the list is ordered 0123
     [ "left", "l", "lt",    "west", "w"                                     ],  # ix == 3 -> Horizontal +
 ]
 
-def direction_to_axiswithflag(direction): # axis_as_vh, negate_flag | None, None
+def direction_to_axiswithflag(direction, inverse=False): # axis_as_vh, negate_flag | None, None
     for ix, directions_ent in enumerate(valid_directions):
         if True in [True if d.lower().strip() == direction.lower().strip() else False for d in directions_ent]:
-            if ix == 0: return "v", False   # Top
-            if ix == 1: return "v", True    # Bottom
-            if ix == 2: return "h", True    # Right
-            if ix == 3: return "h", False   # Left
+            if ix == 0: return "v", False ^ inverse  # Top
+            if ix == 1: return "v", True  ^ inverse  # Bottom
+            if ix == 2: return "h", True  ^ inverse  # Right
+            if ix == 3: return "h", False ^ inverse  # Left
     return None, None
 
 def axiswithflag_to_direction(axis, flag): # direction
@@ -1001,10 +1004,50 @@ def axiswithflag_to_direction(axis, flag): # direction
     if axis == "h" and flag == False: return "l"
     return None
 
-## Detections
+def resolve_vhtblr(hint): # Either one of list("vhtblr") or None
+    if is_long_axis_vert(hint): return "v"
+    elif is_long_axis_horz(hint): return "h"
+    return axiswithflag_to_direction( *direction_to_axiswithflag( hint ) ) # "t", "b", "l", "r"
 
-is_axis_vert = lambda axis: True if axis in [ "v", "vertical", "vert" ] else False
-is_axis_horz = lambda axis: True if axis in [ "h", "horizontal", "horz" ] else False
+def thruvalid_panes(panes, ignore=""): # Return unmodified if valid else None
+    if len([ ch for ch in panes if ch not in PANE_CHARACTERS + ignore ]): return None
+    return panes
+
+def classify_panes(used, unused, panes): # areused, areunused, invalids
+    areused = areunused = invalids = ""
+    for paneid in panes:
+        if paneid in used: areused += paneid
+        elif paneid in unused: areunused += paneid
+        else: invalids += paneid
+    return areused, areunused, invalids
+
+def resolve_size(size, axis_length, inverse, showinv): # error_or_none, inverse_flag, size_as_characters
+    size_as_characters = 0
+    try:
+        original_size = size # Retain original for error messages
+        while size and size[0] == "-": size = size[1:] # Strip negation
+        size_type = size_GetType( size )
+        if size_type is None:
+            raise Exception( "Invalid size parameter: " + original_size )
+        if size_GreaterOrEqualToBaseCharacters( size, axis_length ):
+            if size_type == "characters": rep = showinv + str(axis_length)
+            elif size_type == "percentage": rep = showinv + "100%"
+            else: rep = showinv + "1x" # elif size_type == "multiplier"
+            raise Exception( "Specified size (" + original_size + \
+                ") is greater or equal to the maximum range (" + rep + ") of this function" )
+        size_as_characters = size_ConvertToCharacters( size, axis_length )
+        if size_as_characters is None:
+            raise Exception( "Invalid size parameter: " + size )
+        if size_as_characters >= axis_length: # Shouldn't happen by now, but if it does
+            raise Exception( "Resulting size (" + showinv + str(size_as_characters) + \
+                " characters) is greater or equal to the axis length (" + str(axis_length) + ")" )
+        if size_as_characters < 1:
+            raise Exception( "Resulting size (" + showinv + str(size_as_characters) + \
+                " characters) is not valid" )
+        if inverse: size_as_characters = axis_length - size_as_characters # Flip
+    except Exception as error:
+        return str(error), None, None
+    return None, inverse, size_as_characters
 
 
 
@@ -1172,6 +1215,13 @@ class EdgeStatus:
     Irrational = 2      # No edge produced from data
     Ambiguous = 3       # One or more edges were found (which may be on one or more axis)
     Noncontiguous = 4   # The produced edge has one or more gaps
+    @staticmethod
+    def error2string(status):
+        if status == EdgeStatus.Valid: return None
+        elif status == EdgeStatus.Irrational: return "No edge found (EdgeStatus.Irrational)"
+        elif status == EdgeStatus.Ambiguous: return "Edges found on each axis (EdgeStatus.Ambiguous)"
+        elif status == EdgeStatus.Noncontiguous: return "Multiple edges found (EdgeStatus.Noncontiguous)"
+        else: return "Unknown error (EdgeStatus.Undefined)"
 
 # Required for merging contiguous runs that are likely to be unordered ... Presently SwipeSide produces such runs
 
@@ -1254,9 +1304,7 @@ def edgecore(wg, group, direction=None): # status, axis, minimal, optimal
     used, unused = wg.Panes_GetUsedUnused()
     # Resolve direction to common form ("v", "h", "t", "b", "l", "r") for easier reference
     if direction is not None:
-        if is_axis_vert(direction): direction = "v"
-        elif is_axis_horz(direction): direction = "h"
-        else: direction = axiswithflag_to_direction( *direction_to_axiswithflag( direction ) ) # "t", "b", "r", "l"
+        direction = resolve_vhtblr( direction )
     # Algorithm uses parsed and character formats for edge detection
     windowgram_parsed = wg.Export_Parsed()
     windowgram_chars_yx = wg.Export_Chars()
@@ -1651,12 +1699,17 @@ class FlexPointersParameter(object):
 ##
 ## Flex automated processor for one or more commands in the flex group "modifiers"
 ##
-##      * Intended for unit testing, may also be used for macros
 ##      * Supports multiple commands ("cmd 1 ; cmd 2 ; cmd 3")
 ##      * Only commands from the flex group "modifiers" are supported
 ##      * No command ambiguity
 ##      * No command aliases
 ##      * Processing halts on flex warning or error
+##
+## Used by
+##
+##      * Unit testing
+##      * Stack reprocessor (when stack support is added)
+##      * Other macroing may use this
 ##
 
 def flex_processor(wg, commands): # -> error
@@ -1691,6 +1744,10 @@ def flex_processor(wg, commands): # -> error
 
 ##
 ## Flex: Scale
+##
+## Analogues:
+##
+##      Drag * may be used for scale
 ##
 
 @flex(
@@ -2059,8 +2116,8 @@ def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
     # Verify axis and reduce to "v" or "h"
     inverse = "-" if size[0] == "-" else ""
     showinv = inverse # Show inverse flag by default
-    if is_axis_vert(axis): axis = "v"
-    elif is_axis_horz(axis): axis = "h"
+    if is_long_axis_vert(axis): axis = "v"
+    elif is_long_axis_horz(axis): axis = "h"
     else:
         if size[0] == "-":
             return fpp_PRIVATE.flexsense['notices'].append(
@@ -2079,27 +2136,8 @@ def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
     if axis_length < 2: # Single character length on the specified axis
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Pane is too small to be split in that way" ) )
     # Verify size
-    original_size = size # Retain original for error messages
-    while size and size[0] == "-": size = size[1:] # Strip negation
-    size_type = size_GetType( size )
-    if size_type is None:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Invalid size parameter: " + original_size ) )
-    if size_GreaterOrEqualToBaseCharacters( size, axis_length ):
-        if size_type == "characters": rep = showinv + str(axis_length)
-        elif size_type == "percentage": rep = showinv + "100%"
-        else: rep = showinv + "1x" # elif size_type == "multiplier"
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Specified size (" + original_size + \
-            ") is greater or equal to the maximum range (" + rep + ") of this function" ) )
-    size_chars = size_ConvertToCharacters( size, axis_length )
-    if size_chars is None:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Invalid size parameter: " + size ) )
-    if size_chars >= axis_length: # Shouldn't happen by now, but if it does
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Resulting size (" + showinv + str(size_chars) + \
-            " characters) is greater or equal to the axis length (" + str(axis_length) + ")" ) )
-    if size_chars < 1:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Resulting size (" + showinv + str(size_chars) + \
-            " characters) is not valid" ) )
-    if inverse: size_chars = axis_length - size_chars # Flip
+    error, inverse, size_chars = resolve_size(size, axis_length, inverse, showinv)
+    if error: return fpp_PRIVATE.flexsense['notices'].append( error )
     # Verify newpanes ... Set to first available if not specified
     if len(unused) < 1: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Insufficient panes to split" ) )
     if newpanes is None: newpanes = ""
@@ -2292,18 +2330,116 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
 ##
 ## Flex: Drag
 ##
-##          When dragging an edge, it will be forced to stop for pane preservation
-##          When dragging a group edge, the internal edges are scaled, only the group edge is contiguous
-##          Drags specified edges, keeps opposing edges pinned, and scales the inner edges
-##          May need a specialized scaler for this command
-##          Maximum scale range depends whether a pane disappears or not
-##          Dragging pushing edges was considered, but this would get messy and probably unnecessary
+## Analogues:
 ##
-##      drag <panes> <dir> <how>                    drags edge, panes == xyz / dir == up / how == 50%
-##      drag <edge> <panes> <dir> <how>             drags group edge, edge == top, bottom, left, right
+##      Scale may be used for drag *
+##
+## Notes:
+##
+##      Dragging up to just before the point where panes disappear is the function of the caller.  This feature will
+##      take considerable overhead by honing in on the extreme using multiple calls to drag (similar to Newton's square
+##      root approximation).  Making it faster by analyzing the function is only trivial without the scale feature, so
+##      this may require refactoring.  The purpose of this technique is to preserve the existing panes and/or to honor
+##      neighboring edges.  For now, this feature is not required.
+##
+##      Pushing neighboring edges was considered, but this would get complicated and is probably unnecessary.
+##
+## TODO:
+##
+## It will be possible to have a parallel-irregular scalegroup.  This is to say it only needs to have the group
+## edge perpendicular to the edge axis to be a single run, the parallel axis doesn't have to line up like this.  Adding
+## this check and allowing this exception will add flexibility to the command.  This requires a new or modified scale
+## core that pins the outer parallel edges.  The following examples illustrates the differences between these forms.
+##
+##                         Rectangular      Irregular       Irregular
+##                                        Perpendicular     Parallel
+##
+##      Illustrated       ..aaaa12bbbb..  ..AA..12bb....  ..AAqq12bbb...
+##      windowgrams       ..aaaa12bbbb..  ..AAaa12bbBB..  ..AAqq12BBBB..
+##      drag a vertical   ..aaaa12bbbb..  ..AAaa12bbBB..  ....aa12BBBB..
+##      edge of 1 and 2   ..aaaa12bbbb..  ....aa12..BB..  ..QQaa12ss....
+##
+## Because this feature has not yet been implemented, all scale groups must be rectangular.
 ##
 
-# TODO
+@flex(
+    command     = "drag",
+    group       = "modifiers",
+    examples    = [ "drag 12 r 2", "drag abcd u 25%", "drag 12:abcd l 50%" ],
+    description = "Drags an edge in the specified direction.  An edge is defined by the panes that border it.  " + \
+                  "sometimes specifying a hint will be necessary to resolve ambiguity.  The hint is an axis or " + \
+                  "a direction (VHTBLR).  Supports an optional scalegroup, just add the panes to the edge " + \
+                  "parameter using colon (:) as a separator.",
+    aliases     = [ ["move", "drag "], ["slide", "drag "], ],
+)
+def cmd_drag_1(fpp_PRIVATE, edge, direction, size):
+    return cmd_drag_2(fpp_PRIVATE, "", edge, direction, size)
+
+@flex(
+    command     = "drag",
+    group       = "modifiers",
+    examples    = [ "drag v 12 r 2", "drag u abcd u 25%", "drag l 12:abcd l 50%" ],
+)
+def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size):
+    if not fpp_PRIVATE.wg:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+    wg = fpp_PRIVATE.wg
+    used, unused = wg.Panes_GetUsedUnused()
+    # Reduce edge and resolve hint (supports swapping of hint and edge)
+    swapped = ""
+    res_hint = resolve_vhtblr( hint ) if hint is not "" else ""
+    res_edge = thruvalid_panes( edge, ":" )
+    if not res_hint or not res_edge:
+        swapped_hint = resolve_vhtblr( edge ) if edge is not "" else ""
+        swapped_edge = thruvalid_panes( hint, ":" )
+        if swapped_hint and res_edge:
+            res_hint, res_edge = swapped_hint, swapped_edge
+            swapped = "swapped "
+    hint = edge = None # From here on use res_hint, res_edge
+    if res_hint is None: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+        # Only handle None type, blank string for hint is valid
+        "The " + swapped + "hint parameter is unrecognized" ) )
+    if not res_edge: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+        "The edge contains invalid pane characters" ) )
+    areused, areunused, invalids = classify_panes( used+":", unused, res_edge )
+    if invalids: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+        "The panes (" + invalids + ") in " + swapped + "edge (" + res_edge + ") are invalid" ) ) # Already ruled out
+    if areunused: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+        "The panes (" + areunused + ") in " + swapped + "edge (" + res_edge + ") are not being used" ) )
+    # Separate edge into edge and scalegroup
+    res_scalegroup = ""
+    if ":" in res_edge:
+        res_edge, res_scalegroup = res_edge.split(":", 1)
+        if ":" in res_scalegroup: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+            "Please specify the optional scalegroup in the form: \"<edge>:<scalegroup>\"" ) )
+    # Resolve direction ... Axis (VH) is valid and like split, is based on TL, and is controlled via size negation
+    res_direction, direction = resolve_vhtblr( direction ), None
+    if not res_direction: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+        "The direction parameter is unrecognized" ) )
+    # Get edge from res_hint + res_edge, this yields the official edge axis, required to resolve direction and size
+    status, res_hint, minimal, optimal = edgecore( wg, res_edge, res_hint )
+    status_print = EdgeStatus.error2string( status )
+    if status_print: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+        "Edge specification error: " + status_print ) )
+    # Exclude contradiction in axis, this must follow edge core since the hint may not have been specified by the user
+    # Note: If they're equal they're opposite, consider that the edge axis and direction axis are different expressions
+    if (is_short_axis_vert_vhtblr(res_direction) and is_short_axis_vert_vhtblr(res_hint)) or \
+    (is_short_axis_horz_vhtblr(res_direction) and is_short_axis_horz_vhtblr(res_hint)):
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The direction must go against the edge axis" ) )
+    # Reduce direction to "v" or "h"
+    inverse = "-" if size[0] == "-" else ""
+    showinv = inverse # Show inverse flag by default
+    if res_direction != "v" and res_direction != "h":
+        if size[0] == "-":
+            return fpp_PRIVATE.flexsense['notices'].append(
+                FlexError( "Negative size only valid if `direction` is vertical or horizontal" ) )
+        res_direction, negate_flag = direction_to_axiswithflag(res_direction, True) # Inversed in this context
+        if res_direction is None or negate_flag is None:
+            return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The hint you specified is invalid" ) )
+        inverse = "-" if negate_flag else ""
+        showinv = "" # For TBRL do not show inverse flag
+    # TODO
+    return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Drag is still in development" ) )
 
 ##
 ## Flex: Insert
