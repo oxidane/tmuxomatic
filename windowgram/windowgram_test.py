@@ -980,9 +980,51 @@ class Test_FlexModifier_Add(SenseTestCase):
                                            BBBBBBBBBB
         """ )
 
-    # This also asserts the underlying pane order of [0-9a-zA-Z] through default name assignment
-
     def test_Add_DefaultNames(self): # Created in flex using "new unittest Add_DefaultNames"
+        self.assertFlexSequence( [
+            "add left 1",
+            "add right 1",
+            "add right 1",
+            "add right 1",
+            "add right 1",
+            "add right 1",
+            "add right 1",
+            "add right 1",
+            "add right 1",
+            "add top 1",
+            "add bottom 1",
+        ], """
+            01 012 0123 01234 012345 0123456 01234567 012345678 0123456789 aaaaaaaaaa aaaaaaaaaa
+                                                                           0123456789 0123456789
+                                                                                      bbbbbbbbbb
+        """ )
+
+
+
+##----------------------------------------------------------------------------------------------------------
+##
+## Keep this note for adding new unit tests for flex
+##
+##   flex> new unittest ScaleCommand    # When created, the output switches to a convenient code dump
+##   flex> scale 25x10                  # Run commands and the unittest code will be built as you go
+##   flex> scale 20x20                  # When finished just paste the generated code into this class
+##
+##----------------------------------------------------------------------------------------------------------
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Unit Testing :: Flex Modifier Combination :: AddBreakJoin
+##
+## This asserts the underlying pane order of [0-9a-zA-Z] through default name assignment of the Add command.  It must
+## follow the commands it depends upon: add, break, and join.
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+class Test_FlexModifierCombination_AddBreakJoin(SenseTestCase):
+
+    def test_AddBreakJoin_DefaultNames(self): # Created in flex using "new unittest AddBreakJoin_DefaultNames"
         self.assertFlexSequence( [
             "break 1 31x2 ; join 210 ba BA YZ",
             "add left 1",
@@ -1000,18 +1042,6 @@ class Test_FlexModifier_Add(SenseTestCase):
                                               AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 0vwxyzBBCDEFGHIJKLMNOPQRSTUVWXYY1
                                                                                 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
         """ )
-
-
-
-##----------------------------------------------------------------------------------------------------------
-##
-## Keep this note for adding new unit tests for flex
-##
-##   flex> new unittest ScaleCommand    # When created, the output switches to a convenient code dump
-##   flex> scale 25x10                  # Run commands and the unittest code will be built as you go
-##   flex> scale 20x20                  # When finished just paste the generated code into this class
-##
-##----------------------------------------------------------------------------------------------------------
 
 
 
