@@ -684,80 +684,6 @@ class Test_FlexCores(SenseTestCase):
 
 class Test_FlexModifier_Scale(SenseTestCase):
 
-    ## Enforces the use of scale core v1, and will fail if v2 is reactivated.  See notes in scale core.
-
-    def test_Scale_ScaleCore_CaseOne(self): # Created in flex using "new unittest Scale_ScaleCore_CaseOne"
-        self.assertFlexSequence( [
-            "break 1 2x2 ; scale 3x3 ; scale 2x2",
-        ], """
-            01
-            23
-        """ )
-
-    ## Tests the scale core multiple resizing that's necessary in some situations.  See notes in scale core.
-
-    def test_Scale_ScaleCore_CaseTwo(self): # Created in flex using "new unittest Scale_ScaleCore_CaseTwo"
-        self.assertFlexSequence( [
-            "scale 42x42 ; break 1 6x6 ; break 1 3x3",
-        ], """
-            000000000111AAABBB222222222333333333444444444555555555
-            000000000111AAABBB222222222333333333444444444555555555
-            000000000111AAABBB222222222333333333444444444555555555
-            000000000CCCDDDEEE222222222333333333444444444555555555
-            000000000CCCDDDEEE222222222333333333444444444555555555
-            000000000CCCDDDEEE222222222333333333444444444555555555
-            000000000FFFGGGHHH222222222333333333444444444555555555
-            000000000FFFGGGHHH222222222333333333444444444555555555
-            000000000FFFGGGHHH222222222333333333444444444555555555
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-        """ )
-
-    ## General use
-
     def test_Scale_One_DupCharacters(self): # Created in flex using "new unittest Scale_One_DupCharacters"
         self.assertFlexSequence( [
             "scale 1",
@@ -1010,6 +936,88 @@ class Test_FlexModifier_Add(SenseTestCase):
 ##   flex> scale 20x20                  # When finished just paste the generated code into this class
 ##
 ##----------------------------------------------------------------------------------------------------------
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Unit Testing :: Flex Modifier Combination :: Scale Core Difference
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+class Test_FlexModifierCombination_ScaleCoreDifference(SenseTestCase):
+
+    ## Enforces the use of scale core v1, and will fail if v2 is reactivated.  See notes in scale core.
+
+    def test_ScaleCoreDifference_CaseOne(self): # Created in flex using "new unittest ScaleCoreDifference_CaseOne"
+        self.assertFlexSequence( [
+            "break 1 2x2 ; scale 3x3 ; scale 2x2",
+        ], """
+            01
+            23
+        """ )
+
+    ## Tests the scale core multiple resizing that's necessary in some situations.  See notes in scale core.
+
+    def test_ScaleCoreDifference_CaseTwo(self): # Created in flex using "new unittest ScaleCoreDifference_CaseTwo"
+        self.assertFlexSequence( [
+            "scale 42x42 ; break 1 6x6 ; break 1 3x3",
+        ], """
+            000000000111AAABBB222222222333333333444444444555555555
+            000000000111AAABBB222222222333333333444444444555555555
+            000000000111AAABBB222222222333333333444444444555555555
+            000000000CCCDDDEEE222222222333333333444444444555555555
+            000000000CCCDDDEEE222222222333333333444444444555555555
+            000000000CCCDDDEEE222222222333333333444444444555555555
+            000000000FFFGGGHHH222222222333333333444444444555555555
+            000000000FFFGGGHHH222222222333333333444444444555555555
+            000000000FFFGGGHHH222222222333333333444444444555555555
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
+        """ )
 
 
 
