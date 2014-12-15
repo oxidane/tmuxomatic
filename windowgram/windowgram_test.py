@@ -923,6 +923,86 @@ class Test_FlexModifier_Scale(SenseTestCase):
 
 
 
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Unit Testing :: Flex Modifier :: Add
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+class Test_FlexModifier_Add(SenseTestCase):
+
+    def test_Add_Characters(self): # Created in flex using "new unittest Add_Characters"
+        self.assertFlexSequence( [
+            "scale 5x2 ; rename 1 0 ; add left 1 L",
+            "add right 2 R",
+            "add top 3 T",
+            "add bottom 4 B",
+        ], """
+            L00000 L00000RR TTTTTTTT TTTTTTTT
+            L00000 L00000RR TTTTTTTT TTTTTTTT
+                            TTTTTTTT TTTTTTTT
+                            L00000RR L00000RR
+                            L00000RR L00000RR
+                                     BBBBBBBB
+                                     BBBBBBBB
+                                     BBBBBBBB
+                                     BBBBBBBB
+        """ )
+
+    def test_Add_Percentages(self): # Created in flex using "new unittest Add_Percentages"
+        self.assertFlexSequence( [
+            "scale 5 ; rename 1 0 ; add left 100% L",
+            "add right 50% R",
+            "add top 20% T",
+            "add bottom 17% B",
+        ], """
+            LLLLL00000 LLLLL00000RRRRR TTTTTTTTTTTTTTT TTTTTTTTTTTTTTT
+            LLLLL00000 LLLLL00000RRRRR LLLLL00000RRRRR LLLLL00000RRRRR
+            LLLLL00000 LLLLL00000RRRRR LLLLL00000RRRRR LLLLL00000RRRRR
+            LLLLL00000 LLLLL00000RRRRR LLLLL00000RRRRR LLLLL00000RRRRR
+            LLLLL00000 LLLLL00000RRRRR LLLLL00000RRRRR LLLLL00000RRRRR
+                                       LLLLL00000RRRRR LLLLL00000RRRRR
+                                                       BBBBBBBBBBBBBBB
+        """ )
+
+    def test_Add_Multipliers(self): # Created in flex using "new unittest Add_Multipliers"
+        self.assertFlexSequence( [
+            "scale 2 ; rename 1 0 ; add left 3x L",
+            "add right .25x R",
+            "add top .5x T",
+            "add bottom 1x B",
+        ], """
+            LLLLLL00 LLLLLL00RR TTTTTTTTTT TTTTTTTTTT
+            LLLLLL00 LLLLLL00RR LLLLLL00RR LLLLLL00RR
+                                LLLLLL00RR LLLLLL00RR
+                                           BBBBBBBBBB
+                                           BBBBBBBBBB
+                                           BBBBBBBBBB
+        """ )
+
+    # This also asserts the underlying pane order of [0-9a-zA-Z] through default name assignment
+
+    def test_Add_DefaultNames(self): # Created in flex using "new unittest Add_DefaultNames"
+        self.assertFlexSequence( [
+            "break 1 31x2 ; join 210 ba BA YZ",
+            "add left 1",
+            "add right 1",
+            "add top 1",
+            "add bottom 1",
+            "add top 1",
+        ], """
+            2223456789bbcdefghijklmnopqrstu 02223456789bbcdefghijklmnopqrstu 02223456789bbcdefghijklmnopqrstu1
+            vwxyzBBCDEFGHIJKLMNOPQRSTUVWXYY 0vwxyzBBCDEFGHIJKLMNOPQRSTUVWXYY 0vwxyzBBCDEFGHIJKLMNOPQRSTUVWXYY1
+
+            aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+            02223456789bbcdefghijklmnopqrstu1 02223456789bbcdefghijklmnopqrstu1 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+            0vwxyzBBCDEFGHIJKLMNOPQRSTUVWXYY1 0vwxyzBBCDEFGHIJKLMNOPQRSTUVWXYY1 02223456789bbcdefghijklmnopqrstu1
+                                              AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 0vwxyzBBCDEFGHIJKLMNOPQRSTUVWXYY1
+                                                                                AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        """ )
+
+
+
 ##----------------------------------------------------------------------------------------------------------
 ##
 ## Keep this note for adding new unit tests for flex
