@@ -248,7 +248,7 @@ In this demonstration is presented in summary form.  Here we modify the windowgr
 
 **Drag**:
 
-> Drag the `right` edge of pane `1` (plus scale `BDLbdl`) to the `left` exactly `12` characters.
+> Drag the `right` edge of pane `1` (and scaling `BDLbdl`) to the `left` exactly `12` characters.
 
 	flex> drag right 1:BDLbdl left 12
 
