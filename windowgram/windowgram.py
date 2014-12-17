@@ -2647,18 +2647,20 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size):
         def Validate(wgm):
             # (1) Any MASKPANE_1 character touching the specified axis edge
             if wgm.Panes_HasPane(MASKPANE_1) and not MASKPANE_1 in wgm.Edge_PanesAlong(res_hint, axis_location):
-                return False
+                return "Group of panes does not touch the specified edge"
             # (2) That the mask is a rectangular shape (for now; see above notes on irregular parallelism)
             result, suggestions = groupcore(wgm, MASKPANE_1) # GroupStatus.Invalid_Panes means MASKPANE_1 was not found
-            return True if result == GroupStatus.Invalid_Panes or result == GroupStatus.Success else False
-        return True if Validate(wgm1) and Validate(wgm2) else False
+            if result == GroupStatus.Invalid_Panes or result == GroupStatus.Success: return None
+            return "The group of panes is an unsupported irregular shape, try making it rectangular"
+        r1 = Validate(wgm1) ; r2 = Validate(wgm2)
+        return r1 if r1 else (r2 if r2 else 0)
     wgm0x, wgm1x = Generate( res_scalegroup + res_edge )    # The first mask pair must be "scalegroup + edgegroup".
-    valid = Validate( wgm0x, wgm1x )                        # Consider [ "12\n34", "right 12:34" ] -> "34" is valid.
-    if not valid:                                           # The combined should test first, then scalegroup alone.
+    error = Validate( wgm0x, wgm1x )                        # Consider [ "12\n34", "right 12:34" ] -> "34" is valid.
+    if error:                                               # The combined should test first, then scalegroup alone.
         wgm0x, wgm1x = Generate( res_scalegroup )           # It's always possible to define parameters that fit the
-        valid = Validate( wgm0x, wgm1x )                    # user's desired effect, if it's otherwise a valid form.
-    if not valid: return fpp_PRIVATE.flexsense['notices'].append( FlexError( 
-        "Unable to drag in the manner specified due to gaps along the drag direction" ) )
+        error = Validate( wgm0x, wgm1x )                    # user's desired effect, if it's otherwise a valid form.
+    if error:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to drag: " + error ) )
     # Mask-extract the dynamics (areas to be scaled) from the static (the rest of the windowgram)
     wgm0s, wgm1s = wg.CopyOut( wgm0x ), wg.CopyOut( wgm1x ) # The CopyOut method already supports irregular parallelism
     sw0, sh0 = wgm0s.Analyze_WidthHeight() ; sw1, sh1 = wgm1s.Analyze_WidthHeight()
@@ -2673,6 +2675,28 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size):
     if wgm1s.Panes_Exist(): wgm1s = Windowgram( scalecore( wgm1s.Export_String(), sw1, sh1 ) )
     # TODO
     return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Drag is still in development" ) )
+
+##
+## Flex: RDrag
+##
+## Analogues:
+##
+##      Scale may be used for rdrag *
+##
+## Notes:
+##
+##      This function performs a drag, and if any panes disappear, it begins searching for the maximum drag limit before
+##      panes disappear.  Once found this function will restrict the drag to that limit.  This is accomplished by honing
+##      in on the location by dragging 50% of the remaining distance, and if missing panes, reversing direction.
+##
+##      Shortcuts in this technique are complicated, since the underlying algorithms do not lend themselves to it, in
+##      particular the scale core.  However there are other optimizations that could be done to speed this up, should
+##      that be necessary.
+##
+##      Possibly return a warning message that may be captured by the caller that reports the actual drag value used.
+##
+
+# TODO
 
 ##
 ## Flex: Insert
