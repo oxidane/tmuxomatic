@@ -146,7 +146,7 @@ class SenseTestCase(unittest.TestCase):
     ##
     ##----------------------------------------------------------------------------------------------------------
 
-    def assertFlexSequence(self, commands, pattern):
+    def assertFlexSequence(self, commands, pattern, noticesok=False):
         windowgramgroup_list = WindowgramGroup_Convert.Pattern_To_List( pattern )
         cmdlen, ptnlen = len(commands), len(windowgramgroup_list)
         if cmdlen != ptnlen:
@@ -154,7 +154,7 @@ class SenseTestCase(unittest.TestCase):
         wg = Windowgram( "1" ) # Specified in case the default changes
         wlist = []
         for ix, (command, windowgram) in enumerate( zip( commands, windowgramgroup_list ) ):
-            errors = flex_processor( wg, command )
+            errors = flex_processor( wg, command, noticesok )
             self.assertTrue( not errors, errors )
             self.assertTrue( wg.Export_String() == windowgram, 
                 "The resulting windowgram for sequence #" + str(ix+1) + " does not match: \n\n" + wg.Export_String() )
@@ -708,6 +708,20 @@ class Test_FlexCores(SenseTestCase):
         self.assertTrue( minimal == [ [0, 1, 3] ] )
         self.assertTrue( optimal == [ [0, 1, 3] ] )
 
+    def test_EdgeCore_Nuances(self):
+        # This is noncontiguous, for now.  It's possible to support, but callers must be rigorously tested, since they
+        # assume a single run in the edgecore result.
+        wg = Windowgram( """
+            1122AABB
+            aabbxxyy
+            XXYY3344
+        """ )
+        status, axis, minimal, optimal = edgecore( wg, "1234", "right" )
+        self.assertTrue( status is EdgeStatus.Noncontiguous )
+        self.assertTrue( axis is None )
+        self.assertTrue( minimal is None )
+        self.assertTrue( optimal is None )
+
     def test_EdgeCore_Examples(self):
         wg = Windowgram( """
             # E.1
@@ -746,6 +760,63 @@ class Test_FlexCores(SenseTestCase):
         self.assertTrue( axis is "v" )
         self.assertTrue( minimal == [ [3, 2, 3] ] )
         self.assertTrue( optimal == [ [3, 1, 4] ] )
+
+    ## Smudge Core
+
+    def test_SmudgeCore_Basic(self):
+        wg_i = Windowgram( """
+            12345 
+            abcde 
+            fghij 
+            ABCDE 
+            FGHIJ 
+        """ )
+        group_o = """
+            2345 11345 1234 12355
+            bcde aacde abcd abcee
+            ghij ffhij fghi fghjj
+            BCDE AACDE ABCD ABCEE
+            GHIJ FFHIJ FGHI FGHJJ
+
+            abcde 12345 12345 12345 
+            fghij 12345 abcde abcde 
+            ABCDE fghij fghij fghij 
+            FGHIJ ABCDE ABCDE FGHIJ 
+                  FGHIJ       FGHIJ 
+
+            345 12345 123 12555
+            cde abcde abc abeee
+            hij fffij fgh fgjjj
+            CDE AAADE ABC ABCDE
+            HIJ FFFIJ FGH FGHIJ
+
+            fghij 12345 12345 12345 
+            ABCDE ab345 abcde abcde 
+            FGHIJ fg345 fghij FGHij 
+                  ABCDE       FGHDE 
+                  FGHIJ       FGHIJ 
+        """
+        wg_o_list = WindowgramGroup_Convert.Pattern_To_List( group_o )
+        wg_x_list = [
+            smudgecore( wg_i, 0, "v", 1, ""  ).Export_String(),
+            smudgecore( wg_i, 1, "v", 1, ""  ).Export_String(),
+            smudgecore( wg_i, 5, "v", 1, "-" ).Export_String(),
+            smudgecore( wg_i, 4, "v", 1, "-" ).Export_String(),
+            smudgecore( wg_i, 0, "h", 1, ""  ).Export_String(),
+            smudgecore( wg_i, 1, "h", 1, ""  ).Export_String(),
+            smudgecore( wg_i, 5, "h", 1, "-" ).Export_String(),
+            smudgecore( wg_i, 4, "h", 1, "-" ).Export_String(),
+            smudgecore( wg_i, 0, "v", 2, ""  , [0, 1, 4] ).Export_String(), # Edge discarded with transparency
+            smudgecore( wg_i, 1, "v", 2, ""  , [1, 2, 5] ).Export_String(),
+            smudgecore( wg_i, 5, "v", 2, "-" , [5, 1, 4] ).Export_String(), # Edge discarded with transparency
+            smudgecore( wg_i, 4, "v", 2, "-" , [4, 0, 3] ).Export_String(),
+            smudgecore( wg_i, 0, "h", 2, ""  , [0, 1, 4] ).Export_String(), # Edge discarded with transparency
+            smudgecore( wg_i, 1, "h", 2, ""  , [1, 2, 5] ).Export_String(),
+            smudgecore( wg_i, 5, "h", 2, "-" , [5, 1, 4] ).Export_String(), # Edge discarded with transparency
+            smudgecore( wg_i, 4, "h", 2, "-" , [4, 0, 3] ).Export_String(),
+        ]
+        for wg_o, wg_x in zip( wg_o_list, wg_x_list ):
+            self.assertTrue( wg_x == wg_o, "\nwg_o\n" + wg_o + "\nwg_x\n" + wg_x )
 
 
 
@@ -997,6 +1068,97 @@ class Test_FlexModifier_Add(SenseTestCase):
                                                                            0123456789 0123456789
                                                                                       bbbbbbbbbb
         """ )
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Unit Testing :: Flex Modifier :: Drag
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+class Test_FlexModifier_Drag(SenseTestCase):
+
+    def test_Drag_EdgeMorphing(self): # Created in flex using "new unittest Drag_EdgeMorphing"
+        self.assertFlexSequence( [
+            "break 1 6x5 a ; join Au.0 Bvp.1 Cwqk.2 Dxrlf.3 s.w t.Q mn.x o.R ghi.y j.S abcd.z e.T y.X z.Y",
+        ], """
+            zzzzT3
+            yyyS23
+            xxR123
+            wQ0123
+            XY0123
+        """ )
+
+    # Ignore notices
+    def test_Drag_EdgeModify_Example1(self): # Created in flex using "new unittest Drag_EdgeModify_Example1"
+        self.assertFlexSequence( [
+            "break 1 6x5 a ; join Au.0 Bvp.1 Cwqk.2 Dxrlf.3 s.w t.Q mn.x o.R ghi.y j.S abcd.z e.T y.X z.Y",
+            "drag XY right 5",
+        ], """
+            zzzzT3 zzzzTT
+            yyyS23 yyySSS
+            xxR123 xxRRRR
+            wQ0123 wQQQQQ
+            XY0123 XXXXXX
+        """, True )
+
+    # Ignore notices
+    def test_Drag_EdgeModify_Example2(self): # Created in flex using "new unittest Drag_EdgeModify_Example2"
+        self.assertFlexSequence( [
+            "break 1 6x5 a ; join Au.0 Bvp.1 Cwqk.2 Dxrlf.3 s.w t.Q mn.x o.R ghi.y j.S abcd.z e.T y.X z.Y",
+            "drag right XY right 4",
+        ], """
+            zzzzT3 zzzzTT
+            yyyS23 yyySSS
+            xxR123 xxRRRR
+            wQ0123 wQQQQQ
+            XY0123 XXXYYY
+        """, True )
+
+    # Ignore notices
+    def test_Drag_EdgeModify_WithScale(self): # Created in flex using "new unittest Drag_EdgeModify_WithScale"
+        self.assertFlexSequence( [
+            "break 1 9x6 ; join RIzqh8 QHypg PGxo OFw NE",
+            "drag right ABCJKL right 6",
+            "drag top * down 100%",
+            "drag left * right 100%",
+        ], """
+            01234567R 012345677 ijklmnnnn m
+            9abcdefQR 9abcdefff
+            ijklmnPQR ijklmnnnn
+            rstuvOPQR rstuvvvvv
+            ABCDNOPQR AAABBBCCC
+            JKLMNOPQR JJJKKKLLL
+        """, True )
+
+    # Ignore notices
+    def test_Drag_EdgeModify_NoScale(self): # Created in flex using "new unittest Drag_EdgeModify_NoScale"
+        self.assertFlexSequence( [
+            "break 1 7x7 ; join 18fm 29g 3a MFyrkd6 LExqjc KDwpi JCvo IBu HA",
+            "drag right l right 10",
+            "drag bottom * up 100%",
+            "drag right * left 100%",
+        ], """
+            012345M 00000000000 lllllllllll l
+            7123bLM 77777777777
+            e12hKLM eeeeeeeeeee
+            l1nJKLM lllllllllll
+            stIJKLM stIIIIIIIII
+            zHIJKLM zHIIIIIIIII
+            GHIJKLM GHIIIIIIIII
+        """, True )
+
+    # Ignore notices
+    def test_Drag_Expansion_Right(self): # Created in flex using "new unittest Drag_Expansion_Right"
+        self.assertFlexSequence( [
+            "break 1 2x3 o ; scale 2x:1x",
+            "drag right q right 5",
+        ], """
+            oopp ooppppp
+            qqrr qqqqqqq
+            sstt ssttttt
+        """, True )
 
 
 
