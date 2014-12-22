@@ -630,7 +630,7 @@ def Mosaics_Equal(windowgram_mosaic_1, windowgram_mosaic_2): # True if equal els
 ## Windowgram Group Conversions
 ##
 ##      WindowgramGroupPattern      Single string of 1 or more packed windowgrams with arbitrary padding
-##                                  This pattern must be horizontally aligned to accommodate differently sized panes
+##                                  This pattern must be top aligned to accommodate differently sized windowgrams
 ##                                  See flex unit testing for examples of properly constructed objects
 ##
 ##      WindowgramGroupList         List of strings, where each string is a windowgram with optional padding
@@ -764,6 +764,9 @@ class Windowgram():
     def Is_Extended(self):
         return self.extend
 
+    def Copy(self):
+        return Windowgram( self.Export_String(), self.Is_Extended() )
+
     ##
     ## Loaders
     ##
@@ -853,9 +856,7 @@ class Windowgram():
             list_split, list_links = SplitProcessor( sw, self, 1024, 1024, list_panes ) # Avoid layout errors
             splityes = True
             for split in list_split:
-                #
                 # Readability
-                #
                 list_split_linkid = split['linkid']     # 1234          This is for cross-referencing
                 ent_panes = ''
                 for i in list_panes:
@@ -957,7 +958,7 @@ class Windowgram():
         windowgram_chars = Windowgram_Convert.String_To_Chars( self.windowgram_string )
         if axis == "v": windowgram_chars = Windowgram_Convert.Transpose_Chars( windowgram_chars )
         panes = "".join( set( (windowgram_chars[edge-1] if edge > 0 else []) +
-                              (windowgram_chars[edge] if edge+1 < len(windowgram_chars) else []) ) )
+                              (windowgram_chars[edge] if edge < len(windowgram_chars) else []) ) )
         return panes
 
     @staticmethod
@@ -980,25 +981,19 @@ class Windowgram():
 
     def Edge_ClipOuterTransparents(self):
         # Any fully transparent lines on any outer edge are clipped entirely
-        wgc = self.Export_Chars()
+        wgl = self.Export_Lines()
         wgx1, wgy1, (wgx2, wgy2) = 1, 1, self.Analyze_WidthHeight()
         wgx2 -= 1 ; wgy2 -= 1 # Aligns edges so they may be extracted directionally
-        while wgx1-1 <= wgx2 and set(Windowgram.Edge_Extract_Static( wgc, "v", wgx1, "-" )) == {MASKPANE_X}:
+        while wgx1-1 <= wgx2 and set(Windowgram.Edge_Extract_Static( wgl, "v", wgx1, "-" )) == {MASKPANE_X}:
             wgx1 = wgx1 + 1
-        while wgx2 >= wgx1-1 and set(Windowgram.Edge_Extract_Static( wgc, "v", wgx2, ""  )) == {MASKPANE_X}:
+        while wgx2 >= wgx1-1 and set(Windowgram.Edge_Extract_Static( wgl, "v", wgx2, ""  )) == {MASKPANE_X}:
             wgx2 = wgx2 - 1
-        while wgy1-1 <= wgy2 and set(Windowgram.Edge_Extract_Static( wgc, "h", wgy1, "-" )) == {MASKPANE_X}:
+        while wgy1-1 <= wgy2 and set(Windowgram.Edge_Extract_Static( wgl, "h", wgy1, "-" )) == {MASKPANE_X}:
             wgy1 = wgy1 + 1
-        while wgy2 >= wgy1-1 and set(Windowgram.Edge_Extract_Static( wgc, "h", wgy2, ""  )) == {MASKPANE_X}:
+        while wgy2 >= wgy1-1 and set(Windowgram.Edge_Extract_Static( wgl, "h", wgy2, ""  )) == {MASKPANE_X}:
             wgy2 = wgy2 - 1
+        wgc = self.Export_Chars()
         self.Import_Chars( [ [ wgc[iy][ix] for ix in range(wgx1-1, wgx2+1) ] for iy in range(wgy1-1, wgy2+1) ] )
-
-    ##
-    ## Copy
-    ##
-
-    def Copy(self):
-        return Windowgram( self.Export_String(), self.Is_Extended() )
 
     ##
     ## CopyMasked
@@ -1032,14 +1027,14 @@ class Windowgram():
                 for ix in range(iw):
                     if frame_chars[fy-1+iy][fx-1+ix] == MASKPANE_1:
                         windowgram_chars[fy-1+iy][fx-1+ix] = image_chars[iy][ix]
-        return Windowgram("", self.Is_Extended()).Load_Chars(windowgram_chars)
+        self.Load_Chars(windowgram_chars)
 
 ##
 ## Windowgram Masking Functions
 ##
 
 def Windowgram_Mask_Generate(wg, panes): # wg_mask
-    # Returns a windowgram with non-standard panes for use with masking: "." for zero, ":" for one
+    # Returns a windowgram with non-standard panes for use with masking: MASKPANE_0 for zero, MASKPANE_1 for one
     windowgram_parsed = wg.Export_Parsed()
     width, height = wg.Analyze_WidthHeight()
     # Produce mask
@@ -1421,7 +1416,7 @@ def edgecore_buildoptimal(windowgram_parsed, axis, group, minimal): # optimal
     # Derive an optimal run from the produced minimal run
     #
     # The following are examples of minimal ("m"), optimal ("o"), and identical ("=") runs where they overlap entirely.
-    # The "|" is just a reminder that this is an illustration of edges (as opposed to panes, as a re typical elsewhere).
+    # The "|" is just a reminder that this is an illustration of edges (as opposed to panes, as are typical elsewhere).
     # Dots are for irrelevant areas of the windowgram.  Vertical edges are shown, but of course the same applies to
     # horizontal when the windowgram is transposed.
     #
@@ -1464,11 +1459,11 @@ def edgecore_buildoptimal(windowgram_parsed, axis, group, minimal): # optimal
         # An edge is included if and only if it overlaps at least one character of the existing edge
         run = run_as_runs[0]
         for qedge in qedges:
-            # Not the most efficient way to do this, but so easy to code...
+            # Not the most efficient way to test overlap
             sq = list(range(qedge[1], qedge[2] + 1))
             sr = list(range(run  [1], run  [2] + 1))
             sqr = list(sorted(set(sq + sr)))
-            if len(sq) + len(sr) - len(sqr) > 1: # Since these counts are edge-to-edge, +1 is not an actual overlap
+            if len(sq) + len(sr) - len(sqr) > 1: # These counts are edge-to-edge, +1 is not an actual overlap
                 run = [ run[0], sqr[0], sqr[-1] ]
                 if not qedge[0] in panes: panes += qedge[0]
                 qedges = [ _ for _ in qedges if _[0] != qedge[0] ]
@@ -1499,7 +1494,7 @@ def edgecore(wg, group, direction=None): # status, axis, minimal, optimal
     ## For tmuxomatic, (group, direction) should be used and/or the optimal edge favored, otherwise the result could
     ## produce windowgrams that are incompatible with tmux.
     ##
-    ## For difference between minimal and optimal, consider the unittests, or see the upcoming "drag" implementation.
+    ## For difference between minimal and optimal, consider the unit tests, or see the "drag" implementation.
     ##
     used, unused = wg.Panes_GetUsedUnused()
     # Resolve direction to common form ("v", "h", "t", "b", "l", "r") for easier reference
@@ -1540,6 +1535,7 @@ def edgecore(wg, group, direction=None): # status, axis, minimal, optimal
                 for paneid2 in windowgram_parsed.keys():
                     pane2 = windowgram_parsed[paneid2]
                     if paneid2 in group and paneid1 != paneid2:
+                        run = None
                         p1x1, p1y1 = pane1['x'],                  pane1['y']
                         p1x2, p1y2 = pane1['x'] + pane1['w'] - 1, pane1['y'] + pane1['h'] - 1
                         p2x1, p2y1 = pane2['x'],                  pane2['y']
@@ -1603,8 +1599,8 @@ def smudgecore(wg, edge, axis, length, direction, run=None): # wg
         windowgram_chars += [[(edge_characters[iy] if ix >= fr and ix <= to and iy >= run[1] and iy < run[2] \
             else ch) for ix, ch in enumerate(line)]]
     for iy, _ in enumerate(windowgram_chars): # Additions
-        if ed < 0: windowgram_chars[iy] = [edge_characters[iy] * ec] + windowgram_chars[iy]
-        else: windowgram_chars[iy] += [edge_characters[iy] * ec]
+        if ed < 0: windowgram_chars[iy] = list(edge_characters[iy] * ec) + windowgram_chars[iy]
+        else: windowgram_chars[iy] += list(edge_characters[iy] * ec)
     if axis == "h": windowgram_chars = Windowgram_Convert.Transpose_Chars( windowgram_chars )
     wgout.Import_Chars( windowgram_chars )
     # Truncate transparency and return
@@ -1881,7 +1877,7 @@ class FlexPointersParameter(object):
 ##      * Only commands from the flex group "modifiers" are supported
 ##      * No command ambiguity
 ##      * No command aliases
-##      * Processing halts on flex warning or error
+##      * Processing halts on flex warning or error (if noticesok == False)
 ##
 ## Used by
 ##
@@ -1937,7 +1933,7 @@ def flex_processor(wg, commands, noticesok=False): # -> error
                   "the x and y axis.  If only one axis is specified then the value will be applied to both x and " + \
                   "y.  When specifying both, any valid combination will work, including mixing multipliers with " + \
                   "the times separator, for example \"2xx2x\", \"200%x2x\", \"2xx200%\", etc.",
-    aliases     = [ ["size", "scale "], # Resize conflicts with rename for two character ambiguity, replaced with size
+    aliases     = [ ["size", "scale "],
                     ["half", "scale 50%"], ["double", "scale 2x"],
                     ["wider", "scale 200%:100%"], ["thinner", "scale 50%:100%"],
                     ["taller", "scale 100%:200%"], ["shorter", "scale 100%:50%"],
@@ -1999,10 +1995,9 @@ def cmd_scale_2(fpp_PRIVATE, x_how, y_how): # 2 parameters
 ##
 ## Flex: Add
 ##
-## TODO: Edge could also represent a combined edge of panes.  The panes would have to be adjacent, but it would
-## allow for the insertion of panes into the middle of windows.  Would require scaling the surrounding panes to
-## support the insertion, but it could be done.  This is the insert command, and the accommodation logic is the
-## same as clone.
+## Analogues:
+##
+##      Add may be used for insert at windowgram edge
 ##
 
 @flex(
@@ -2070,11 +2065,11 @@ def cmd_add(fpp_PRIVATE, edge, size, newpane=None):
 ## Notes:
 ##
 ##      Avoiding unnecessary complexity.  It's easy to incorporate support for group as target.  Such an algorithm would
-##      break all panes in the group equally and apply the newpanes linearly.  This becomes complicated if avoiding size
-##      explosions from finding the most efficient break sequence (common divisors).  Besides, such situations are more
-##      easily managed by the user of flex; simply perform the breaks in a sequence that yields personally satisfactory
-##      results.  Since this is already possible with flex, implementing such a feature would not add much practical
-##      benefit and only complicate the function.
+##      break all panes in the group equally and apply the newpanes linearly.  This would have to avoid size explosions
+##      to be reasonably usable, accomplished by finding the most efficient break sequence (common divisors).  However
+##      this seems a bit unnecessary, since these situations are more easily managed by the user of flex; simply perform
+##      the breaks in a sequence that yields personally satisfactory results.  Since this is already possible with flex,
+##      implementing such a feature would not add much practical benefit and only complicate the function.
 ##
 
 @flex(
@@ -2515,15 +2510,12 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
 ##
 ## Notes:
 ##
-##      Dragging up to just before the point where panes disappear is the function of the caller.  This feature will
-##      take considerable overhead by honing in on the extreme using multiple calls to drag (similar to Newton's square
-##      root approximation).  Making it faster by analyzing the function is only trivial without the scale feature, so
-##      this may require refactoring.  The purpose of this technique is to preserve the existing panes and/or to honor
-##      neighboring edges.  For now, this feature is not required.
+##      Supports limiting pane loss, if the user sets the `limit` parameter to `yes`.
 ##
-##      Pushing neighboring edges was considered, but this would get complicated and is probably unnecessary.
+##      Pushing neighboring edges to preserve panes was considered, but this would just add to the overhead with no
+##      present advantage.  Perhaps in a future version.
 ##
-## TODO:
+## Considerations:
 ##
 ##      It will be possible to have a parallel-irregular scalegroup.  This is to say it only needs to have the group
 ##      edge perpendicular to the edge axis to be a single run, the parallel axis doesn't have to line up like this.
@@ -2534,13 +2526,47 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
 ##                          Rectangular        Irregular         Irregular
 ##                                           Perpendicular      Parallelism
 ##
-##      Illustrated       ..aaaa1|2bbbb..   ..AA..1|2bb....   ..AAqq1|2bbb...
+##      Illustrated       ..aaaa1|2bbbb..   ..AAaa1|2bbBB..   ..AAqq1|2bbbb..
 ##      windowgrams       ..aaaa1|2bbbb..   ..AAaa1|2bbBB..   ..AAqq1|2BBBB..
-##      drag a vertical   ..aaaa1|2bbbb..   ..AAaa1|2bbBB.. +-....aa1|2BBBB..
-##      edge of 1 and 2   ..aaaa1|2bbbb..   ....aa1|2x.BB.. | ..QQaa1|2ss....
+##      drag a vertical   ..aaaa1|2bbbb..   ..AAaa1|2bbBB.. +-...xaa1|2BBBB..
+##      edge of 1 and 2   ..aaaa1|2bbbb..   ..AAaa1|2x.BB.. | ..QQaa1|2ssss..
 ##                                                    |     |
-## The arrows point to areas where drag is impossible-+ and +-possible.  It will be possible to support irregularity
-## on the parallel axis.  Axis is in relation to drag motion, not edge direction, which are opposites.
+##      The arrows are areas where drag is impossible-+ and +-possible.  Note that the "x" is entirely pinned to the
+##      edge, if it did not exist then "a" would be and that means border "Qa" could not be moved during the scaling.
+##      This is possible to add support for.  Perhaps quietly, since a rectangular requirement is easier to explain to
+##      the user.  So yes, it will be possible to support irregularity on the parallel axis in certain cases, and with
+##      some caveats.  Note that the axis is in relation to drag motion, not edge direction, which are opposites.
+##
+##      ==================================
+##      UPDATE 2.17: Irregular Parallelism
+##      ==================================
+##
+##      This has been ruled out for now.  The complications arising from this don't seem worthwhile for what little
+##      convenience may be had.  Take a look at this case:
+##
+##           ..XXYYYZZZ|       X is fully pinned                            ..XXYZ| drag right ABXYZ left 4
+##           ....YYYZZZ|       Y is partially pinned                        ....YZ|
+##           .AAABBBZZZ|       A is pinned and Z binds panes ABXY           .AAABZ| <- Connected; left of B pinned
+##           ..wwxxyyzz|       wxyz are easily isolated                     ..wxyz| <- Independent
+##
+##      The "connected" line requires a potentially deep analysis of neighbor connectivity, and scale behavior would be
+##      restricted in a way that could be counter-intuitive to the user.  Also, the practicality of this seems limited.
+##      Many areas of the code would have to be upgraded, including: 1) New scale core that is able to deal with these
+##      irregular parallelism groups including an algorithm to map out which edges are fixed and which are subject to
+##      scaling, 2) The rectangular mask check would have to be discarded in favor of scanning the perpendicular scan
+##      lines to determine validity by testing for holes, 3) Multiple edges would need to be supported, affecting all
+##      code using the `optimal` edge with the assumption that it is a single edge.
+##
+##      If adding this, probably accept all irregular scalegroups, and simply ignore panes that cannot be scaled.
+##
+##      ===========================
+##      UPDATE 2.17: Multiple Edges
+##      ===========================
+##
+##      Adding support for multiple edges has been ruled out for now.  If added, use a single point fill extraction,
+##      where the mask is filled, and the resulting rectangle is removed from the mask, it is tested for validity (must
+##      touch drag edge, be contiguous, and rectangular), then repeats until the mask is empty.  The independent scale
+##      groups that result would replace the two that exist right now.  It would be nice to have but not important.
 ##
 
 @flex(
@@ -2626,6 +2652,10 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     axis_length = axis_location = optimal[0][0] # Use optimal since we're dealing with a pane grid
     if inverse != "-": axis_length = (wgw if res_direction == "h" else wgh) - axis_length
     # Resolve size and refine direction by toggling size negation if direction is VH
+    # NOTE: If the drag edge falls on the windowgram edge, and the motion is to expand, the available relative space
+    # is zero, and this action will result in an error when using percentages or multipliers, e.g., "drag r * r 100%"
+    # The user must specify exact characters when dragging in these situations, or use the scale command which treats
+    # percentages and multipliers as relative to the windowgram size; drag is relative to the edge-split windowgram.
     restrict = False # If true, restrict dragging beyond the windowgram edge
     (error, res_sizeinv, res_size), size = resolve_size(size, axis_length, inverse, showinv, restrict), None
     if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Size error: " + error ) )
@@ -2667,10 +2697,10 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     wgm0s, wgm1s = wg.CopyMasked_Out( wgm0x ), wg.CopyMasked_Out( wgm1x ) # Already supports irregular parallelism
     # Drag logic is isolated so it may be reprocessed as necessary
     def drag(count, edgeruns, wg, wgm0s, wgm0x, wgm1s, wgm1x):
-        sw0, sh0 = wgm0s.Analyze_WidthHeight() ; sw1, sh1 = wgm1s.Analyze_WidthHeight()
         # Scale the dynamics
         def modifier(which, val, size, inv):
             return (val+(-size if ((True if inv == "-" else False)^(True if which else False)) else size)) if val else 0
+        sw0, sh0 = wgm0s.Analyze_WidthHeight() ; sw1, sh1 = wgm1s.Analyze_WidthHeight()
         if res_direction == "h" and sw0: sw0 = modifier(0, sw0, count, inverse)
         if res_direction == "h" and sw1: sw1 = modifier(1, sw1, count, inverse)
         if res_direction == "v" and sh0: sh0 = modifier(0, sh0, count, inverse)
@@ -2697,8 +2727,8 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
             edgeruns = edgecore_buildoptimal( windowgram_parsed, res_hint, "", edgeruns )
             count -= abs(move)
         # Paste the dynamics over the static
-        wg = wg.CopyMasked_In( wgm0x, wgm0s )
-        wg = wg.CopyMasked_In( wgm1x, wgm1s )
+        wg.CopyMasked_In( wgm0x, wgm0s )
+        wg.CopyMasked_In( wgm1x, wgm1s )
         # Return result for analysis
         return wg
     # Perform drag.  Result must be valid according to: windowgram must not be zero, no loss of panes if user selects.
@@ -2708,6 +2738,9 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     # edge for the static, to find a more efficient maximum range.  The scale algorithm does not lend itself to such
     # reasoning, so windowing will still need to be done to assure that no panes are lost, but if there are no scale
     # masks to begin with then the maximum range is trivially discovered.
+    # NOTE: Because scale produces aliasing artifacts, the only way to know the real maximum is to work backwards from
+    # the desired maximum one step at a time.  Keeping the divide for now because it should be faster on average, in
+    # situations where this search is performed.
     wgout = wg.Copy()
     error = None
     chars = res_size
@@ -2720,8 +2753,7 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
             break
         wgout = drag( chars, copy.deepcopy(optimal), wg.Copy(), wgm0s.Copy(), wgm0x.Copy(), wgm1s.Copy(), wgm1x.Copy() )
         wgw, wgh = wgout.Analyze_WidthHeight()
-        zero = (not wgw or not wgh)
-        if (limit and PaneList_DiffLost( wg, wgout )) or zero:
+        if (limit and PaneList_DiffLost( wg, wgout )) or not wgw or not wgh:
             chars_max = chars
         else:
             chars_min = chars
@@ -2730,11 +2762,10 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
             if chars == chars_min: break
             chars = chars_min
         else:
-            chars = chars_min + (span >> 1)
-    # Report error
+            chars = chars_min + (span // 2)
+    # Report error or warning
     if error:
         fpp_PRIVATE.flexsense['notices'].append( FlexError( error ) )
-    # Warning if lost panes (and not already an error)
     else:
         lostpanes = PaneList_DiffLost( wg, wgout )
         if lostpanes:
@@ -2746,6 +2777,12 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
 
 ##
 ## Flex: Insert
+##
+## Analogues:
+##
+##      Insert at windowgram edge may be used for add
+##
+## Notes:
 ##
 ##          Modifiers insert and clone need to differentiate between a deduced edge (1 parameter), a specified edge (2),
 ##          and the cardinal edge of a specified group (2).  Each of these is handled by one master function that will
@@ -2779,6 +2816,20 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
 ##          |   789         |       77889               7899                789X                7789                |
 ##          +---------------+---------------------------------------------------------------------------------------+
 ##
+## Sketch:
+##
+##      1) Separate; based on the minimal and optimal edges, behavior will differ
+##
+##          "12\n32\n34" -> "vertical `32`" smudges: `1` right, and `4` left
+##          "15\n32\n64" -> "vertical `32`" smudges: `1` + `6` right, and `5` + `4` left
+##          Minimal will always be possible for positioned and split windowgrams
+##          Optimal is discarded in favor of manual search to pin panes that overlap with minimal
+##          Balance, where possible, is user-specified: 0% (left) to 100% (right) with a default of 50% (even)
+##      
+##      2) Smudge to either side of the minimal edge according to pinned panes and user balance
+##
+##      3) Copy over the new pane in place of the insertion
+##
 
 # TODO
 
@@ -2794,7 +2845,9 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
 ##          Clone could be thought of as:
 ##              1) insert <pane> ...        Axis 1 stretch/scale and insert
 ##              2) scale ...                Axis 2 scale to fit
-##              Then copy the group into the new pane.  This is pretty easy to implement.
+##              3) rename ...               Rename the panes so they don't conflict
+##              3) copy it in
+##          This is pretty easy to implement.
 ##
 ##          Requires 3 functions: public by edge, public by group, hidden internal that is core of both wrappers
 ##
