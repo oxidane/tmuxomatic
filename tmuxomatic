@@ -66,13 +66,13 @@ HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
 VERSION = "2.16" # x.y: x = Major feature, y = Minor feature or bug fix
 ##
 ##  2.16    2014-12-18  New flex command: drag
-##                      Added smudge core, required by some upcoming flex commands
+##                      Added smudge core, required by upcoming flex commands
 ##
 ##  2.15    2014-12-12  Fixed PyPI readme and screenshot
 ##                      See PyPI information detailed in the notes section
 ##
 ##  2.14    2014-12-11  Applying screenshot scale fix to PyPI readme
-##                      Added edge core, required by some upcoming flex commands
+##                      Added edge core, required by upcoming flex commands
 ##
 ##  2.13    2014-12-06  Fixed PyPI long description by setting the index links to absolute
 ##                      PyPI does not support relative links (see https://stackoverflow.com/q/16367770)

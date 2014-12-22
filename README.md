@@ -248,9 +248,9 @@ In this demonstration is presented in summary form.  Here we modify the windowgr
 
 **Drag**:
 
-> Drag the `right` edge of pane `1` (while scaling `BDLbdl`), over to the `left` exactly `12` characters.
+> Drag the `left` edge of group `BDLbdl`, to the `left`, about `50%` of the available space.
 
-	flex> drag right 1:BDLbdl left 12
+	flex> drag left BDLbdl left 50%
 
 	1111111111111ssssssssssssssssssssssss
 	1111111111111ssssssssssssssssssssssss
