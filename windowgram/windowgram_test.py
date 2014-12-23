@@ -421,7 +421,8 @@ class Test_FlexCores(SenseTestCase):
         self.assertTrue( wg_o == wg_i )
 
     ## Tests the scale core multiple resizing that's necessary in some situations.  See notes in scale core.
-    ## TODO: Move this into the unit testing for the break command
+    ## TODO: Replace with an equivalent that is not dependent on flex
+    ## TODO: When replacing, keep this test anyway, and move it into unit testing for the break command
 
     def test_ScaleCoreDifference_CaseTwo(self): # Created in flex using "new unittest ScaleCoreDifference_CaseTwo"
         # scale 42x42 ; break 1 6x6 ; break 1 3x3
@@ -1079,18 +1080,6 @@ class Test_FlexModifier_Add(SenseTestCase):
 
 class Test_FlexModifier_Drag(SenseTestCase):
 
-    def test_Drag_EdgeMorphing(self): # Created in flex using "new unittest Drag_EdgeMorphing"
-        self.assertFlexSequence( [
-            "break 1 6x5 a ; join Au.0 Bvp.1 Cwqk.2 Dxrlf.3 s.w t.Q mn.x o.R ghi.y j.S abcd.z e.T y.X z.Y",
-        ], """
-            zzzzT3
-            yyyS23
-            xxR123
-            wQ0123
-            XY0123
-        """ )
-
-    # Ignore notices
     def test_Drag_EdgeModify_Example1(self): # Created in flex using "new unittest Drag_EdgeModify_Example1"
         self.assertFlexSequence( [
             "break 1 6x5 a ; join Au.0 Bvp.1 Cwqk.2 Dxrlf.3 s.w t.Q mn.x o.R ghi.y j.S abcd.z e.T y.X z.Y",
@@ -1101,9 +1090,8 @@ class Test_FlexModifier_Drag(SenseTestCase):
             xxR123 xxRRRR
             wQ0123 wQQQQQ
             XY0123 XXXXXX
-        """, True )
+        """, True ) # Ignore notices
 
-    # Ignore notices
     def test_Drag_EdgeModify_Example2(self): # Created in flex using "new unittest Drag_EdgeModify_Example2"
         self.assertFlexSequence( [
             "break 1 6x5 a ; join Au.0 Bvp.1 Cwqk.2 Dxrlf.3 s.w t.Q mn.x o.R ghi.y j.S abcd.z e.T y.X z.Y",
@@ -1114,9 +1102,8 @@ class Test_FlexModifier_Drag(SenseTestCase):
             xxR123 xxRRRR
             wQ0123 wQQQQQ
             XY0123 XXXYYY
-        """, True )
+        """, True ) # Ignore notices
 
-    # Ignore notices
     def test_Drag_EdgeModify_WithScale(self): # Created in flex using "new unittest Drag_EdgeModify_WithScale"
         self.assertFlexSequence( [
             "break 1 9x6 ; join RIzqh8 QHypg PGxo OFw NE",
@@ -1130,9 +1117,8 @@ class Test_FlexModifier_Drag(SenseTestCase):
             rstuvOPQR rstuvvvvv
             ABCDNOPQR AAABBBCCC
             JKLMNOPQR JJJKKKLLL
-        """, True )
+        """, True ) # Ignore notices
 
-    # Ignore notices
     def test_Drag_EdgeModify_NoScale(self): # Created in flex using "new unittest Drag_EdgeModify_NoScale"
         self.assertFlexSequence( [
             "break 1 7x7 ; join 18fm 29g 3a MFyrkd6 LExqjc KDwpi JCvo IBu HA",
@@ -1147,9 +1133,8 @@ class Test_FlexModifier_Drag(SenseTestCase):
             stIJKLM stIIIIIIIII
             zHIJKLM zHIIIIIIIII
             GHIJKLM GHIIIIIIIII
-        """, True )
+        """, True ) # Ignore notices
 
-    # Ignore notices
     def test_Drag_Expansion_Right(self): # Created in flex using "new unittest Drag_Expansion_Right"
         self.assertFlexSequence( [
             "break 1 2x3 o ; scale 2x:1x",
@@ -1158,7 +1143,195 @@ class Test_FlexModifier_Drag(SenseTestCase):
             oopp ooppppp
             qqrr qqqqqqq
             sstt ssttttt
-        """, True )
+        """, True ) # Ignore notices
+
+    # Released 2.16 without sufficient unit testing; found and fixed the following bugs
+
+    def test_Drag_Fixed1(self): # Created in flex using "new unittest Drag_Fixed1"
+        self.assertFlexSequence( [
+            "break 1 2x2 1 ; scale 5x",
+            "drag horizontal 1234 down 4",
+            "drag horizontal 1234 down 3",
+        ], """
+            1111122222 1111122222 1111122222
+            1111122222 1111122222 1111122222
+            1111122222 1111122222 1111122222
+            1111122222 1111122222 1111122222
+            1111122222 1111122222 1111122222
+            3333344444 1111122222 1111122222
+            3333344444 1111122222 1111122222
+            3333344444 1111122222 1111122222
+            3333344444 1111122222 1111122222
+            3333344444 3333344444 1111122222
+                                  1111122222
+                                  1111122222
+        """, True ) # Ignore notices
+
+    def test_Drag_Fixed2(self): # Created in flex using "new unittest Drag_Fixed2"
+        self.assertFlexSequence( [
+            "break 1 2x2 1 ; scale 5x",
+            "drag horizontal 1234 down 4",
+            "drag horizontal 1234 up 2",
+        ], """
+            1111122222 1111122222 1111122222
+            1111122222 1111122222 1111122222
+            1111122222 1111122222 1111122222
+            1111122222 1111122222 1111122222
+            1111122222 1111122222 1111122222
+            3333344444 1111122222 1111122222
+            3333344444 1111122222 1111122222
+            3333344444 1111122222 3333344444
+            3333344444 1111122222 3333344444
+            3333344444 3333344444 3333344444
+        """ )
+
+    def test_Drag_Fixed3(self): # Created in flex using "new unittest Drag_Fixed3"
+        self.assertFlexSequence( [
+            "scale 36x10 ; break 1 6x2 defghiDEFGHI ; drag r iI l 3",
+            "drag bottom ghi down 4",
+            "drag horizontal ghiGHI up 1",
+        ], """
+            ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii
+            ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii
+            ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii
+            ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii
+            ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii
+            DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII DDDDDDEEEEEEFFFFFFgggggghhhhhhiii DDDDDDEEEEEEFFFFFFgggggghhhhhhiii
+            DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII DDDDDDEEEEEEFFFFFFgggggghhhhhhiii DDDDDDEEEEEEFFFFFFgggggghhhhhhiii
+            DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII DDDDDDEEEEEEFFFFFFgggggghhhhhhiii DDDDDDEEEEEEFFFFFFgggggghhhhhhiii
+            DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII DDDDDDEEEEEEFFFFFFgggggghhhhhhiii DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII
+            DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII
+        """ )
+
+    # Enforce required sorted() of edge overlap in the edgemagnet() function to prevent careless removal
+
+    def test_Drag_Overlap(self): # Created in flex using "new unittest Drag_Overlap"
+        self.assertFlexSequence( [
+            "scale 36x10 ; break 1 6x2 defghiDEFGHI ; drag r iI l 3",
+            "drag bottom ghi down 4",
+            "drag bottom ghi up 1",
+        ], """
+            ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii
+            ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii
+            ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii
+            ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii
+            ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii ddddddeeeeeeffffffgggggghhhhhhiii
+            DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII DDDDDDEEEEEEFFFFFFgggggghhhhhhiii DDDDDDEEEEEEFFFFFFgggggghhhhhhiii
+            DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII DDDDDDEEEEEEFFFFFFgggggghhhhhhiii DDDDDDEEEEEEFFFFFFgggggghhhhhhiii
+            DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII DDDDDDEEEEEEFFFFFFgggggghhhhhhiii DDDDDDEEEEEEFFFFFFgggggghhhhhhiii
+            DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII DDDDDDEEEEEEFFFFFFgggggghhhhhhiii DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII
+            DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII DDDDDDEEEEEEFFFFFFGGGGGGHHHHHHIII
+        """ )
+
+    # Mixing edgegroup with scalegroup to make sure the intended edge is dragged when multiple panes factor
+
+    def test_Drag_EdgeScaleMixing(self): # Created in flex using "new unittest Drag_EdgeScaleMixing"
+        self.assertFlexSequence( [
+            "scale 12x4 ; break 1 4x2 wxyzWXYZ",
+            "drag bottom x:yXY down 1",
+            "drag top Y:Xxy up 2",
+            "drag horizontal XYxy down 2",
+            "drag top XY:xy up 1 ; drag left Z:xyzXY right 2",
+            "drag right wW:xyXY left 2",
+            "drag vertical ZY:xXyz left 2",
+            "drag vertical wxWX:yY right 2",
+        ], """
+            wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxxyyyyz wxxxxxyyyyyz wxxxxyyyyzzz wwwxxxyyyzzz
+            wwwxxxyyyzzz wwwxxxyyyzzz wwwXXXYYYzzz wwwxxxyyyzzz wwwxxxxyyyyz wxxxxxyyyyyz wxxxxyyyyzzz wwwxxxyyyzzz
+            WWWXXXYYYZZZ WWWxxxyyyZZZ WWWXXXYYYZZZ WWWxxxyyyZZZ WWWXXXXYYYYZ WXXXXXYYYYYZ WXXXXYYYYZZZ WWWXXXYYYZZZ
+            WWWXXXYYYZZZ WWWXXXYYYZZZ WWWXXXYYYZZZ WWWXXXYYYZZZ WWWXXXXYYYYZ WXXXXXYYYYYZ WXXXXYYYYZZZ WWWXXXYYYZZZ
+        """ )
+
+    # Other tests
+
+    def test_Drag_ExpandAndContract(self): # Created in flex using "new unittest Drag_ExpandAndContract"
+        self.assertFlexSequence( [
+            "scale 12x4 ; break 1 4x2 wxyzWXYZ",
+            "drag bottom X:* down 2",
+            "drag right z:* right 4",
+            "drag top y:* down 2",
+            "drag left w:* right 4",
+            "drag bottom * up 2",
+            "drag right * left 8",
+            "drag top * up 2",
+            "drag left * left 8",
+        ], """
+            wwwxxxyyyzzz wwwxxxyyyzzz wwwwxxxxyyyyzzzz wwwwxxxxyyyyzzzz wwwxxxyyyzzz wwwxxxyyyzzz wxyz wxyz wwwxxxyyyzzz
+            wwwxxxyyyzzz wwwxxxyyyzzz wwwwxxxxyyyyzzzz wwwwxxxxyyyyzzzz wwwxxxyyyzzz WWWXXXYYYZZZ WXYZ wxyz wwwxxxyyyzzz
+            WWWXXXYYYZZZ wwwxxxyyyzzz wwwwxxxxyyyyzzzz WWWWXXXXYYYYZZZZ WWWXXXYYYZZZ                   WXYZ WWWXXXYYYZZZ
+            WWWXXXYYYZZZ WWWXXXYYYZZZ WWWWXXXXYYYYZZZZ WWWWXXXXYYYYZZZZ WWWXXXYYYZZZ                   WXYZ WWWXXXYYYZZZ
+                         WWWXXXYYYZZZ WWWWXXXXYYYYZZZZ
+                         WWWXXXYYYZZZ WWWWXXXXYYYYZZZZ
+        """ )
+
+    def test_Drag_WithAndWithoutScalegroup(self): # Created in flex using "new unittest Drag_WithAndWithoutScalegroup"
+        self.assertFlexSequence( [
+            "break 1 4x4 A ; scale 4x",
+            "drag left G:* left 4",
+            "drag bottom G:* down 4",
+            "drag left G left 1",
+            "drag bottom G down 1",
+            "drag right G right 2",
+        ], """
+            AAAABBBBCCCCDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD
+            AAAABBBBCCCCDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD
+            AAAABBBBCCCCDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD
+            AAAABBBBCCCCDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD
+            EEEEFFFFGGGGHHHH EEFFGGGGGGHHHHHH AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD
+            EEEEFFFFGGGGHHHH EEFFGGGGGGHHHHHH AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD AABBCCCCCCDDDDDD
+            EEEEFFFFGGGGHHHH EEFFGGGGGGHHHHHH EEFFGGGGGGHHHHHH EEFGGGGGGGHHHHHH EEFGGGGGGGHHHHHH EEFGGGGGGGGGHHHH
+            EEEEFFFFGGGGHHHH EEFFGGGGGGHHHHHH EEFFGGGGGGHHHHHH EEFGGGGGGGHHHHHH EEFGGGGGGGHHHHHH EEFGGGGGGGGGHHHH
+            IIIIJJJJKKKKLLLL IIJJKKKKKKLLLLLL EEFFGGGGGGHHHHHH EEFGGGGGGGHHHHHH EEFGGGGGGGHHHHHH EEFGGGGGGGGGHHHH
+            IIIIJJJJKKKKLLLL IIJJKKKKKKLLLLLL EEFFGGGGGGHHHHHH EEFGGGGGGGHHHHHH EEFGGGGGGGHHHHHH EEFGGGGGGGGGHHHH
+            IIIIJJJJKKKKLLLL IIJJKKKKKKLLLLLL EEFFGGGGGGHHHHHH EEFGGGGGGGHHHHHH EEFGGGGGGGHHHHHH EEFGGGGGGGGGHHHH
+            IIIIJJJJKKKKLLLL IIJJKKKKKKLLLLLL EEFFGGGGGGHHHHHH EEFGGGGGGGHHHHHH EEFGGGGGGGHHHHHH EEFGGGGGGGGGHHHH
+            MMMMNNNNOOOOPPPP MMNNOOOOOOPPPPPP IIJJKKKKKKLLLLLL IIJJKKKKKKLLLLLL IIFGGGGGGGLLLLLL IIFGGGGGGGGGLLLL
+            MMMMNNNNOOOOPPPP MMNNOOOOOOPPPPPP IIJJKKKKKKLLLLLL IIJJKKKKKKLLLLLL IIJJKKKKKKLLLLLL IIJJKKKKKKKKLLLL
+            MMMMNNNNOOOOPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP
+            MMMMNNNNOOOOPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP
+        """ )
+
+    # TODO: Replace "scale 1 ; add right 1 0 ; drag left 0 left 1" with some kind of "reset" (to "1") command
+
+    def test_Drag_AcrossWindowgramEdge(self): # Created in flex using "new unittest Drag_AcrossWindowgramEdge"
+        self.assertFlexSequence( [
+            "scale 1 ; add right 1 0 ; drag left 0 left 1 ; scale 12 ; break 0 4x4 A",
+            "drag right F left 150%",
+            "scale 1 ; add right 1 0 ; drag left 0 left 1 ; scale 12 ; break 0 4x4 A ; drag right F right 150%",
+            "scale 1 ; add right 1 0 ; drag left 0 left 1 ; scale 12 ; break 0 4x4 A ; drag bottom G up 150%",
+            "scale 1 ; add right 1 0 ; drag left 0 left 1 ; scale 12 ; break 0 4x4 A ; drag bottom G down 150%",
+        ], """
+            AAABBBCCCDDD AAAAAABBBCCCDDD AAABBBCCCDDDDDD AAABBBKKKDDD AAABBBCCCDDD
+            AAABBBCCCDDD AAAAAABBBCCCDDD AAABBBCCCDDDDDD AAABBBKKKDDD AAABBBCCCDDD
+            AAABBBCCCDDD AAAAAABBBCCCDDD AAABBBCCCDDDDDD AAABBBKKKDDD AAABBBCCCDDD
+            EEEFFFGGGHHH GGGGGGGGGGGGHHH EEEFFFFFFFFFFFF AAABBBKKKDDD EEEFFFGGGHHH
+            EEEFFFGGGHHH GGGGGGGGGGGGHHH EEEFFFFFFFFFFFF AAABBBKKKDDD EEEFFFGGGHHH
+            EEEFFFGGGHHH GGGGGGGGGGGGHHH EEEFFFFFFFFFFFF AAABBBKKKDDD EEEFFFGGGHHH
+            IIIJJJKKKLLL IIIIIIJJJKKKLLL IIIJJJKKKLLLLLL EEEFFFKKKHHH IIIJJJGGGLLL
+            IIIJJJKKKLLL IIIIIIJJJKKKLLL IIIJJJKKKLLLLLL EEEFFFKKKHHH IIIJJJGGGLLL
+            IIIJJJKKKLLL IIIIIIJJJKKKLLL IIIJJJKKKLLLLLL EEEFFFKKKHHH IIIJJJGGGLLL
+            MMMNNNOOOPPP MMMMMMNNNOOOPPP MMMNNNOOOPPPPPP IIIJJJKKKLLL MMMNNNGGGPPP
+            MMMNNNOOOPPP MMMMMMNNNOOOPPP MMMNNNOOOPPPPPP IIIJJJKKKLLL MMMNNNGGGPPP
+            MMMNNNOOOPPP MMMMMMNNNOOOPPP MMMNNNOOOPPPPPP IIIJJJKKKLLL MMMNNNGGGPPP
+                                                         MMMNNNOOOPPP MMMNNNGGGPPP
+                                                         MMMNNNOOOPPP MMMNNNGGGPPP
+                                                         MMMNNNOOOPPP MMMNNNGGGPPP
+        """, True ) # Ignore notices
+
+#    def test_Drag_MultipleEdges(self): # Created in flex using "new unittest Drag_MultipleEdges"
+#        self.assertFlexSequence( [
+#            "scale 15x8 ; break 1 3x4 defDEFGHIghi",
+#            "drag b D:dGgFfIi down 2",
+#        ], """
+#            dddddeeeeefffff dddddeeeeefffff
+#            dddddeeeeefffff dddddeeeeefffff
+#            DDDDDEEEEEFFFFF dddddEEEEEfffff
+#            DDDDDEEEEEFFFFF DDDDDEEEEEFFFFF
+#            GGGGGHHHHHIIIII DDDDDHHHHHFFFFF
+#            GGGGGHHHHHIIIII DDDDDHHHHHFFFFF
+#            ggggghhhhhiiiii GGGGGhhhhhIIIII
+#            ggggghhhhhiiiii ggggghhhhhiiiii
+#        """ )
 
 
 
@@ -1250,6 +1423,7 @@ class Test_ReadmeDemonstrations(SenseTestCase):
             "split 1 bottom 3 s",
             "rename Nn Dd",
             "swap z s Ll Dd",
+            "drag left BDLbdl left 50%",
         ], """
             1111111111111111111111111zzzzzzzzzzzz 1111111111111111111111111zzzzzzzzzzzz
             1111111111111111111111111zzzzzzzzzzzz 1111111111111111111111111zzzzzzzzzzzz
@@ -1272,6 +1446,17 @@ class Test_ReadmeDemonstrations(SenseTestCase):
             sssssssssssssssssssssssssbbbblllldddd zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
             sssssssssssssssssssssssssbbbblllldddd zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
             sssssssssssssssssssssssssbbbblllldddd zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
+
+            1111111111111ssssssssssssssssssssssss
+            1111111111111ssssssssssssssssssssssss
+            1111111111111BBBBBBBBDDDDDDDDLLLLLLLL
+            1111111111111BBBBBBBBDDDDDDDDLLLLLLLL
+            1111111111111BBBBBBBBDDDDDDDDLLLLLLLL
+            1111111111111BBBBBBBBDDDDDDDDLLLLLLLL
+            1111111111111bbbbbbbbddddddddllllllll
+            zzzzzzzzzzzzzbbbbbbbbddddddddllllllll
+            zzzzzzzzzzzzzbbbbbbbbddddddddllllllll
+            zzzzzzzzzzzzzbbbbbbbbddddddddllllllll
         """ )
 
 
