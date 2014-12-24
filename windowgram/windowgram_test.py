@@ -90,7 +90,7 @@ FLEXUNIT_SPACE = 1
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-def UnitTests():
+def Flex_UnitTests():
     # Sense test classes
     classes = inspect.getmembers(sys.modules[__name__])
     classes = [ classobj for classname, classobj in classes if classname.startswith("Test") ]

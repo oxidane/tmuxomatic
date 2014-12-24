@@ -1238,6 +1238,13 @@ def cmd_exit(fpp_PRIVATE):
 
 def flex_shell(session, serial=0):
     ##
+    ## Unit testing required before entering flex
+    ##
+    error = Flex_UnitTests()
+    if error:
+        print("\nFlex Unit Test Failure:\n" + error)
+        exit()
+    ##
     ## Poll dimensions
     ##
     user_wh = [ 0, 0 ]
@@ -2005,12 +2012,6 @@ def main():
 ##----------------------------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-
-    # Unit test
-    error = UnitTests()
-    if error:
-        print("\nUnit Test Failure:\n" + error)
-        exit()
 
     # Signal handlers
     signal.signal(signal.SIGINT, signal_handler_break) # SIGINT (user break)
