@@ -63,7 +63,10 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DESCRIPTION = "Intelligent tmux session management" # Maybe add: "using windowgrams"
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
-VERSION = "2.16" # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.17" # x.y: x = Major feature, y = Minor feature or bug fix
+##
+##  2.17    2014-12-24  New flex command: reset
+##                      Fixed some bugs in the drag command
 ##
 ##  2.16    2014-12-18  New flex command: drag
 ##                      Added smudge core, required by upcoming flex commands

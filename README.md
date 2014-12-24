@@ -1,6 +1,6 @@
 
 
-# tmuxomatic [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic) [![](http://img.shields.io/pypi/dm/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
+# tmuxomatic [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
 
 
@@ -178,7 +178,7 @@ Either type `done` and flex will open this session file in tmux, or type `exit` 
 
 #### Flex demonstration #2 -- Extend the windowgram
 
-In this demonstration is presented in summary form.  Here we modify the windowgram from the previous demonstration, using a different set of flex commands.
+For this demonstration, we modify the windowgram from the previous demonstration, using a different set of flex commands.  The commands in this section are described in summary form.
 
 > Open the windowgram that we created in the above demonstration
 
