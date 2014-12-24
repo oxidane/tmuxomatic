@@ -1265,12 +1265,12 @@ def scalecore(windowgram, w_chars, h_chars, retry=None): # TODO: Scale by wg to 
     # Retry with necessary increment and/or decrement until desired pane dimensions are reached.  This is required for
     # commands like "break", which need to scale to a specific pane size.  There's likely a way to derive these metrics
     # directly, but this works.  The following verifies that two resizes are necessary.  This is scale core case two:
-    #       "new 1 ; scale 42x42 ; break 1 6x6 ; break 1 3x3"
+    #       "new 1 ; break 1 11x1 ; scale 46 1 ; break 5 7x1"
     tries = 0
     tries_max = 16 # An infinite loop is unlikely, but this maximum will prevent such an occurrence
     paneid = exp_w = exp_h = None
     if retry and type(retry) is tuple and len(retry) == 3:
-        paneid, exp_w, exp_h = retry # retry == ( paneid, w, h )
+        paneid, exp_w, exp_h = retry
         if Windowgram( windowgram ).Panes_HasPane( paneid ): tries = tries_max
         else: paneid = None
     # Scale until satisfied; this loop is for pane measurement, since the windowgram should always scale on first try.
@@ -2706,7 +2706,8 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
             result, suggestions = groupcore(wgm, MASKPANE_1) # GroupStatus.Invalid_Panes means MASKPANE_1 was not found
             if result == GroupStatus.Invalid_Panes or result == GroupStatus.Success: return None
             return "The group of panes is an unsupported irregular shape, try making it rectangular"
-        r1 = Validate(wgm1) ; r2 = Validate(wgm2)
+        r1 = Validate(wgm1)
+        r2 = Validate(wgm2)
         return r1 if r1 else (r2 if r2 else 0)
     wgm0x, wgm1x = Generate( res_scalegroup + res_edge )    # The first mask pair must be "scalegroup + edgegroup".
     error = Validate( wgm0x, wgm1x )                        # Consider [ "12\n34", "right 12:34" ] -> "34" is valid.
@@ -2722,7 +2723,8 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
         # Scale the dynamics
         def modifier(which, val, size, inv):
             return (val+(-size if ((True if inv == "-" else False)^(True if which else False)) else size)) if val else 0
-        sw0, sh0 = wgm0s.Analyze_WidthHeight() ; sw1, sh1 = wgm1s.Analyze_WidthHeight()
+        sw0, sh0 = wgm0s.Analyze_WidthHeight()
+        sw1, sh1 = wgm1s.Analyze_WidthHeight()
         if res_direction == "h" and sw0: sw0 = modifier(0, sw0, count, inverse)
         if res_direction == "h" and sw1: sw1 = modifier(1, sw1, count, inverse)
         if res_direction == "v" and sh0: sh0 = modifier(0, sh0, count, inverse)

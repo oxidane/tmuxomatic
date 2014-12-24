@@ -299,9 +299,8 @@ import sys, os, time, subprocess, argparse, signal, re, math, copy, inspect
 import windowgram               # Required for print(windowgram.__version__), eventually this will be the only import
 from windowgram import *        # Reorganize windowgram and its use so that only "import windowgram" is needed
 
-INSTALLED_PYYAML = False
 try: import yaml ; INSTALLED_PYYAML = True
-except ImportError as e: pass
+except ImportError as e: INSTALLED_PYYAML = False
 
 
 

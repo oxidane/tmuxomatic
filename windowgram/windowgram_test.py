@@ -1444,24 +1444,6 @@ class Test_FlexModifierCombination_ScaleCoreDetails(SenseTestCase):
         """ )
 
     def test_ScaleCoreDetails_ScaleRetries(self): # Created in flex using "new unittest ScaleCoreDetails_ScaleRetries"
-        # While revisiting this test, I discovered the previous test does not actually require a retry.  I mistyped the
-        # command sequence somehow when making the original note.  So I used the following code to discover a new test.
-        # Note that it requires a stop to be placed in the scalecore that exits when a retry is required.
-        """
-        import random
-        while True:
-            print("...")
-            wg = Windowgram( NEW_WINDOWGRAM )
-            for n in range(2):
-                panes, _ = wg.Panes_GetUsedUnused()
-                command = "break " + panes[random.randrange(0,len(panes))] + " " + \
-                    str(random.randrange(0,15)) + "x" + str(random.randrange(0,15))
-                print(command)
-                errors = flex_processor( wg, command, True )
-                command = "scale " + str(random.randrange(0,80)) + " " + str(random.randrange(0,80))
-                print(command)
-                errors = flex_processor( wg, command, True )
-        """
         # See this commit for the code used to discover this test
         # break 1 11x1 ; scale 46 1 ; break 5 7x1
         self.assertFlexSequence( [
