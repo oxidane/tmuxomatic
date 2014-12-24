@@ -151,7 +151,7 @@ class SenseTestCase(unittest.TestCase):
         cmdlen, ptnlen = len(commands), len(windowgramgroup_list)
         if cmdlen != ptnlen:
             raise Exception( "Mismatch: commands (" + str(cmdlen) + ") and windowgrams (" + str(ptnlen) + ")" )
-        wg = Windowgram( "1" ) # Specified in case the default changes
+        wg = Windowgram( NEW_WINDOWGRAM ) # Specified in case the default changes
         wlist = []
         for ix, (command, windowgram) in enumerate( zip( commands, windowgramgroup_list ) ):
             errors = flex_processor( wg, command, noticesok )
@@ -411,79 +411,22 @@ class Test_FlexCores(SenseTestCase):
         group_x = scalecore( group_i, 12, 3 )
         self.assertTrue( group_o == group_x )
 
-    ## Enforces the use of scale core v1, and will fail if v2 is reactivated.  See notes in scale core.
+    ## Enforces the use of scale core v1, and will fail if v2 is reactivated
 
-    def test_ScaleCoreDifference_CaseOne(self): # Created in flex using "new unittest ScaleCoreDifference_CaseOne"
+    def test_ScaleCore_VersionAssert(self):
         # break 1 2x2 ; scale 3x3 ; scale 2x2
         wg_i = "01\n23\n"
         wg_o = scalecore( wg_i, 3, 3 )
         wg_o = scalecore( wg_o, 2, 2 )
         self.assertTrue( wg_o == wg_i )
 
-    ## Tests the scale core multiple resizing that's necessary in some situations.  See notes in scale core.
-    ## TODO: Replace with an equivalent that is not dependent on flex
-    ## TODO: When replacing, keep this test anyway, and move it into unit testing for the break command
+    ## Tests the need for retries in the scale core
 
-    def test_ScaleCoreDifference_CaseTwo(self): # Created in flex using "new unittest ScaleCoreDifference_CaseTwo"
-        # scale 42x42 ; break 1 6x6 ; break 1 3x3
-        self.assertFlexSequence( [
-            "scale 42x42 ; break 1 6x6 ; break 1 3x3",
-        ], """
-            000000000111AAABBB222222222333333333444444444555555555
-            000000000111AAABBB222222222333333333444444444555555555
-            000000000111AAABBB222222222333333333444444444555555555
-            000000000CCCDDDEEE222222222333333333444444444555555555
-            000000000CCCDDDEEE222222222333333333444444444555555555
-            000000000CCCDDDEEE222222222333333333444444444555555555
-            000000000FFFGGGHHH222222222333333333444444444555555555
-            000000000FFFGGGHHH222222222333333333444444444555555555
-            000000000FFFGGGHHH222222222333333333444444444555555555
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            666666666777777777888888888999999999aaaaaaaaabbbbbbbbb
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            cccccccccdddddddddeeeeeeeeefffffffffggggggggghhhhhhhhh
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            iiiiiiiiijjjjjjjjjkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnn
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            ooooooooopppppppppqqqqqqqqqrrrrrrrrrsssssssssttttttttt
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-            uuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxxyyyyyyyyyzzzzzzzzz
-        """ )
+    def test_ScaleCore_ScaleRetries(self):
+        # break 1 11x1 ; scale 46 1 ; break 5 7x1
+        wg_x = "00000001111111222222222333333344444445555555666666677777778888888889999999aaaaaaa\n"
+        wg_o = scalecore( "000011112222233334444555566667777888889999aaaa\n", 80, 1, ( "5", 7, 1 ) )
+        self.assertTrue( wg_o == wg_x )
 
     ## Group Core
 
@@ -1427,8 +1370,6 @@ class Test_FlexModifier_Drag(SenseTestCase):
             MMMMNNNNOOOOPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP
         """ )
 
-    # TODO: Replace "scale 1 ; add right 1 0 ; drag left 0 left 1" with some kind of "reset" (to "1") command
-
     def test_Drag_AcrossWindowgramEdge(self): # Created in flex using "new unittest Drag_AcrossWindowgramEdge"
         self.assertFlexSequence( [
             "scale 12 ; break 1 4x4 A",
@@ -1485,14 +1426,53 @@ class Test_FlexModifier_Drag(SenseTestCase):
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Unit Testing :: Flex Modifier Combination :: AddBreakJoin
-##
-## This asserts the underlying pane order of [0-9a-zA-Z] through default name assignment of the Add command.  It must
-## follow the commands it depends upon: add, break, and join.
+## Unit Testing :: Flex Modifier Combinations
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
+class Test_FlexModifierCombination_ScaleCoreDetails(SenseTestCase):
+
+    ## These two tests were already done in a more direct form earlier in the core area
+
+    def test_ScaleCoreDetails_VersionAssert(self): # Created in flex using "new unittest ScaleCoreDetails_VersionAssert"
+        # break 1 2x2 ; scale 3x3 ; scale 2x2
+        self.assertFlexSequence( [
+            "break 1 2x2 ; scale 3x3 ; scale 2x2",
+        ], """
+            01
+            23
+        """ )
+
+    def test_ScaleCoreDetails_ScaleRetries(self): # Created in flex using "new unittest ScaleCoreDetails_ScaleRetries"
+        # While revisiting this test, I discovered the previous test does not actually require a retry.  I mistyped the
+        # command sequence somehow when making the original note.  So I used the following code to discover a new test.
+        # Note that it requires a stop to be placed in the scalecore that exits when a retry is required.
+        """
+        import random
+        while True:
+            print("...")
+            wg = Windowgram( NEW_WINDOWGRAM )
+            for n in range(2):
+                panes, _ = wg.Panes_GetUsedUnused()
+                command = "break " + panes[random.randrange(0,len(panes))] + " " + \
+                    str(random.randrange(0,15)) + "x" + str(random.randrange(0,15))
+                print(command)
+                errors = flex_processor( wg, command, True )
+                command = "scale " + str(random.randrange(0,80)) + " " + str(random.randrange(0,80))
+                print(command)
+                errors = flex_processor( wg, command, True )
+        """
+        # See this commit for the code used to discover this test
+        # break 1 11x1 ; scale 46 1 ; break 5 7x1
+        self.assertFlexSequence( [
+            "break 1 11x1 ; scale 46 1 ; break 5 7x1",
+        ], """
+            00000001111111222222222333333344444445bcdefg666666677777778888888889999999aaaaaaa
+        """ )
+
 class Test_FlexModifierCombination_AddBreakJoin(SenseTestCase):
+
+    ## This asserts the underlying pane order of [0-9a-zA-Z] through default name assignment of the Add command
 
     def test_AddBreakJoin_DefaultNames(self): # Created in flex using "new unittest AddBreakJoin_DefaultNames"
         self.assertFlexSequence( [
