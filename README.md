@@ -342,5 +342,5 @@ Copyright 2013-2014, Oxidane.  All rights reserved.
 
 The `windowgram` module is presently not licensed for use outside the tmuxomatic project.  For more information, including future plans for an open source license, please see the file `windowgram.py`.
 
-Everything else is distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution.  See the license for details.
+The `tmuxomatic` source is distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution.  See the license for details.
 
