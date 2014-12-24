@@ -1414,11 +1414,11 @@ class Test_FlexModifier_Drag(SenseTestCase):
 
     def test_Drag_AcrossWindowgramEdge(self): # Created in flex using "new unittest Drag_AcrossWindowgramEdge"
         self.assertFlexSequence( [
-            "scale 1 ; add right 1 0 ; drag left 0 left 1 ; scale 12 ; break 0 4x4 A",
+            "scale 12 ; break 0 4x4 A",
             "drag right F left 150%",
-            "scale 1 ; add right 1 0 ; drag left 0 left 1 ; scale 12 ; break 0 4x4 A ; drag right F right 150%",
-            "scale 1 ; add right 1 0 ; drag left 0 left 1 ; scale 12 ; break 0 4x4 A ; drag bottom G up 150%",
-            "scale 1 ; add right 1 0 ; drag left 0 left 1 ; scale 12 ; break 0 4x4 A ; drag bottom G down 150%",
+            "reset ; scale 12 ; break 0 4x4 A ; drag right F right 150%",
+            "reset ; scale 12 ; break 0 4x4 A ; drag bottom G up 150%",
+            "reset ; scale 12 ; break 0 4x4 A ; drag bottom G down 150%",
         ], """
             AAABBBCCCDDD AAAAAABBBCCCDDD AAABBBCCCDDDDDD AAABBBKKKDDD AAABBBCCCDDD
             AAABBBCCCDDD AAAAAABBBCCCDDD AAABBBCCCDDDDDD AAABBBKKKDDD AAABBBCCCDDD

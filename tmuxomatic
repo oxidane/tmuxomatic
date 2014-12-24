@@ -1126,7 +1126,7 @@ def cmd_use(fpp_PRIVATE, *name_or_serial_REQUIRED):
         flexmenu_index[0] = serial
         wg = fpp_PRIVATE.flexmenu_session.Get_Wg(serial)
         if wg.Analyze_IsBlank():
-            fpp_PRIVATE.flexmenu_session.Replace_Windowgram(serial, "1")
+            fpp_PRIVATE.flexmenu_session.Replace_Windowgram(serial, NEW_WINDOWGRAM)
             wg = fpp_PRIVATE.flexmenu_session.Get_Wg(serial)
             return fpp_PRIVATE.flexsense['notices'].append( FlexWarning( \
                 "The windowgram was blank and required initialization" ) )
@@ -1169,7 +1169,7 @@ def cmd_new(fpp_PRIVATE, *window_name_REQUIRED):
                 "The name \"" + name + "\" is already in use, try another" ) )
     # Create window
     comments = "## Window added by tmuxomatic flex " + VERSION + "\n\n"
-    serial = fpp_PRIVATE.flexmenu_session.Add_Windowgram( comments, name, "1" )
+    serial = fpp_PRIVATE.flexmenu_session.Add_Windowgram( comments, name, NEW_WINDOWGRAM )
     # Use it (note that for unit testing, this function clears the flag so it should be run first)
     cmd_use(fpp_PRIVATE, *[str(serial)])
     # Activate unit testing mode if the window begins with "unittest"

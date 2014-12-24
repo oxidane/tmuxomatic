@@ -83,6 +83,10 @@ PANE_CHAR_SPA   = " "                   # Cannot be used: Session file stripped
 PANE_RESERVED   = MASKPANE_X + MASKPANE_1 + MASKPANE_0              # Valid ephemeral characters
 PANE_RESERVED_X = PANE_CHAR_SPA + PANE_CHAR_COM + PANE_CHAR_ALL     # Invalid or used as wildcard
 
+# Defaults
+
+NEW_WINDOWGRAM  = "1"
+
 
 
 ##----------------------------------------------------------------------------------------------------------------------
@@ -1915,6 +1919,22 @@ def flex_processor(wg, commands, noticesok=False): # -> error
     if not found: return "Command not found: " + commands + "\n"
     if not processed: return "Command argument mismatch: " + commands + "\n"
     return None
+
+##
+## Flex: Reset
+##
+## Notes:
+##
+##      Like creating a new window without creating a new window
+##
+
+@flex(
+    command     = "reset",
+    group       = "modifiers",
+    description = "Resets the windowgram as if creating a new window.",
+)
+def cmd_reset(fpp_PRIVATE):
+    fpp_PRIVATE.wg.Import_Wg( Windowgram( NEW_WINDOWGRAM ) )
 
 ##
 ## Flex: Scale
