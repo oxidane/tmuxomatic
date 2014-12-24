@@ -1932,6 +1932,8 @@ def flex_processor(wg, commands, noticesok=False): # -> error
     command     = "reset",
     group       = "modifiers",
     description = "Resets the windowgram as if creating a new window.",
+    # TODO: Rename to one of these so there is no two-letter conflict with the rename command
+    aliases     = [ ["blank", "reset "], ["begin", "reset "], ["initialize", "reset "], ["clear", "reset "], ],
 )
 def cmd_reset(fpp_PRIVATE):
     fpp_PRIVATE.wg.Import_Wg( Windowgram( NEW_WINDOWGRAM ) )
