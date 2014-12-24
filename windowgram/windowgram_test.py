@@ -823,6 +823,23 @@ class Test_FlexCores(SenseTestCase):
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
+## Unit Testing :: Flex Modifier :: Reset
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+class Test_FlexModifier_Reset(SenseTestCase):
+
+    def test_Reset(self):
+        self.assertFlexSequence( [
+            "reset",
+        ], """
+            1
+        """ )
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
 ## Unit Testing :: Flex Modifier :: Scale
 ##
 ##----------------------------------------------------------------------------------------------------------------------
@@ -1414,11 +1431,11 @@ class Test_FlexModifier_Drag(SenseTestCase):
 
     def test_Drag_AcrossWindowgramEdge(self): # Created in flex using "new unittest Drag_AcrossWindowgramEdge"
         self.assertFlexSequence( [
-            "scale 12 ; break 0 4x4 A",
+            "scale 12 ; break 1 4x4 A",
             "drag right F left 150%",
-            "reset ; scale 12 ; break 0 4x4 A ; drag right F right 150%",
-            "reset ; scale 12 ; break 0 4x4 A ; drag bottom G up 150%",
-            "reset ; scale 12 ; break 0 4x4 A ; drag bottom G down 150%",
+            "reset ; scale 12 ; break 1 4x4 A ; drag right F right 150%",
+            "reset ; scale 12 ; break 1 4x4 A ; drag bottom G up 150%",
+            "reset ; scale 12 ; break 1 4x4 A ; drag bottom G down 150%",
         ], """
             AAABBBCCCDDD AAAAAABBBCCCDDD AAABBBCCCDDDDDD AAABBBKKKDDD AAABBBCCCDDD
             AAABBBCCCDDD AAAAAABBBCCCDDD AAABBBCCCDDDDDD AAABBBKKKDDD AAABBBCCCDDD
