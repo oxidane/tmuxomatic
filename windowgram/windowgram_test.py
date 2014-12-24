@@ -1074,6 +1074,125 @@ class Test_FlexModifier_Add(SenseTestCase):
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
+## Unit Testing :: Flex Modifier :: Break
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+class Test_FlexModifier_Break(SenseTestCase):
+
+    def test_Break_Recursive(self): # Created in flex using "new unittest Break_Recursive"
+        self.assertFlexSequence( [
+            "break 1 3x2 Q",
+            "break R 3x2 q",
+            "break r 3x2 1",
+            "break 2 2x2 e",
+        ], """
+            QRS QQQqrsSSS QQQQQQQQQqqq123sssSSSSSSSSS QQQQQQQQQQQQQQQQQQqqqqqq11ef33ssssssSSSSSSSSSSSSSSSSSS
+            TUV QQQtuvSSS QQQQQQQQQqqq456sssSSSSSSSSS QQQQQQQQQQQQQQQQQQqqqqqq11gh33ssssssSSSSSSSSSSSSSSSSSS
+                TTTUUUVVV QQQQQQQQQtttuuuvvvSSSSSSSSS QQQQQQQQQQQQQQQQQQqqqqqq445566ssssssSSSSSSSSSSSSSSSSSS
+                TTTUUUVVV QQQQQQQQQtttuuuvvvSSSSSSSSS QQQQQQQQQQQQQQQQQQqqqqqq445566ssssssSSSSSSSSSSSSSSSSSS
+                          TTTTTTTTTUUUUUUUUUVVVVVVVVV QQQQQQQQQQQQQQQQQQttttttuuuuuuvvvvvvSSSSSSSSSSSSSSSSSS
+                          TTTTTTTTTUUUUUUUUUVVVVVVVVV QQQQQQQQQQQQQQQQQQttttttuuuuuuvvvvvvSSSSSSSSSSSSSSSSSS
+                          TTTTTTTTTUUUUUUUUUVVVVVVVVV QQQQQQQQQQQQQQQQQQttttttuuuuuuvvvvvvSSSSSSSSSSSSSSSSSS
+                          TTTTTTTTTUUUUUUUUUVVVVVVVVV QQQQQQQQQQQQQQQQQQttttttuuuuuuvvvvvvSSSSSSSSSSSSSSSSSS
+                                                      TTTTTTTTTTTTTTTTTTUUUUUUUUUUUUUUUUUUVVVVVVVVVVVVVVVVVV
+                                                      TTTTTTTTTTTTTTTTTTUUUUUUUUUUUUUUUUUUVVVVVVVVVVVVVVVVVV
+                                                      TTTTTTTTTTTTTTTTTTUUUUUUUUUUUUUUUUUUVVVVVVVVVVVVVVVVVV
+                                                      TTTTTTTTTTTTTTTTTTUUUUUUUUUUUUUUUUUUVVVVVVVVVVVVVVVVVV
+                                                      TTTTTTTTTTTTTTTTTTUUUUUUUUUUUUUUUUUUVVVVVVVVVVVVVVVVVV
+                                                      TTTTTTTTTTTTTTTTTTUUUUUUUUUUUUUUUUUUVVVVVVVVVVVVVVVVVV
+                                                      TTTTTTTTTTTTTTTTTTUUUUUUUUUUUUUUUUUUVVVVVVVVVVVVVVVVVV
+                                                      TTTTTTTTTTTTTTTTTTUUUUUUUUUUUUUUUUUUVVVVVVVVVVVVVVVVVV
+        """ )
+
+    def test_Break_Scale(self): # Created in flex using "new unittest Break_Scale"
+        self.assertFlexSequence( [
+            "break 1 4x2 G ; scale 2x",
+            "break G 3x1 a",
+            "break H 4x1 d",
+            "break I 5x1 h",
+            "break J 3x1 m",
+            "break K 1x3 x",
+            "break L 1x3 X",
+            "break a 1x3 Q",
+        ], """
+            GGHHIIJJ abcHHHIIIJJJ abbcdefgIIIIJJJJ abbbcdeefghijklJJJJJ abbbbcdeeefghijjklmmnnoo
+            GGHHIIJJ abcHHHIIIJJJ abbcdefgIIIIJJJJ abbbcdeefghijklJJJJJ abbbbcdeeefghijjklmmnnoo
+            KKLLMMNN KKKLLLMMMNNN KKKKLLLLMMMMNNNN KKKKKLLLLLMMMMMNNNNN KKKKKKLLLLLLMMMMMMNNNNNN
+            KKLLMMNN KKKLLLMMMNNN KKKKLLLLMMMMNNNN KKKKKLLLLLMMMMMNNNNN KKKKKKLLLLLLMMMMMMNNNNNN
+
+            abbbbcdeeefghijjklmmnnoo abbbbcdeeefghijjklmmnnoo Qbbbbcdeeefghijjklmmnnoo
+            abbbbcdeeefghijjklmmnnoo abbbbcdeeefghijjklmmnnoo Rbbbbcdeeefghijjklmmnnoo
+            abbbbcdeeefghijjklmmnnoo abbbbcdeeefghijjklmmnnoo Sbbbbcdeeefghijjklmmnnoo
+            xxxxxxLLLLLLMMMMMMNNNNNN xxxxxxXXXXXXMMMMMMNNNNNN xxxxxxXXXXXXMMMMMMNNNNNN
+            yyyyyyLLLLLLMMMMMMNNNNNN yyyyyyYYYYYYMMMMMMNNNNNN yyyyyyYYYYYYMMMMMMNNNNNN
+            zzzzzzLLLLLLMMMMMMNNNNNN zzzzzzZZZZZZMMMMMMNNNNNN zzzzzzZZZZZZMMMMMMNNNNNN
+        """ )
+
+    def test_Break_Various(self): # Created in flex using "new unittest Break_Various"
+        self.assertFlexSequence( [
+            "break 1 7x4 a",
+            "break A 3x3 0",
+            "break B 5x2 A",
+            "break J 1x1 Z",
+            "break k 3x2 OQSUWY",
+        ], """
+            abcdefg aaabbbcccdddeeefffggg aaaaabbbbbcccccdddddeeeeefffffggggg aaaaabbbbbcccccdddddeeeeefffffggggg
+            hijklmn aaabbbcccdddeeefffggg aaaaabbbbbcccccdddddeeeeefffffggggg aaaaabbbbbcccccdddddeeeeefffffggggg
+            opqrstu aaabbbcccdddeeefffggg aaaaabbbbbcccccdddddeeeeefffffggggg aaaaabbbbbcccccdddddeeeeefffffggggg
+            vwxyzAB hhhiiijjjkkklllmmmnnn aaaaabbbbbcccccdddddeeeeefffffggggg aaaaabbbbbcccccdddddeeeeefffffggggg
+                    hhhiiijjjkkklllmmmnnn hhhhhiiiiijjjjjkkkkklllllmmmmmnnnnn hhhhhiiiiijjjjjkkkkklllllmmmmmnnnnn
+                    hhhiiijjjkkklllmmmnnn hhhhhiiiiijjjjjkkkkklllllmmmmmnnnnn hhhhhiiiiijjjjjkkkkklllllmmmmmnnnnn
+                    ooopppqqqrrrssstttuuu hhhhhiiiiijjjjjkkkkklllllmmmmmnnnnn hhhhhiiiiijjjjjkkkkklllllmmmmmnnnnn
+                    ooopppqqqrrrssstttuuu hhhhhiiiiijjjjjkkkkklllllmmmmmnnnnn hhhhhiiiiijjjjjkkkkklllllmmmmmnnnnn
+                    ooopppqqqrrrssstttuuu ooooopppppqqqqqrrrrrssssstttttuuuuu ooooopppppqqqqqrrrrrssssstttttuuuuu
+                    vvvwwwxxxyyyzzz012BBB ooooopppppqqqqqrrrrrssssstttttuuuuu ooooopppppqqqqqrrrrrssssstttttuuuuu
+                    vvvwwwxxxyyyzzz345BBB ooooopppppqqqqqrrrrrssssstttttuuuuu ooooopppppqqqqqrrrrrssssstttttuuuuu
+                    vvvwwwxxxyyyzzz678BBB ooooopppppqqqqqrrrrrssssstttttuuuuu ooooopppppqqqqqrrrrrssssstttttuuuuu
+                                          vvvvvwwwwwxxxxxyyyyyzzzzz00122ABCDE vvvvvwwwwwxxxxxyyyyyzzzzz00122ABCDE
+                                          vvvvvwwwwwxxxxxyyyyyzzzzz33455ABCDE vvvvvwwwwwxxxxxyyyyyzzzzz33455ABCDE
+                                          vvvvvwwwwwxxxxxyyyyyzzzzz33455FGHIJ vvvvvwwwwwxxxxxyyyyyzzzzz33455FGHIZ
+                                          vvvvvwwwwwxxxxxyyyyyzzzzz66788FGHIJ vvvvvwwwwwxxxxxyyyyyzzzzz66788FGHIZ
+
+            aaaaaabbbbbbccccccddddddeeeeeeffffffgggggg
+            aaaaaabbbbbbccccccddddddeeeeeeffffffgggggg
+            aaaaaabbbbbbccccccddddddeeeeeeffffffgggggg
+            aaaaaabbbbbbccccccddddddeeeeeeffffffgggggg
+            hhhhhhiiiiiijjjjjjOOQQSSllllllmmmmmmnnnnnn
+            hhhhhhiiiiiijjjjjjOOQQSSllllllmmmmmmnnnnnn
+            hhhhhhiiiiiijjjjjjUUWWYYllllllmmmmmmnnnnnn
+            hhhhhhiiiiiijjjjjjUUWWYYllllllmmmmmmnnnnnn
+            ooooooppppppqqqqqqrrrrrrssssssttttttuuuuuu
+            ooooooppppppqqqqqqrrrrrrssssssttttttuuuuuu
+            ooooooppppppqqqqqqrrrrrrssssssttttttuuuuuu
+            ooooooppppppqqqqqqrrrrrrssssssttttttuuuuuu
+            vvvvvvwwwwwwxxxxxxyyyyyyzzzzzz001122ABCCDE
+            vvvvvvwwwwwwxxxxxxyyyyyyzzzzzz334455ABCCDE
+            vvvvvvwwwwwwxxxxxxyyyyyyzzzzzz334455FGHHIZ
+            vvvvvvwwwwwwxxxxxxyyyyyyzzzzzz667788FGHHIZ
+        """ )
+
+    def test_Break_Naming(self): # Created in flex using "new unittest Break_Naming"
+        self.assertFlexSequence( [
+            "break 1 6x2 Z",
+            "break a 13x2",
+            "break Z 13x2",
+        ], """
+            Z01234 ZZZZZZZZZZZZZ00000000000001111111111111222222222222233333333333334444444444444
+            56789a ZZZZZZZZZZZZZ00000000000001111111111111222222222222233333333333334444444444444
+                   55555555555556666666666666777777777777788888888888889999999999999abcdefghijklm
+                   55555555555556666666666666777777777777788888888888889999999999999nopqrstuvwxyz
+
+            ABCDEFGHIJKLM00000000000001111111111111222222222222233333333333334444444444444
+            NOPQRSTUVWXYZ00000000000001111111111111222222222222233333333333334444444444444
+            55555555555556666666666666777777777777788888888888889999999999999abcdefghijklm
+            55555555555556666666666666777777777777788888888888889999999999999nopqrstuvwxyz
+        """ )
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
 ## Unit Testing :: Flex Modifier :: Drag
 ##
 ##----------------------------------------------------------------------------------------------------------------------
