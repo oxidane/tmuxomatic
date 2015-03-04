@@ -306,8 +306,10 @@ There are three ways to install tmuxomatic, in order of convenience:
   * **From Development** (git)
 
     * Visit https://github.com/oxidane/tmuxomatic for up-to-date installation instructions
+    * Additional requirement for build [pandoc 1.12](http://johnmacfarlane.net/pandoc/) +
     * `git clone git://github.com/oxidane/tmuxomatic.git`
     * `cd tmuxomatic`
+    * `pandoc -f markdown -t rst README.md -o README.rst`
     * `python3 setup.py install`
 
 Verify that the version reported by `tmuxomatic -V` matches the latest release.  [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)

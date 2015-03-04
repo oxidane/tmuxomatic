@@ -531,14 +531,14 @@ def command_matches(command, primary):
 ## A window declaration without a specified name is not allowed, except during the file parsing
 ##
 
-is_windowdeclaration = lambda line: re.search(r"window", line)
+is_windowdeclaration = lambda line: re.search(r"^[ \t]*window", line)
 windowdeclaration_name = lambda line: " ".join(re.split(r"[ \t]+", line)[1:]) if is_windowdeclaration(line) else ""
 
 ##
 ## Session declaration macros
 ##
 
-is_sessiondeclaration = lambda line: re.search(r"session", line)
+is_sessiondeclaration = lambda line: re.search(r"^[ \t]*session", line)
 sessiondeclaration_name = lambda line: " ".join(re.split(r"[ \t]+", line)[1:]) if is_sessiondeclaration(line) else ""
 
 ##
