@@ -336,7 +336,7 @@ Pull requests must be original source, or properly attributed public domain sour
 
 #### Copyright
 
-Copyright 2013-2014, Oxidane.  All rights reserved.
+Copyright 2013-2015, Oxidane.  All rights reserved.
 
 #### License
 
