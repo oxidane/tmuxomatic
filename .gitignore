@@ -1,4 +1,7 @@
 # tmuxomatic untracked files
 
-README.rst      # PyPI, build with: pandoc -f markdown -t rst README.md -o README.rst
+# PyPI, build with: pandoc -f markdown -t rst README.md -o README.rst
+/README.rst
 
+# build files
+/build/
