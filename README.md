@@ -330,7 +330,7 @@ To use tmuxomatic, you don't have to know everything about [how to use tmux](htt
 
 ## Contributor agreement
 
-Pull requests must be original source, or properly attributed public domain source.  By submitting, you agree that your contribution will inherit the current copyright and license, and will be subject to future changes in tmuxomatic and any officially-related projects.
+Contributions must be comprised of original source, and/or properly attributed public domain source.  By submitting, you agree that your contribution will inherit the current copyright and license, and will be subject to future changes in tmuxomatic and any officially-related projects.
 
 
 
