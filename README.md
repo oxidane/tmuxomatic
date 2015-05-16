@@ -336,6 +336,8 @@ Pull requests must be original source, or properly attributed public domain sour
 
 ## Legal
 
+By downloading, copying, installing or using the software you agree to the license.  If you do not agree to the license, do not download, copy, install, or use the software.
+
 #### Copyright
 
 Copyright 2013-2015, Oxidane.  All rights reserved.
