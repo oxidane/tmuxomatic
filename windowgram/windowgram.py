@@ -2816,54 +2816,116 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
 ##
 ## Notes:
 ##
-##          Modifiers insert and clone need to differentiate between a deduced edge (1 parameter), a specified edge (2),
-##          and the cardinal edge of a specified group (2).  Each of these is handled by one master function that will
-##          infer the intent by the specified arguments and their originating function.  This may even allow some degree
-##          of reordering of arguments, e.g., axis-edge and how-group.  Also maybe support as edge:axis and group:how,
-##          this would assist the highlighter when it's implemented.
-##
-##          Both insert and clone uses the <how> parameter as quasi-optional.  If the edge is ambiguous, it requests it
-##          for clarification.
-##
-##          Both insert and clone requires the edge/group parameter to have holes, all that's important is the specified
-##          edge and that it's unambiguous.
-##
-##          Mid-stream optional arguments (e.g. how) is probably not necessary, since the other function without this
-##          parameter will cover that application.  There will still need to be two distinct functions, but they will
-##          both be wrappers for a single core function.
-##
-##          An axial expansion favoritism option needs to be added.  For example on the demo, when inserting "1B", does
-##          it expand "1", "B", or both.  This could be added as a 3 state toggle in the UI, but for CLI it needs to be
-##          specified.  Make both the default (except on windowgram edges, of course), since drag could be used for
-##          additional adjusting.  These concerns also apply to clone.
-##
-##      insert <edge> <size> [newpanes]      insert pane at edge of panes, just like add but with panes
-##      insert <how> <group> <size> [newpanes]
-##
-##          +---------------+---------------------------------------------------------------------------------------+
-##          |   original    |       insert 12 2 X       insert r 3 1 X      insert r * 1 X      insert v 1245 1 X   |
-##          +---------------+---------------------------------------------------------------------------------------+
-##          |   123         |       1XX23               123X                123X                1X23                |
-##          |   456         |       44556               4566                456X                4X56                |
-##          |   789         |       77889               7899                789X                7789                |
-##          +---------------+---------------------------------------------------------------------------------------+
-##
-## Sketch:
-##
-##      1) Separate; based on the minimal and optimal edges, behavior will differ
-##
-##          "12\n32\n34" -> "vertical `32`" smudges: `1` right, and `4` left
-##          "15\n32\n64" -> "vertical `32`" smudges: `1` + `6` right, and `5` + `4` left
-##          Minimal will always be possible for positioned and split windowgrams
-##          Optimal is discarded in favor of manual search to pin panes that overlap with minimal
-##          Balance, where possible, is user-specified: 0% (left) to 100% (right) with a default of 50% (even)
-##      
-##      2) Smudge to either side of the minimal edge according to pinned panes and user balance
-##
-##      3) Copy over the new pane in place of the insertion
+##      This command should eventually support irregular scalegroups, to the extent that they may be split into multiple
+##      regular independent scalegroups.  This feature will be shared with the 'drag' command for similar purposes.
 ##
 
-# TODO
+@flex(
+    command     = "insert",
+    group       = "modifiers",
+    examples    = [ "insert XZ 10" ],
+    description = "Inserts a pane into an unambiguous <edge>, or with a <hint> where the <edge> is ambiguous.  " + \
+                  "Insert is similar to the add command, but with greater flexibility.  Supports an optional " + \
+                  "scalegroup, by adding panes after a colon (:) on the <edge> parameter.  The [spread] " + \
+                  "parameter defaults to 50%, and is top/left oriented.",
+    aliases     = [  ],
+)
+def cmd_insert(fpp_PRIVATE, edge, size):
+    return cmd_insert_2(fpp_PRIVATE, "", edge, size)
+
+@flex(
+    command     = "insert",
+    group       = "modifiers",
+    examples    = [ "insert right * 10", "insert vert 1245 1", "insert top X 50%", "insert right Z 5 z 75%" ],
+)
+def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpanes=None, spread=None):
+    if not fpp_PRIVATE.wg:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
+    wg = fpp_PRIVATE.wg
+    used, unused = wg.Panes_GetUsedUnused()
+    ignore_invalids = "*@:"
+    # Reduce edge and resolve hint (supports swapping of hint and edge)
+    swapped = ""
+    res_hint = resolve_vhtblr( hint ) if hint is not "" else ""
+    res_edge = thruvalid_panes( edge, ignore_invalids )
+    if not res_hint or not res_edge:
+        swapped_hint = resolve_vhtblr( edge ) if edge is not "" else ""
+        swapped_edge = thruvalid_panes( hint, ignore_invalids )
+        if swapped_hint and res_edge:
+            res_hint, res_edge = swapped_hint, swapped_edge
+            swapped = "swapped "
+    hint = edge = None # From here on use res_hint, res_edge
+    if res_hint is None: # Only handle None type, blank string for hint is valid
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The " + swapped + "hint is unrecognized" ) )
+    if not res_edge: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+        "The " + swapped + "edge contains invalid pane characters" ) )
+    areused, areunused, invalids = classify_panes( used + ignore_invalids, unused, res_edge )
+    if invalids: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+        "The panes (" + invalids + ") in " + swapped + "edge (" + res_edge + ") are invalid" ) ) # Already ruled out
+    if areunused: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+        "The panes (" + areunused + ") in " + swapped + "edge (" + res_edge + ") are not being used" ) )
+    # Separate edge into edge and scalegroup
+    res_scalegroup = ""
+    if ":" in res_edge:
+        res_edge, res_scalegroup = res_edge.split(":", 1)
+        if ":" in res_scalegroup: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+            "Please specify the optional scalegroup in the form: \"<edge>:<scalegroup>\"" ) )
+    # Replace character "*" with all panes
+    if "*" in res_edge: res_edge = AllPanes( res_edge, used )
+    if "*" in res_scalegroup: res_scalegroup = AllPanes( res_scalegroup, used )
+    # Get edge from res_hint + res_edge; this yields the official edge axis, required to resolve direction and size
+    status, res_hint, minimal, optimal = edgecore( wg, res_edge, res_hint )
+    status_print = EdgeStatus.error2string( status )
+    if status_print: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+        "Edge specification error: " + status_print ) )
+    # Get necessary metrics, axis location is required to translate to characters
+    wgw, wgh = wg.Analyze_WidthHeight()
+    axis_length = axis_location = optimal[0][0] # Use optimal since we're dealing with a pane grid
+    # Resolve size
+    (error, res_sizeinv, res_size), size = resolve_size(size, axis_length, "", "", False), None
+    if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Size error: " + error ) )
+    # Produce mutually-exclusive side masks, these are based on the defined edge and the windowgram dimensions
+    aa, bb = (wgw, wgh) if res_hint == "v" else (wgh, wgw)
+    mask_0 = dict(x=1,               w=axis_location,    y=1, h=bb)
+    mask_1 = dict(x=axis_location+1, w=aa-axis_location, y=1, h=bb)
+    if res_hint != "v":
+        mask_0 = Windowgram_Convert.Transpose_Pane(mask_0)
+        mask_1 = Windowgram_Convert.Transpose_Pane(mask_1)
+    wgm0 = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_1, mask_0, ParsedPanes_Add(MASKPANE_0, mask_1)))
+    wgm1 = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_1, mask_1, ParsedPanes_Add(MASKPANE_0, mask_0)))
+    # Produce valid scale masks
+    def Generate(panes):
+        wgm0x = Windowgram_Mask_Boolean(wgm0, Windowgram_Mask_Generate(wg, panes), "and")
+        wgm1x = Windowgram_Mask_Boolean(wgm1, Windowgram_Mask_Generate(wg, panes), "and")
+        return wgm0x, wgm1x
+    def Validate(wgm1, wgm2):
+        def Validate(wgm):
+            # (1) Any MASKPANE_1 character touching the specified axis edge
+            if wgm.Panes_HasPane(MASKPANE_1) and not MASKPANE_1 in wgm.Edge_PanesAlong(res_hint, axis_location):
+                return "Group of panes does not touch the specified edge"
+            # (2) That the mask is a rectangular shape (for now; see above notes on irregular parallelism)
+            result, suggestions = groupcore(wgm, MASKPANE_1) # GroupStatus.Invalid_Panes means MASKPANE_1 was not found
+            if result == GroupStatus.Invalid_Panes or result == GroupStatus.Success: return None
+            return "The group of panes is an unsupported irregular shape, try making it rectangular"
+        r1 = Validate(wgm1)
+        r2 = Validate(wgm2)
+        return r1 if r1 else (r2 if r2 else 0)
+    # Build split-edge masks for the scalegroup
+    wgm0x, wgm1x = Generate( res_scalegroup )
+    error = Validate( wgm0x, wgm1x )
+    if error:
+        wgm0x, wgm1x = Generate( res_scalegroup )
+        error = Validate( wgm0x, wgm1x )
+    if error:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to insert: " + error ) )
+
+    # Produce a new windowgram that accommodates the insertion area
+    # Fill behavior according to the:
+    #   minimal edge ... User defined insertion edge (fill for the new pane)
+    #   optimal edge ... Panes touching this that are not part of minimal must fill the space
+    #   windowgram ..... Remaining area to edge of windowgram will fill according to spread parameter
+    if spread is None: spread = "50%"
+    return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The insert command is in development" ) )
 
 ##
 ## Flex: Clone
