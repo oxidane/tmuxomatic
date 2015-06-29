@@ -147,7 +147,7 @@ def SplitProcessor_SplitWindow( sw, dim, at_linkid, linkid, list_split, list_lin
     # Split list tracks tmux pane number at the time of split (for building the split commands)
     list_split.append( { 'linkid':linkid[0], 'tmux':at_tmux, 'split':how, 'inst_w':w, 'inst_h':h, 'per':per } )
 
-    # Now the new window's pane id, this is shifted up as insertions below it occur (see above)
+    # Now add the new window's pane id, this is shifted up as insertions below it occur (see above)
     at_tmux += 1
     list_links.append( (linkid[0], at_tmux) )
 
@@ -653,8 +653,8 @@ class WindowgramGroup_Convert():
             if not line.strip(): first_linewithcol = []
             else:
                 # Build list of lines according to starting column of character run
-                #       * Discard any out-of-bounds character runs (as defined by first line)
-                #       * Insert blank lines where no runs were found
+                #   * Discard any out-of-bounds character runs (as defined by first line)
+                #   * Insert blank lines where no runs were found
                 def colsplit(line): # linewithcol
                     linewithcol = [] # [ (line, col), ... ]
                     for col, ch in enumerate(list(line)): # Never strip the line or this will fail: "1 2\n  2\n"
@@ -1106,7 +1106,7 @@ def ParsedPanes_Add(paneid, parsedpane, windowgram_parsed={}):
 ## Flex: Macros ... See actual usage for examples
 ##
 
-is_long_axis_vert = lambda axis: True if axis in [ "v", "vertical", "vert" ] else False
+is_long_axis_vert = lambda axis: True if axis in [ "v", "vertical",   "vert" ] else False
 is_long_axis_horz = lambda axis: True if axis in [ "h", "horizontal", "horz" ] else False
 is_short_axis_vert_vhtblr = lambda axis: True if axis in [ "v", "t", "b" ] else False
 is_short_axis_horz_vhtblr = lambda axis: True if axis in [ "h", "l", "r" ] else False
@@ -1264,8 +1264,8 @@ def scalecore(windowgram, w_chars, h_chars, retry=None): # TODO: Scale by wg to 
     windowgram_scaled = "" # Scope, and reset in case of error
     # Retry with necessary increment and/or decrement until desired pane dimensions are reached.  This is required for
     # commands like "break", which need to scale to a specific pane size.  There's likely a way to derive these metrics
-    # directly, but this works.  The following verifies that two resizes are necessary.  This is scale core case two:
-    #       "new 1 ; break 1 11x1 ; scale 46 1 ; break 5 7x1"
+    # directly, but an iterative approach works fine.  Verify two resizes are necessary with the following test case.
+    # Test case Test_FlexCores.test_ScaleCore_ScaleRetries: "new 1 ; break 1 11x1 ; scale 46 1 ; break 5 7x1"
     tries = 0
     tries_max = 16 # An infinite loop is unlikely, but this maximum will prevent such an occurrence
     paneid = exp_w = exp_h = None
@@ -1277,8 +1277,8 @@ def scalecore(windowgram, w_chars, h_chars, retry=None): # TODO: Scale by wg to 
     if tries < 1: tries = 1
     try_w, try_h = w_chars, h_chars
     while tries:
-        # Scale core discrepancy example, note that v2 loses 3 panes, but v1 does not.  This is scale core case one:
-        #       "new 1 ; break 1 2x2 ; scale 3x3 ; scale 2x2"
+        # See the scale core discrepancy in the following test case, where v2 loses 3 panes, and v1 does not.
+        # Test case Test_FlexCores.test_ScaleCore_VersionAssert: "new 1 ; break 1 2x2 ; scale 3x3 ; scale 2x2"
         windowgram_scaled = scalecore_v1( windowgram, try_w, try_h ) # Must be v1, see tests
         if paneid:
             _, _, new_w, new_h = Windowgram( windowgram_scaled ).Panes_PaneXYWH( paneid )
@@ -1648,6 +1648,14 @@ def smudgecore(wg, edge, axis, length, direction, run=None): # wg
 ##
 ##      All ordering is in English order: front -> back, top -> bottom, left -> right
 ##
+## TODO:
+##
+##      For edge specifying parameters, consider switching from the current support of either a single-parameter deduced
+##      edge ("<edge>") or double-parameter specified edge ("<hint> <edge>"), over to a single-parameter variable option
+##      that may be used for both ("<edge>" or "<hint>@<edge>").  Maybe keep the double-parameter option support as a
+##      hidden feature unless it becomes a problem for future commands.  Note that ":" cannot be used as a delimiter
+##      since it's used to designate additional panes in the scale group for the "drag" command.
+##
 ##----------------------------------------------------------------------------------------------------------------------
 
 describe = lambda kwargs: True if 'menu' in kwargs and kwargs['menu'] is True else False
@@ -1987,7 +1995,7 @@ def cmd_scale_1(fpp_PRIVATE, xy_how): # 1 parameter
 def cmd_scale_2(fpp_PRIVATE, x_how, y_how): # 2 parameters
     # Because text is inherently low resolution, fractional scaling may produce unsatisfactory results
     if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     # Generics
     wg_before = fpp_PRIVATE.wg
     dim_before = wg_before.Analyze_WidthHeight()
@@ -2034,7 +2042,7 @@ def cmd_scale_2(fpp_PRIVATE, x_how, y_how): # 2 parameters
 )
 def cmd_add(fpp_PRIVATE, edge, size, newpane=None):
     if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg_work = fpp_PRIVATE.wg
     newpane, error = wg_work.Panes_GetNewPaneId( newpane )
     if error:
@@ -2105,7 +2113,7 @@ def cmd_add(fpp_PRIVATE, edge, size, newpane=None):
 )
 def cmd_break(fpp_PRIVATE, pane, grid, newpanes=None):
     if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     # In order to produce a break of even proportions, we have to scale this windowgram up to next best fit.  It
     # could go one step further and find the most optimal size, being a resolution that evenly scales the original
     # windowgram constituent panes, while simultaneously providing a grid of even sizes.  The problem is that common
@@ -2205,7 +2213,7 @@ def cmd_join(fpp_PRIVATE, *groups_REQUIRED):
     groups = groups_REQUIRED # Readability
     argument = lambda ix: str(ix+1) + " (\"" + groups_REQUIRED[ix] + "\")" # Show the group that the user specified
     if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
     # Repackage groups so all have the rename element
     work, groups = groups, []
@@ -2297,7 +2305,7 @@ def cmd_join(fpp_PRIVATE, *groups_REQUIRED):
 )
 def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
     if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
     axis = how # This argument is handled as an axis
@@ -2388,7 +2396,7 @@ def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
 )
 def cmd_rename(fpp_PRIVATE, panes_from, *panes_to):
     if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     # This command could have wrapped join, but a native implementation has been made to reduce overhead somewhat
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
@@ -2473,7 +2481,7 @@ def cmd_rename(fpp_PRIVATE, panes_from, *panes_to):
 )
 def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
     if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     # This command could have wrapped join, but a native implementation has been made to reduce overhead somewhat
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
@@ -2611,7 +2619,7 @@ def cmd_drag_1(fpp_PRIVATE, edge, direction, size): # No support for limit witho
 )
 def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
     # Reduce edge and resolve hint (supports swapping of hint and edge)
@@ -2722,7 +2730,7 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     def drag(count, edgeruns, wg, wgm0s, wgm0x, wgm1s, wgm1x):
         # Scale the dynamics
         def modifier(which, val, size, inv):
-            return (val+(-size if ((True if inv == "-" else False)^(True if which else False)) else size)) if val else 0
+            return ( val + ( -size if ( ( inv == "-" ) ^ ( which is not 0 ) ) else size ) ) if val else 0
         sw0, sh0 = wgm0s.Analyze_WidthHeight()
         sw1, sh1 = wgm1s.Analyze_WidthHeight()
         if res_direction == "h" and sw0: sw0 = modifier(0, sw0, count, inverse)
@@ -2772,7 +2780,7 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     chars_max = chars + 1
     while True:
         if chars == 0:
-            error = "Drag without losing panes is not possible for the given parameters with this windowgram"
+            error = "Drag without losing panes is not possible with the given parameters"
             wgout = wg.Copy()
             break
         wgout = drag( chars, copy.deepcopy(optimal), wg.Copy(), wgm0s.Copy(), wgm0x.Copy(), wgm1s.Copy(), wgm1x.Copy() )
@@ -2905,7 +2913,7 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
 def cmd_mirror(fpp_PRIVATE):
     # TODO: Optional pane group mirror
     if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
     windowgram_lines = wg.Export_Lines()
     wg.Import_Lines( [ "".join( [ ch for ch in reversed(list(line)) ] ) for line in windowgram_lines ] )
@@ -2927,7 +2935,7 @@ def cmd_mirror(fpp_PRIVATE):
 def cmd_flip(fpp_PRIVATE):
     # TODO: Optional pane group flip
     if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with use or new" ) )
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
     windowgram_lines = wg.Export_Lines()
     wg.Import_Lines( reversed(windowgram_lines) )

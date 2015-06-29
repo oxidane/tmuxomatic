@@ -912,6 +912,8 @@ class SessionFile(object):
 ##      unlink <line>                               remove from directions by line number
 ##      mvlink <line_from> <line_to>                move line in directions
 ##      clonewindow <newname>                       copy current selected window into a new window and select
+##      arguments <command>                         like help but only shows the arguments
+##      examples <command>                          like help but only shows the examples
 ##
 ## Stack Sketch:
 ##
@@ -949,10 +951,10 @@ class SessionFile(object):
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-unittesting_name = "unittest" # Unit testing is activated when the user creates a window starting with this name
-unittesting_run = 0 # See notes in flex unit testing
-unittesting_fcl = [] # Flex Command List
-unittesting_wgp = "" # Windowgram Group Pattern
+unittestgen_name = "unittest" # Unit testing is activated when the user creates a window starting with this name
+unittestgen_run = 0 # See notes in flex unit testing
+unittestgen_fcl = [] # Flex Command List
+unittestgen_wgp = "" # Windowgram Group Pattern
 
 ##
 ## Table Printer (used by help and list)
@@ -1123,8 +1125,8 @@ def cmd_list(fpp_PRIVATE):
     insert      = True,
 )
 def cmd_use(fpp_PRIVATE, *name_or_serial_REQUIRED):
-    global unittesting_run
-    if unittesting_run: unittesting_run = 0 # Turn off unit testing mode
+    global unittestgen_run
+    if unittestgen_run: unittestgen_run = 0 # Turn off unit testing mode
     name_or_serial = " ".join(name_or_serial_REQUIRED)
     def using(serial):
         flexmenu_index[0] = serial
@@ -1136,9 +1138,11 @@ def cmd_use(fpp_PRIVATE, *name_or_serial_REQUIRED):
                 "The windowgram was blank and required initialization" ) )
     if name_or_serial.isdigit():
         serial = int(name_or_serial)
-        if fpp_PRIVATE.flexmenu_session.Serial_Is_Valid(serial): return using(serial)               # Serial match
+        if fpp_PRIVATE.flexmenu_session.Serial_Is_Valid(serial):
+            return using(serial)                                                        # Serial match
     for serial in range(1, fpp_PRIVATE.flexmenu_session.Count_Windows()+1):
-        if name_or_serial == fpp_PRIVATE.flexmenu_session.Get_Name(serial): return using(serial)    # Exact string match
+        if name_or_serial == fpp_PRIVATE.flexmenu_session.Get_Name(serial):
+            return using(serial)                                                        # Exact string match
     matches = matched = 0
     for serial in range(1, fpp_PRIVATE.flexmenu_session.Count_Windows()+1):
         if fpp_PRIVATE.flexmenu_session.Get_Name(serial).startswith(name_or_serial):
@@ -1164,8 +1168,8 @@ def cmd_use(fpp_PRIVATE, *name_or_serial_REQUIRED):
     insert      = True,
 )
 def cmd_new(fpp_PRIVATE, *window_name_REQUIRED):
-    global unittesting_run
-    if unittesting_run: unittesting_run = 0 # Turn off unit testing mode
+    global unittestgen_run
+    if unittestgen_run: unittestgen_run = 0 # Turn off unit testing mode
     name = " ".join(window_name_REQUIRED)
     for serial in range(1, fpp_PRIVATE.flexmenu_session.Count_Windows()+1):
         if name == fpp_PRIVATE.flexmenu_session.Get_Name(serial):
@@ -1177,7 +1181,7 @@ def cmd_new(fpp_PRIVATE, *window_name_REQUIRED):
     # Use it (note that for unit testing, this function clears the flag so it should be run first)
     cmd_use(fpp_PRIVATE, *[str(serial)])
     # Activate unit testing mode if the window begins with "unittest"
-    if name.startswith("unittest"): unittesting_run = 1
+    if name.startswith("unittest"): unittestgen_run = 1
 
 ##
 ## Flex: Print
@@ -1285,7 +1289,7 @@ def flex_shell(session, serial=0):
     ##
     ## Easily generate flex unit tests by creating a new window starting with the name "unittest"
     ##
-    global unittesting_run, unittesting_fcl, unittesting_wgp
+    global unittestgen_run, unittestgen_fcl, unittestgen_wgp
     ##
     ## Input loop
     ##
@@ -1333,24 +1337,24 @@ def flex_shell(session, serial=0):
             flexout(None) # The fill marker used for later padding to keep header consistently on top
         # Always show windowgram as long as: the command produced no output, and no commands are enqueued
         if not fpp.flexsense['output'] and not queue:
-            if unittesting_run == 1:
-                unittesting_run = 2 # 0 = Not Used / 1 = Initialization Required / 2 = Process Normally
-                unittesting_fcl = []
-                unittesting_wgp = ""
-            if unittesting_run:
+            if unittestgen_run == 1:
+                unittestgen_run = 2 # 0 = Not Used / 1 = Initialization Required / 2 = Process Normally
+                unittestgen_fcl = []
+                unittestgen_wgp = ""
+            if unittestgen_run:
                 # Print the command-result array in code form for easy implementation
                 serial = flexmenu_index[0]
                 name = flexmenu_session.Get_Name(serial)
-                name_func = name[len(unittesting_name):].strip()
+                name_func = name[len(unittestgen_name):].strip()
                 if not name_func: name_func = "NAMEHERE"
                 flexout("def test_" + name_func + "(self): # Created in flex using \"new " + name + "\"")
                 flexout("    self.assertFlexSequence( [")
-                if unittesting_fcl:
-                    flexout("\n".join([ "        \"" + command + "\"," for command in unittesting_fcl ]))
+                if unittestgen_fcl:
+                    flexout("\n".join([ "        \"" + command + "\"," for command in unittestgen_fcl ]))
                 flexout("    ], \"\"\"")
                 aftergroup = "    \"\"\" )"
-                if unittesting_wgp:
-                    flexout("\n".join([ line for line in unittesting_wgp.split("\n") ]) + aftergroup)
+                if unittestgen_wgp:
+                    flexout("\n".join([ line for line in unittestgen_wgp.split("\n") ]) + aftergroup)
                 else:
                     flexout(aftergroup)
                 flexout("")
@@ -1420,7 +1424,7 @@ def flex_shell(session, serial=0):
         if not queue:
             try: thisinput_str = input("<<< tmuxomatic flex >>> ")
             except EOFError as e: thisinput_str = "exit" ; print("") # About to exit: print, not flexout
-            if unittesting_run and thisinput_str.strip(): unittesting_fcl.append( thisinput_str )
+            if unittestgen_run and thisinput_str.strip(): unittestgen_fcl.append( thisinput_str )
             if ";" in thisinput_str: queue = thisinput_str
         if queue:
             thisinput_str, queue = queue.split(";", 1) if ";" in queue else (queue, "")
@@ -1481,10 +1485,10 @@ def flex_shell(session, serial=0):
                                 flexmenu_session.Replace_Windowgram( serial, fpp.wg.Export_String() )
                             invoked = True
                             if not queue and serial:
-                                if unittesting_run:
-                                    windowgramgroup_list = WindowgramGroup_Convert.Pattern_To_List( unittesting_wgp ) \
+                                if unittestgen_run:
+                                    windowgramgroup_list = WindowgramGroup_Convert.Pattern_To_List( unittestgen_wgp ) \
                                         + [ flexmenu_session.Get_Wg(serial).Export_String() ]
-                                    unittesting_wgp = WindowgramGroup_Convert.List_To_Pattern( windowgramgroup_list,
+                                    unittestgen_wgp = WindowgramGroup_Convert.List_To_Pattern( windowgramgroup_list,
                                         FLEXUNIT_MAXWIDTH-leftgap, FLEXUNIT_INDENT-leftgap, FLEXUNIT_SPACE )
                             break
                     if not invoked:
@@ -2018,8 +2022,8 @@ def main():
 if __name__ == "__main__":
 
     # Signal handlers
-    signal.signal(signal.SIGINT, signal_handler_break) # SIGINT (user break)
-    signal.signal(signal.SIGHUP, signal_handler_hup) # SIGHUP (user disconnect)
+    signal.signal(signal.SIGINT, signal_handler_break)  # SIGINT (user break)
+    signal.signal(signal.SIGHUP, signal_handler_hup)    # SIGHUP (user disconnect)
 
     # Argument deprecations
     for arg in sys.argv[1:]:
