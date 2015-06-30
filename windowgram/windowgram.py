@@ -1069,6 +1069,42 @@ def Windowgram_Mask_Boolean(wg_mask1, wg_mask2, op):
                 wgc3[iy][ix] = MASKPANE_0
     return Windowgram("", True).Load_Chars(wgc3)
 
+def Windowgram_Mask_Macro_BuildSplitMasks(wg, res_hint, axis_location):
+    # Produce mutually-exclusive side masks, these are based on the defined edge and the windowgram dimensions
+    # This macro is shared by: drag, insert, clone
+    wgw, wgh = wg.Analyze_WidthHeight()
+    aa, bb = (wgw, wgh) if res_hint == "v" else (wgh, wgw)
+    mask_0 = dict(x=1,               w=axis_location,    y=1, h=bb)
+    mask_1 = dict(x=axis_location+1, w=aa-axis_location, y=1, h=bb)
+    if res_hint != "v":
+        mask_0 = Windowgram_Convert.Transpose_Pane(mask_0)
+        mask_1 = Windowgram_Convert.Transpose_Pane(mask_1)
+    wgm0 = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_1, mask_0, ParsedPanes_Add(MASKPANE_0, mask_1)))
+    wgm1 = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_1, mask_1, ParsedPanes_Add(MASKPANE_0, mask_0)))
+    return wgm0, wgm1
+
+def Windowgram_Mask_Macro_Generate(wg, wgm0, wgm1, panes):
+    # Generates new masks based on a windowgram, base masks, and a set of panes
+    # This macro is shared by: drag, insert, clone
+    wgm0x = Windowgram_Mask_Boolean(wgm0, Windowgram_Mask_Generate(wg, panes), "and")
+    wgm1x = Windowgram_Mask_Boolean(wgm1, Windowgram_Mask_Generate(wg, panes), "and")
+    return wgm0x, wgm1x
+
+def Windowgram_Mask_Macro_Validate(wgm1, wgm2, res_hint, axis_location):
+    # Validates masks according to regularity rules (until irregular scalegoups are supported), returns valid or None
+    # This macro is shared by: drag, insert, clone
+    def Validate(wgm):
+        # (1) Any MASKPANE_1 character touching the specified axis edge
+        if wgm.Panes_HasPane(MASKPANE_1) and not MASKPANE_1 in wgm.Edge_PanesAlong(res_hint, axis_location):
+            return "Group of panes does not touch the specified edge"
+        # (2) That the mask is a rectangular shape (for now; see above notes on irregular parallelism)
+        result, suggestions = groupcore(wgm, MASKPANE_1) # GroupStatus.Invalid_Panes means MASKPANE_1 was not found
+        if result == GroupStatus.Invalid_Panes or result == GroupStatus.Success: return None
+        return "The group of panes is an unsupported irregular shape, try making it rectangular"
+    r1 = Validate(wgm1)
+    r2 = Validate(wgm2)
+    return r1 if r1 else (r2 if r2 else None)
+
 ##
 ## Pane List Functions
 ##
@@ -2711,37 +2747,17 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Size error: " + error ) )
     # Reduce limitation flag
     limit = True if limit is not None and is_true(limit, "limit") else False
-    # Produce mutually-exclusive side masks, these are based on the defined edge and the windowgram dimensions
-    aa, bb = (wgw, wgh) if res_hint == "v" else (wgh, wgw)
-    mask_0 = dict(x=1,               w=axis_location,    y=1, h=bb)
-    mask_1 = dict(x=axis_location+1, w=aa-axis_location, y=1, h=bb)
-    if res_hint != "v":
-        mask_0 = Windowgram_Convert.Transpose_Pane(mask_0)
-        mask_1 = Windowgram_Convert.Transpose_Pane(mask_1)
-    wgm0 = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_1, mask_0, ParsedPanes_Add(MASKPANE_0, mask_1)))
-    wgm1 = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_1, mask_1, ParsedPanes_Add(MASKPANE_0, mask_0)))
+    # Produce mutually-exclusive side masks
+    wgm0, wgm1 = Windowgram_Mask_Macro_BuildSplitMasks( wg, res_hint, axis_location )
     # Produce valid scale masks
-    def Generate(panes):
-        wgm0x = Windowgram_Mask_Boolean(wgm0, Windowgram_Mask_Generate(wg, panes), "and")
-        wgm1x = Windowgram_Mask_Boolean(wgm1, Windowgram_Mask_Generate(wg, panes), "and")
-        return wgm0x, wgm1x
-    def Validate(wgm1, wgm2):
-        def Validate(wgm):
-            # (1) Any MASKPANE_1 character touching the specified axis edge
-            if wgm.Panes_HasPane(MASKPANE_1) and not MASKPANE_1 in wgm.Edge_PanesAlong(res_hint, axis_location):
-                return "Group of panes does not touch the specified edge"
-            # (2) That the mask is a rectangular shape (for now; see above notes on irregular parallelism)
-            result, suggestions = groupcore(wgm, MASKPANE_1) # GroupStatus.Invalid_Panes means MASKPANE_1 was not found
-            if result == GroupStatus.Invalid_Panes or result == GroupStatus.Success: return None
-            return "The group of panes is an unsupported irregular shape, try making it rectangular"
-        r1 = Validate(wgm1)
-        r2 = Validate(wgm2)
-        return r1 if r1 else (r2 if r2 else 0)
-    wgm0x, wgm1x = Generate( res_scalegroup + res_edge )    # The first mask pair must be "scalegroup + edgegroup".
-    error = Validate( wgm0x, wgm1x )                        # Consider [ "12\n34", "right 12:34" ] -> "34" is valid.
-    if error:                                               # The combined should test first, then scalegroup alone.
-        wgm0x, wgm1x = Generate( res_scalegroup )           # It's always possible to define parameters that fit the
-        error = Validate( wgm0x, wgm1x )                    # user's desired effect, if it's otherwise a valid form.
+    # The first mask pair must be "scalegroup + edgegroup".  Consider [ "12\n34", "right 12:34" ] -> "34" is valid.
+    # The combined should test first, then scalegroup alone.  It's always possible to define parameters that fit the
+    # user's desired effect, if it's otherwise a valid form.
+    wgm0x, wgm1x = Windowgram_Mask_Macro_Generate( wg, wgm0, wgm1, res_scalegroup + res_edge )
+    error = Windowgram_Mask_Macro_Validate( wgm0x, wgm1x, res_hint, axis_location )
+    if error:
+        wgm0x, wgm1x = Windowgram_Mask_Macro_Generate( wg, wgm0, wgm1, res_scalegroup )
+        error = Windowgram_Mask_Macro_Validate( wgm0x, wgm1x, res_hint, axis_location )
     if error:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to drag: " + error ) )
     # Mask-extract the dynamics (areas to be scaled) from the static (the rest of the windowgram)
@@ -2891,34 +2907,11 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpanes=None, spread=None):
     wgw_new = wgw if res_hint == "h" else wgw + res_size
     wgh_new = wgh if res_hint == "v" else wgh + res_size
     wg_new = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_X, dict(x=1, w=wgw_new, y=1, h=wgh_new)))
-    # Produce mutually-exclusive side masks, these are based on the defined edge and the windowgram dimensions
-    aa, bb = (wgw, wgh) if res_hint == "v" else (wgh, wgw)
-    mask_0 = dict(x=1,               w=axis_location,    y=1, h=bb)
-    mask_1 = dict(x=axis_location+1, w=aa-axis_location, y=1, h=bb)
-    if res_hint != "v":
-        mask_0 = Windowgram_Convert.Transpose_Pane(mask_0)
-        mask_1 = Windowgram_Convert.Transpose_Pane(mask_1)
-    wgm0 = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_1, mask_0, ParsedPanes_Add(MASKPANE_0, mask_1)))
-    wgm1 = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_1, mask_1, ParsedPanes_Add(MASKPANE_0, mask_0)))
+    # Produce mutually-exclusive side masks
+    wgm0, wgm1 = Windowgram_Mask_Macro_BuildSplitMasks( wg, res_hint, axis_location )
     # Produce scale masks for the scalegroup (if specified)
-    def Generate(panes):
-        wgm0x = Windowgram_Mask_Boolean(wgm0, Windowgram_Mask_Generate(wg, panes), "and")
-        wgm1x = Windowgram_Mask_Boolean(wgm1, Windowgram_Mask_Generate(wg, panes), "and")
-        return wgm0x, wgm1x
-    def Validate(wgm1, wgm2):
-        def Validate(wgm):
-            # (1) Any MASKPANE_1 character touching the specified axis edge
-            if wgm.Panes_HasPane(MASKPANE_1) and not MASKPANE_1 in wgm.Edge_PanesAlong(res_hint, axis_location):
-                return "Group of panes does not touch the specified edge"
-            # (2) That the mask is a rectangular shape (for now; see above notes on irregular parallelism)
-            result, suggestions = groupcore(wgm, MASKPANE_1) # GroupStatus.Invalid_Panes means MASKPANE_1 was not found
-            if result == GroupStatus.Invalid_Panes or result == GroupStatus.Success: return None
-            return "The group of panes is an unsupported irregular shape, try making it rectangular"
-        r1 = Validate(wgm1)
-        r2 = Validate(wgm2)
-        return r1 if r1 else (r2 if r2 else 0)
-    wgm0x, wgm1x = Generate( res_scalegroup )
-    error = Validate( wgm0x, wgm1x )
+    wgm0x, wgm1x = Windowgram_Mask_Macro_Generate( wg, wgm0, wgm1, res_scalegroup )
+    error = Windowgram_Mask_Macro_Validate( wgm0x, wgm1x, res_hint, axis_location )
     if error:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to insert: " + error ) )
     # Layers in order; without clipping there could be overdraw, but the process is easier and the result is identical
