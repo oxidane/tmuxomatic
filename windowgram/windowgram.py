@@ -1654,7 +1654,8 @@ def smudgecore(wg, edge, axis, length, direction, run=None): # wg
 ##      edge ("<edge>") or double-parameter specified edge ("<hint> <edge>"), over to a single-parameter variable option
 ##      that may be used for both ("<edge>" or "<hint>@<edge>").  Maybe keep the double-parameter option support as a
 ##      hidden feature unless it becomes a problem for future commands.  Note that ":" cannot be used as a delimiter
-##      since it's used to designate additional panes in the scale group for the "drag" command.
+##      since it's used to designate additional panes in the scale group for the "drag" command.  This will affect the
+##      function argument_processor_edge() and the commands that use it.
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
@@ -1927,6 +1928,48 @@ def flex_processor(wg, commands, noticesok=False): # -> error
     if not found: return "Command not found: " + commands + "\n"
     if not processed: return "Command argument mismatch: " + commands + "\n"
     return None
+
+##
+## Flex Argument Processors
+##
+
+def argument_processor_edge(hint, edge, ignore, used, unused, getsc): # -> error, res_hint, res_edge, res_scalegroup
+    # Process the edge parameter for flex commands: drag, insert, clone ... Handles swapping of hint and edge
+    # Reduce edge and resolve hint
+    swapped = ""
+    res_hint = resolve_vhtblr( hint ) if hint is not "" else ""
+    res_edge = thruvalid_panes( edge, ignore )
+    if not res_hint or not res_edge:
+        swapped_hint = resolve_vhtblr( edge ) if edge is not "" else ""
+        swapped_edge = thruvalid_panes( hint, ignore )
+        if swapped_hint and res_edge:
+            res_hint, res_edge = swapped_hint, swapped_edge
+            swapped = "swapped "
+    # From here on use res_hint, res_edge
+    hint = edge = None
+    # Error handlers
+    if res_hint is None: # A blank string for the hint is considered valid
+        return ( "The " + swapped + "hint is unrecognized" ), None, None, None
+    if not res_edge: return ( "The " + swapped + "edge contains invalid pane characters" ), None, None, None
+    areused, areunused, invalids = classify_panes( used + ignore, unused, res_edge )
+    if invalids: return ( \
+        "Panes (" + invalids + ") in " + swapped + "edge (" + res_edge + ") are invalid" ), None, None, None
+    if areunused: return ( \
+        "Panes (" + areunused + ") in " + swapped + "edge (" + res_edge + ") are not being used" ), None, None, None
+    # Separate res_edge into res_edge and res_scalegroup
+    res_scalegroup = ""
+    if ":" in res_edge:
+        if not getsc: return ( "A user provided scalegroup is not supported with this command" ), None, None, None
+        res_edge, res_scalegroup = res_edge.split(":", 1)
+        if ":" in res_scalegroup:
+            return ( "Please specify the optional scalegroup in the form: \"<edge>:<scalegroup>\"" ), None, None, None
+    # Replace character "*" with all panes
+    if "*" in res_edge:
+        res_edge = AllPanes( res_edge, used )
+    if "*" in res_scalegroup:
+        res_scalegroup = AllPanes( res_scalegroup, used )
+    # The user should use these resolved variables in place of those provided by the user
+    return None, res_hint, res_edge, res_scalegroup
 
 ##
 ## Flex: Reset
@@ -2622,35 +2665,10 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
-    # Reduce edge and resolve hint (supports swapping of hint and edge)
-    swapped = ""
-    res_hint = resolve_vhtblr( hint ) if hint is not "" else ""
-    res_edge = thruvalid_panes( edge, "*:" )
-    if not res_hint or not res_edge:
-        swapped_hint = resolve_vhtblr( edge ) if edge is not "" else ""
-        swapped_edge = thruvalid_panes( hint, "*:" )
-        if swapped_hint and res_edge:
-            res_hint, res_edge = swapped_hint, swapped_edge
-            swapped = "swapped "
-    hint = edge = None # From here on use res_hint, res_edge
-    if res_hint is None: # Only handle None type, blank string for hint is valid
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The " + swapped + "hint is unrecognized" ) )
-    if not res_edge: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
-        "The edge contains invalid pane characters" ) )
-    areused, areunused, invalids = classify_panes( used+"*:", unused, res_edge )
-    if invalids: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
-        "The panes (" + invalids + ") in " + swapped + "edge (" + res_edge + ") are invalid" ) ) # Already ruled out
-    if areunused: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
-        "The panes (" + areunused + ") in " + swapped + "edge (" + res_edge + ") are not being used" ) )
-    # Separate edge into edge and scalegroup
-    res_scalegroup = ""
-    if ":" in res_edge:
-        res_edge, res_scalegroup = res_edge.split(":", 1)
-        if ":" in res_scalegroup: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
-            "Please specify the optional scalegroup in the form: \"<edge>:<scalegroup>\"" ) )
-    # Replace character "*" with all panes
-    if "*" in res_edge: res_edge = AllPanes( res_edge, used )
-    if "*" in res_scalegroup: res_scalegroup = AllPanes( res_scalegroup, used )
+    # Reduce edge, resolve hint, deduce scalegroup, expand wildcards ... Supports swapping of hint and edge
+    error, res_hint, res_edge, res_scalegroup = argument_processor_edge(hint, edge, "*:", used, unused, True)
+    if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( error ) )
+    hint = edge = None # From here only use: res_hint, res_edge
     # Resolve direction ... Axis (VH) is valid and like split, is based on TL, and is controlled with size negation
     res_direction, direction = resolve_vhtblr( direction ), None
     if not res_direction: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
@@ -2843,36 +2861,10 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpanes=None, spread=None):
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
-    ignore_invalids = "*@:"
-    # Reduce edge and resolve hint (supports swapping of hint and edge)
-    swapped = ""
-    res_hint = resolve_vhtblr( hint ) if hint is not "" else ""
-    res_edge = thruvalid_panes( edge, ignore_invalids )
-    if not res_hint or not res_edge:
-        swapped_hint = resolve_vhtblr( edge ) if edge is not "" else ""
-        swapped_edge = thruvalid_panes( hint, ignore_invalids )
-        if swapped_hint and res_edge:
-            res_hint, res_edge = swapped_hint, swapped_edge
-            swapped = "swapped "
-    hint = edge = None # From here on use res_hint, res_edge
-    if res_hint is None: # Only handle None type, blank string for hint is valid
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The " + swapped + "hint is unrecognized" ) )
-    if not res_edge: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
-        "The " + swapped + "edge contains invalid pane characters" ) )
-    areused, areunused, invalids = classify_panes( used + ignore_invalids, unused, res_edge )
-    if invalids: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
-        "The panes (" + invalids + ") in " + swapped + "edge (" + res_edge + ") are invalid" ) ) # Already ruled out
-    if areunused: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
-        "The panes (" + areunused + ") in " + swapped + "edge (" + res_edge + ") are not being used" ) )
-    # Separate edge into edge and scalegroup
-    res_scalegroup = ""
-    if ":" in res_edge:
-        res_edge, res_scalegroup = res_edge.split(":", 1)
-        if ":" in res_scalegroup: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
-            "Please specify the optional scalegroup in the form: \"<edge>:<scalegroup>\"" ) )
-    # Replace character "*" with all panes
-    if "*" in res_edge: res_edge = AllPanes( res_edge, used )
-    if "*" in res_scalegroup: res_scalegroup = AllPanes( res_scalegroup, used )
+    # Reduce edge, resolve hint, deduce scalegroup, expand wildcards ... Supports swapping of hint and edge
+    error, res_hint, res_edge, res_scalegroup = argument_processor_edge(hint, edge, "*@:", used, unused, True)
+    if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( error ) )
+    hint = edge = None # From here only use: res_hint, res_edge
     # Get edge from res_hint + res_edge; this yields the official edge axis, required to resolve direction and size
     status, res_hint, minimal, optimal = edgecore( wg, res_edge, res_hint )
     status_print = EdgeStatus.error2string( status )
