@@ -1097,6 +1097,7 @@ def PaneList_AssimilatedSorted(this, that): # this_plus_that_assimilated_and_sor
 ##
 
 def ParsedPanes_Add(paneid, parsedpane, windowgram_parsed={}):
+    windowgram_parsed = copy.deepcopy(windowgram_parsed) # Required so the default ({}) won't get shared and corrupted
     windowgram_parsed[paneid] = dict( list(parsedpane.items()) + list(dict(n=paneid).items()) )
     return windowgram_parsed
 
@@ -1933,8 +1934,9 @@ def flex_processor(wg, commands, noticesok=False): # -> error
 ## Flex Argument Processors
 ##
 
-def argument_processor_edge(hint, edge, ignore, used, unused, getsc): # -> error, res_hint, res_edge, res_scalegroup
+def argument_processor_edge(hint, edge, used, unused, getsc): # -> error, res_hint, res_edge, res_scalegroup
     # Process the edge parameter for flex commands: drag, insert, clone ... Handles swapping of hint and edge
+    ignore = "*@:" # The "@" is for when the parameters hint and edge are combined
     # Reduce edge and resolve hint
     swapped = ""
     res_hint = resolve_vhtblr( hint ) if hint is not "" else ""
@@ -2666,7 +2668,7 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
     # Reduce edge, resolve hint, deduce scalegroup, expand wildcards ... Supports swapping of hint and edge
-    error, res_hint, res_edge, res_scalegroup = argument_processor_edge(hint, edge, "*:", used, unused, True)
+    error, res_hint, res_edge, res_scalegroup = argument_processor_edge(hint, edge, used, unused, True)
     if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( error ) )
     hint = edge = None # From here only use: res_hint, res_edge
     # Resolve direction ... Axis (VH) is valid and like split, is based on TL, and is controlled with size negation
@@ -2862,20 +2864,33 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpanes=None, spread=None):
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
     # Reduce edge, resolve hint, deduce scalegroup, expand wildcards ... Supports swapping of hint and edge
-    error, res_hint, res_edge, res_scalegroup = argument_processor_edge(hint, edge, "*@:", used, unused, True)
+    error, res_hint, res_edge, res_scalegroup = argument_processor_edge(hint, edge, used, unused, True)
     if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( error ) )
     hint = edge = None # From here only use: res_hint, res_edge
     # Get edge from res_hint + res_edge; this yields the official edge axis, required to resolve direction and size
     status, res_hint, minimal, optimal = edgecore( wg, res_edge, res_hint )
     status_print = EdgeStatus.error2string( status )
-    if status_print: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
-        "Edge specification error: " + status_print ) )
-    # Get necessary metrics, axis location is required to translate to characters
+    if status_print:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Edge specification error: " + status_print ) )
+    # Get necessary metrics
     wgw, wgh = wg.Analyze_WidthHeight()
-    axis_length = axis_location = optimal[0][0] # Use optimal since we're dealing with a pane grid
-    # Resolve size
+    axis_location = optimal[0][0]
+    # Axis length is of the combined edge panes, on the axis opposite of insertion; easiest to derive using a mask
+    _, _, pw, ph = Windowgram_Mask_Generate(wg, res_edge).Panes_PaneXYWH(MASKPANE_1)
+    axis_length = pw if res_hint == "v" else ph
+    # Resolve size ... If percentage or multiplier, this will be based on the axis_length of the combined edge panes
     (error, res_sizeinv, res_size), size = resolve_size(size, axis_length, "", "", False), None
     if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Size error: " + error ) )
+    # Resolve spread parameter
+    if spread is None: spread = "50%"
+    res_spread = size_ConvertToCharacters(spread, res_size)
+    if res_spread < 0 or res_spread > res_size: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+        "The spread parameter must be between 0% and 100%" ) )
+    spread = None
+    # Create a blank target windowgram compatible with masking
+    wgw_new = wgw if res_hint == "h" else wgw + res_size
+    wgh_new = wgh if res_hint == "v" else wgh + res_size
+    wg_new = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_X, dict(x=1, w=wgw_new, y=1, h=wgh_new)))
     # Produce mutually-exclusive side masks, these are based on the defined edge and the windowgram dimensions
     aa, bb = (wgw, wgh) if res_hint == "v" else (wgh, wgw)
     mask_0 = dict(x=1,               w=axis_location,    y=1, h=bb)
@@ -2885,7 +2900,7 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpanes=None, spread=None):
         mask_1 = Windowgram_Convert.Transpose_Pane(mask_1)
     wgm0 = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_1, mask_0, ParsedPanes_Add(MASKPANE_0, mask_1)))
     wgm1 = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_1, mask_1, ParsedPanes_Add(MASKPANE_0, mask_0)))
-    # Produce valid scale masks
+    # Produce scale masks for the scalegroup (if specified)
     def Generate(panes):
         wgm0x = Windowgram_Mask_Boolean(wgm0, Windowgram_Mask_Generate(wg, panes), "and")
         wgm1x = Windowgram_Mask_Boolean(wgm1, Windowgram_Mask_Generate(wg, panes), "and")
@@ -2902,21 +2917,20 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpanes=None, spread=None):
         r1 = Validate(wgm1)
         r2 = Validate(wgm2)
         return r1 if r1 else (r2 if r2 else 0)
-    # Build split-edge masks for the scalegroup
     wgm0x, wgm1x = Generate( res_scalegroup )
     error = Validate( wgm0x, wgm1x )
     if error:
-        wgm0x, wgm1x = Generate( res_scalegroup )
-        error = Validate( wgm0x, wgm1x )
-    if error:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to insert: " + error ) )
+    # Layers in order; without clipping there could be overdraw, but the process is easier and the result is identical
+    # L0) Copy the fixed portions of the windowgram (half masks, edge-aligned)
+    # L1) Fill in the surrounding gap according to the [spread] value
+    # L2) Copy the scaled portions of the windowgram (scalegroup masks, edge-aligned) according to the [spread] value
+    # L3) Fill in the new inserted pane
 
-    # Produce a new windowgram that accommodates the insertion area
-    # Fill behavior according to the:
-    #   minimal edge ... User defined insertion edge (fill for the new pane)
-    #   optimal edge ... Panes touching this that are not part of minimal must fill the space
-    #   windowgram ..... Remaining area to edge of windowgram will fill according to spread parameter
-    if spread is None: spread = "50%"
+    # Behavior of the fill layers are based on the defined edges:
+    #   minimal edge ... User defined insertion edge, simple fill for the new pane, no spread (L3)
+    #   optimal edge ... Panes touching this that are not part of minimal must fill the space (L1, L2)
+    #   windowgram ..... Remaining area to edge of windowgram will fill according to spread parameter (L1)
     return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The insert command is in development" ) )
 
 ##
