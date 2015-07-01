@@ -63,9 +63,10 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##
 DESCRIPTION = "Intelligent tmux session management" # Maybe add: "using windowgrams"
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
-VERSION = "2.17" # x.y: x = Major feature, y = Minor feature or bug fix
+VERSION = "2.18" # x.y: x = Major feature, y = Minor feature or bug fix
 ##
-##  2.18    TBD         TBD
+##  2.18    TBD         New flex command: insert
+##                      Fixed issues #11, #12: Better handling of the "window" directive
 ##
 ##  2.17    2014-12-24  New flex command: reset
 ##                      Fixed some bugs in the drag command
@@ -146,6 +147,14 @@ VERSION = "2.17" # x.y: x = Major feature, y = Minor feature or bug fix
 ##      Finish flex console
 ##
 ##      License and release windowgram library
+##
+##      Minimal color support for the windowgram
+##
+## 3.x:
+##
+##      Refactor flex console to use Python's cmd module
+##
+##      Add color to flex console with full color support for the windowgram
 ##
 ## Minor:
 ##
