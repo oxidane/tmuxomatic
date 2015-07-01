@@ -620,6 +620,23 @@ class Windowgram_Convert():
         windowgram_parsedpane_transposed['h'], windowgram_parsedpane_transposed['w']
         return windowgram_parsedpane_transposed
 
+    ## Transpose Windowgram
+
+    @staticmethod
+    def Transpose_Windowgram(wg):
+        wg_transposed = copy.deepcopy(wg)
+        wg_transposed.Import_Chars( Windowgram_Convert.Transpose_Chars( wg.Export_Chars() ) )
+        return wg_transposed
+
+    ## Transpose Multiple Windowgrams
+
+    @staticmethod
+    def Transpose_Windowgrams(*batch_wg):
+        batch_transposed = []
+        for wg in batch_wg:
+            batch_transposed.append( Windowgram_Convert.Transpose_Windowgram( wg ) )
+        return batch_transposed
+
 ##
 ## Mosaics Equal ... Used for comparison purposes in testing, would not be needed if windowgram_mosaic used strings
 ##
@@ -767,6 +784,9 @@ class Windowgram():
 
     def Is_Extended(self):
         return self.extend
+
+    def Disable_Extended(self):
+        self.extend = False
 
     def Copy(self):
         return Windowgram( self.Export_String(), self.Is_Extended() )
@@ -1083,24 +1103,24 @@ def Windowgram_Mask_Macro_BuildSplitMasks(wg, res_hint, axis_location):
     wgm1 = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_1, mask_1, ParsedPanes_Add(MASKPANE_0, mask_0)))
     return wgm0, wgm1
 
-def Windowgram_Mask_Macro_Generate(wg, wgm0, wgm1, panes):
+def Windowgram_Mask_Macro_GenerateAndSplitMasks(wg, wgm0, wgm1, panes):
     # Generates new masks based on a windowgram, base masks, and a set of panes
     # This macro is shared by: drag, insert, clone
     wgm0x = Windowgram_Mask_Boolean(wgm0, Windowgram_Mask_Generate(wg, panes), "and")
     wgm1x = Windowgram_Mask_Boolean(wgm1, Windowgram_Mask_Generate(wg, panes), "and")
     return wgm0x, wgm1x
 
-def Windowgram_Mask_Macro_Validate(wgm1, wgm2, res_hint, axis_location):
+def Windowgram_Mask_Macro_ValidateRegularity(wgm1, wgm2, res_hint, axis_location):
     # Validates masks according to regularity rules (until irregular scalegoups are supported), returns valid or None
     # This macro is shared by: drag, insert, clone
     def Validate(wgm):
         # (1) Any MASKPANE_1 character touching the specified axis edge
         if wgm.Panes_HasPane(MASKPANE_1) and not MASKPANE_1 in wgm.Edge_PanesAlong(res_hint, axis_location):
-            return "Group of panes does not touch the specified edge"
+            return "The scalegroup of panes does not touch the specified edge"
         # (2) That the mask is a rectangular shape (for now; see above notes on irregular parallelism)
         result, suggestions = groupcore(wgm, MASKPANE_1) # GroupStatus.Invalid_Panes means MASKPANE_1 was not found
         if result == GroupStatus.Invalid_Panes or result == GroupStatus.Success: return None
-        return "The group of panes is an unsupported irregular shape, try making it rectangular"
+        return "The scalegroup of panes is an unsupported irregular shape, try making it rectangular"
     r1 = Validate(wgm1)
     r2 = Validate(wgm2)
     return r1 if r1 else (r2 if r2 else None)
@@ -2753,11 +2773,11 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     # The first mask pair must be "scalegroup + edgegroup".  Consider [ "12\n34", "right 12:34" ] -> "34" is valid.
     # The combined should test first, then scalegroup alone.  It's always possible to define parameters that fit the
     # user's desired effect, if it's otherwise a valid form.
-    wgm0x, wgm1x = Windowgram_Mask_Macro_Generate( wg, wgm0, wgm1, res_scalegroup + res_edge )
-    error = Windowgram_Mask_Macro_Validate( wgm0x, wgm1x, res_hint, axis_location )
+    wgm0x, wgm1x = Windowgram_Mask_Macro_GenerateAndSplitMasks( wg, wgm0, wgm1, res_scalegroup + res_edge )
+    error = Windowgram_Mask_Macro_ValidateRegularity( wgm0x, wgm1x, res_hint, axis_location )
     if error:
-        wgm0x, wgm1x = Windowgram_Mask_Macro_Generate( wg, wgm0, wgm1, res_scalegroup )
-        error = Windowgram_Mask_Macro_Validate( wgm0x, wgm1x, res_hint, axis_location )
+        wgm0x, wgm1x = Windowgram_Mask_Macro_GenerateAndSplitMasks( wg, wgm0, wgm1, res_scalegroup )
+        error = Windowgram_Mask_Macro_ValidateRegularity( wgm0x, wgm1x, res_hint, axis_location )
     if error:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to drag: " + error ) )
     # Mask-extract the dynamics (areas to be scaled) from the static (the rest of the windowgram)
@@ -2854,6 +2874,14 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
 ##
 ##      This command should eventually support irregular scalegroups, to the extent that they may be split into multiple
 ##      regular independent scalegroups.  This feature will be shared with the 'drag' command for similar purposes.
+##      Note that the scalegroups for insert must touch (or cross) the insertion edge to be considered valid, in
+##      addition to being rectangular and whole.
+##
+##      There are two possible behaviors for handling the scalegroup:
+##          1) Splitting the scalegroup at edge of insertion and scale the two sides independently at [spread] position
+##          2) Treating the scalegroup as a whole and scaling it independent of [spread] (unless not crossing edge)
+##      Although there are good reasons for both, one of these must the default.  Perhaps an unobtrusive option could be
+##      added, like adding "!" to the scalegroup to change this behavior.
 ##
 
 @flex(
@@ -2874,7 +2902,7 @@ def cmd_insert(fpp_PRIVATE, edge, size):
     group       = "modifiers",
     examples    = [ "insert right * 10", "insert vert 1245 1", "insert top X 50%", "insert right Z 5 z 75%" ],
 )
-def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpanes=None, spread=None):
+def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     if not fpp_PRIVATE.wg:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
@@ -2903,28 +2931,80 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpanes=None, spread=None):
     if res_spread < 0 or res_spread > res_size: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
         "The spread parameter must be between 0% and 100%" ) )
     spread = None
+    # Verify newpane ... Set to first available if not specified
+    if len(unused) < 1: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Insufficient panes for insert" ) )
+    if newpane is None: newpane = unused[0]
+    if len(newpane) > 1: return fpp_PRIVATE.flexsense['notices'].append( FlexError(
+        "Parameter newpane exceeds the function maximum of one pane" ) )
+    for ch in set(newpane):
+        if not ch in PANE_CHARACTERS: return fpp_PRIVATE.flexsense['notices'].append( FlexError(
+            "Invalid pane in newpane parameter: " + ch ) )
+    panes_in_use = newpane if newpane in used else ""
+    panes_in_use_message = panes_in_use_message_generate( panes_in_use )
+    if panes_in_use_message: return fpp_PRIVATE.flexsense['notices'].append( FlexError( panes_in_use_message ) )
+    used, unused = newpanes_RebuildPaneListsInPreferentialOrder( used, unused, newpane )
     # Create a blank target windowgram compatible with masking
     wgw_new = wgw if res_hint == "h" else wgw + res_size
     wgh_new = wgh if res_hint == "v" else wgh + res_size
-    wg_new = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_X, dict(x=1, w=wgw_new, y=1, h=wgh_new)))
+    wgout = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_X, dict(x=1, w=wgw_new, y=1, h=wgh_new)))
     # Produce mutually-exclusive side masks
     wgm0, wgm1 = Windowgram_Mask_Macro_BuildSplitMasks( wg, res_hint, axis_location )
+    # Remove edge panes from scalegroup since they cannot be scaled and including them would overwrite the new pane
+    res_scalegroup, _ = PaneList_MovePanes( res_scalegroup, "", res_edge )
     # Produce scale masks for the scalegroup (if specified)
-    wgm0x, wgm1x = Windowgram_Mask_Macro_Generate( wg, wgm0, wgm1, res_scalegroup )
-    error = Windowgram_Mask_Macro_Validate( wgm0x, wgm1x, res_hint, axis_location )
+    wgm0x, wgm1x = Windowgram_Mask_Macro_GenerateAndSplitMasks( wg, wgm0, wgm1, res_scalegroup )
+    error = Windowgram_Mask_Macro_ValidateRegularity( wgm0x, wgm1x, res_hint, axis_location )
     if error:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to insert: " + error ) )
-    # Layers in order; without clipping there could be overdraw, but the process is easier and the result is identical
-    # L0) Copy the fixed portions of the windowgram (half masks, edge-aligned)
-    # L1) Fill in the surrounding gap according to the [spread] value
-    # L2) Copy the scaled portions of the windowgram (scalegroup masks, edge-aligned) according to the [spread] value
-    # L3) Fill in the new inserted pane
+    # For readability, let's transpose our windowgrams, and work with a vertical edge axis from here on
+    def transposer():
+        nonlocal \
+        wg, wgout, wgm0, wgm1, wgm0x, wgm1x
+        wg, wgout, wgm0, wgm1, wgm0x, wgm1x = Windowgram_Convert.Transpose_Windowgrams( \
+        wg, wgout, wgm0, wgm1, wgm0x, wgm1x )
+    if res_hint == "h": transposer()
+    # Two pass assembly
+    # With a scalegroup there will be overdraw, but layering is simpler to implement, and the result will be identical
+    l, m, r = axis_location, axis_location + res_spread, axis_location + res_size
+    span = r - l
+    # Pass 1:
+    #   A1) Fill in the new inserted pane (minimal edge)
+    #   A2) Copy the locked portions of the surrounding gap (optimal edge)
+    #   A3) Fill in the surrounding gap according to the [spread] value (windowgram split)
+    #   A4) Copy the original windowgram
+    wgc_i = wg.Export_Chars()
+    wgc_o = wgout.Export_Chars()
+    wgc_x = []
+    def lock_detection(res_edge, wgc_i, xpos, ypos, threshold):
+        if ypos == threshold: return None
+        lt, rt = wgc_i[ypos][xpos-1], wgc_i[ypos][xpos]
+        return rt if lt in res_edge else lt if rt in res_edge else None
+    lock_t = lock_detection(res_edge, wgc_i, l, minimal[0][1]-1, 0)
+    lock_b = lock_detection(res_edge, wgc_i, l, minimal[0][2], len(wgc_i))
+    for y, (row_i, row_o) in enumerate(zip(wgc_i, wgc_o)):
+        run = []
+        for x in range(len(row_o)):
+            if x >= l and x < r:
+                if y >= minimal[0][1] and y < minimal[0][2]:    run.append( newpane )                           # A1
+                elif y >= optimal[0][1] and y < optimal[0][2]:
+                    if y < minimal[0][1]:                       run.append( lock_t )                            # A2
+                    if y >= minimal[0][2]:                      run.append( lock_b )                            # A2
+                else:                                           run.append( row_i[l-1] if x < m else row_i[l] ) # A3
+            else:                                               run.append( row_i[x if x < l else x - span] )   # A4
+        wgc_x.append( run )
+    wgout.Import_Chars(wgc_x)
+    # Return to correct orientation
+    if res_hint == "h": transposer()
+    # Pass 2:
+    #   B1) Copy the scaled portions of the windowgram (using scalegroup masks)
 
-    # Behavior of the fill layers are based on the defined edges:
-    #   minimal edge ... User defined insertion edge, simple fill for the new pane, no spread (L3)
-    #   optimal edge ... Panes touching this that are not part of minimal must fill the space (L1, L2)
-    #   windowgram ..... Remaining area to edge of windowgram will fill according to spread parameter (L1)
+    # TODO: Decide on scalegroup behavior, leaning towards #2, update the notes to reflect decision
+    # TODO: Now using chars instead of masks, so some of the transpositions may not be needed
+
     return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The insert command is in development" ) )
+
+    # Replace windowgram
+    fpp_PRIVATE.wg.Import_Wg( wgout )
 
 ##
 ## Flex: Clone
