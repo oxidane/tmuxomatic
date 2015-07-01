@@ -2870,18 +2870,47 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
 ##
 ##      Insert at windowgram edge may be used for add
 ##
-## Notes:
+## Scaling:
+##
+##      There are two possible scale behaviors for the scalegroup where its edges are aligned to the edge of insertion:
+##
+##          1) Handling the scalegroup as a whole and scaling it independent of the edge (only if crossing edge)
+##              * Useful for neighboring grids: They would not necessarily have to be pinned to the [spread]
+##              * Mixed behavior: If the scalegroup doesn't cross the edge, it would be pinned to [spread]
+##
+##          2) Splitting the scalegroup at edge of insertion and scale the two sides independently at [spread] position
+##              * Behavioral consistency (and alignment) with any edge panes that are not part of the scalegroup
+##
+##      Illustration using the hypothetical command "insert vertical 23:STQL x" with both algorithms contrasted:
+##
+##                      original            spread = "50%"              spread = "100%"
+##
+##                      1111222233334444    11112222xxxxxxxx33334444    11112222xxxxxxxx33334444    insertion
+##            aligned > SSSSTTTTQQQQLLLL    SSSSTTTTTTTTQQQQQQQQLLLL    SSSSTTTTTTTTTTTTQQQQLLLL    noscalegroup
+##                                          SSSSSSTTTTTTQQQQQQLLLLLL    SSSSSSTTTTTTQQQQQQLLLLLL    scalegroup1
+##                                          SSSSSSTTTTTTQQQQQQLLLLLL    SSSSSSSSTTTTTTTTQQQQLLLL    scalegroup2
+##
+##                      1111222233334444    11112222xxxxxxxx33334444    11112222xxxxxxxx33334444    insertion
+##          unaligned > XXXXXYYYYYYZZZZZ    XXXXXYYYYYYYYYYYYYYZZZZZ    XXXXXYYYYYYYYYYYYYYZZZZZ    noscalegroup
+##                                          XXXXXXXXYYYYYYYYZZZZZZZZ    XXXXXXXXYYYYYYYYZZZZZZZZ    scalegroup1
+##                                          XXXXXXXXYYYYYYYYZZZZZZZZ    XXXXXXXXYYYYYYYYZZZZZZZZ    scalegroup2
+##
+##      Although there are going to be ideal situations for both, scalegroup1 is the default because it gives users more
+##      control over neighboring grids, allowing consistent scaling that may otherwise be distorted if [spread] changes.
+##
+##      Two features that won't be difficult to implement that would provide the full range of functionality:
+##          a) Multiple, independently functioning scalegroups, e.g., "<hint>@<edge>:<sg1>:<sg2>:<sg3>"
+##          b) Flag toggle for the scalegroup that changes the default behavior, e.g, by adding "!" into the scalegroup
+##
+##      When implementing multiple scalegroups (requires irregular support), it should also be added to the `drag`
+##      command.  Note that the different scale behavior is not applicable to `drag`, only to `insert` and `clone`.
+##
+## TODO:
 ##
 ##      This command should eventually support irregular scalegroups, to the extent that they may be split into multiple
-##      regular independent scalegroups.  This feature will be shared with the 'drag' command for similar purposes.
-##      Note that the scalegroups for insert must touch (or cross) the insertion edge to be considered valid, in
-##      addition to being rectangular and whole.
-##
-##      There are two possible behaviors for handling the scalegroup:
-##          1) Splitting the scalegroup at edge of insertion and scale the two sides independently at [spread] position
-##          2) Treating the scalegroup as a whole and scaling it independent of [spread] (unless not crossing edge)
-##      Although there are good reasons for both, one of these must the default.  Perhaps an unobtrusive option could be
-##      added, like adding "!" to the scalegroup to change this behavior.
+##      regular scalegroups.  This feature will be shared with the `drag` command for similar purposes.  Note that the
+##      scalegroups for `insert` must touch (or cross) the insertion edge to be considered valid, in addition to being
+##      rectangular and whole.
 ##
 
 @flex(
@@ -2943,25 +2972,16 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     panes_in_use_message = panes_in_use_message_generate( panes_in_use )
     if panes_in_use_message: return fpp_PRIVATE.flexsense['notices'].append( FlexError( panes_in_use_message ) )
     used, unused = newpanes_RebuildPaneListsInPreferentialOrder( used, unused, newpane )
-    # Create a blank target windowgram compatible with masking
+    # Create a blank target windowgram compatible with masking (for error checking)
     wgw_new = wgw if res_hint == "h" else wgw + res_size
     wgh_new = wgh if res_hint == "v" else wgh + res_size
     wgout = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_X, dict(x=1, w=wgw_new, y=1, h=wgh_new)))
-    # Produce mutually-exclusive side masks
-    wgm0, wgm1 = Windowgram_Mask_Macro_BuildSplitMasks( wg, res_hint, axis_location )
-    # Remove edge panes from scalegroup since they cannot be scaled and including them would overwrite the new pane
-    res_scalegroup, _ = PaneList_MovePanes( res_scalegroup, "", res_edge )
-    # Produce scale masks for the scalegroup (if specified)
-    wgm0x, wgm1x = Windowgram_Mask_Macro_GenerateAndSplitMasks( wg, wgm0, wgm1, res_scalegroup )
-    error = Windowgram_Mask_Macro_ValidateRegularity( wgm0x, wgm1x, res_hint, axis_location )
-    if error:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to insert: " + error ) )
-    # For readability, let's transpose our windowgrams, and work with a vertical edge axis from here on
+    # For readability, let's transpose our windowgrams, and work with a consistent vertical edge
     def transposer():
         nonlocal \
-        wg, wgout, wgm0, wgm1, wgm0x, wgm1x
-        wg, wgout, wgm0, wgm1, wgm0x, wgm1x = Windowgram_Convert.Transpose_Windowgrams( \
-        wg, wgout, wgm0, wgm1, wgm0x, wgm1x )
+        wg, wgout
+        wg, wgout = Windowgram_Convert.Transpose_Windowgrams( \
+        wg, wgout )
     if res_hint == "h": transposer()
     # Two pass assembly
     # With a scalegroup there will be overdraw, but layering is simpler to implement, and the result will be identical
@@ -2971,7 +2991,7 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     #   A1) Fill in the new inserted pane (minimal edge)
     #   A2) Copy the locked portions of the surrounding gap (optimal edge)
     #   A3) Fill in the surrounding gap according to the [spread] value (windowgram split)
-    #   A4) Copy the original windowgram
+    #   A4) Copy the original windowgram halves
     wgc_i = wg.Export_Chars()
     wgc_o = wgout.Export_Chars()
     wgc_x = []
@@ -2990,15 +3010,27 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
                     if y < minimal[0][1]:                       run.append( lock_t )                            # A2
                     if y >= minimal[0][2]:                      run.append( lock_b )                            # A2
                 else:                                           run.append( row_i[l-1] if x < m else row_i[l] ) # A3
-            else:                                               run.append( row_i[x if x < l else x - span] )   # A4
+            else:                                               run.append( row_i[x if x < l else (x - span)] ) # A4
         wgc_x.append( run )
     wgout.Import_Chars(wgc_x)
     # Return to correct orientation
     if res_hint == "h": transposer()
+    # The entire output windowgram should have been overwritten or an error occurred
+    if wgout.Panes_HasPane(MASKPANE_X):
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Pass 1 error: Windowgram not replaced" ) )
     # Pass 2:
-    #   B1) Copy the scaled portions of the windowgram (using scalegroup masks)
+    #   B1) Scale the scalegroup (using method 1)
+    #   B2) Copy the scaled portion of the windowgram (using scalegroup mask)
 
-    # TODO: Decide on scalegroup behavior, leaning towards #2, update the notes to reflect decision
+    # Produce mutually-exclusive side masks
+    wgm0, wgm1 = Windowgram_Mask_Macro_BuildSplitMasks( wg, res_hint, axis_location )
+    # Remove edge panes from scalegroup since they cannot be scaled and including them would overwrite the new pane
+    res_scalegroup, _ = PaneList_MovePanes( res_scalegroup, "", res_edge )
+    # Produce scale masks for the scalegroup (if specified)
+    wgm0x, wgm1x = Windowgram_Mask_Macro_GenerateAndSplitMasks( wg, wgm0, wgm1, res_scalegroup )
+    error = Windowgram_Mask_Macro_ValidateRegularity( wgm0x, wgm1x, res_hint, axis_location )
+    if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to insert: " + error ) )
+
     # TODO: Now using chars instead of masks, so some of the transpositions may not be needed
 
     return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The insert command is in development" ) )
