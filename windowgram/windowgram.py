@@ -881,7 +881,6 @@ class Windowgram():
             splityes = True
             for split in list_split:
                 # Readability
-                list_split_linkid = split['linkid']     # 1234          This is for cross-referencing
                 ent_panes = ''
                 for i in list_panes:
                     if 'l' in i and i['l'] == split['linkid']:
@@ -974,34 +973,33 @@ class Windowgram():
         return True if Windowgram_Convert.String_To_Lines( self.windowgram_string ) != [] else False
 
     ##
-    ## Edge
+    ## Edge (full) ... Edge format is the position of a full windowgram edge: xy
     ##
 
-    def Edge_PanesAlong(self, axis, edge):
-        # Returns a unique unsorted set of panes that touch the edge on either side
+    def Edge_PanesAlong(self, axis, fulledge):
+        # Returns a unique unsorted set of panes that touch the fulledge on either side
         windowgram_chars = Windowgram_Convert.String_To_Chars( self.windowgram_string )
         if axis == "v": windowgram_chars = Windowgram_Convert.Transpose_Chars( windowgram_chars )
-        panes = "".join( set( (windowgram_chars[edge-1] if edge > 0 else []) +
-                              (windowgram_chars[edge] if edge < len(windowgram_chars) else []) ) )
-        return panes
+        return "".join( set( (windowgram_chars[fulledge-1] if fulledge > 0 else []) +
+                             (windowgram_chars[fulledge] if fulledge < len(windowgram_chars) else []) ) )
 
     @staticmethod
-    def Edge_Extract_Static(windowgram_lines, axis, edge, direction):
-        # Returns a string of characters that border the one side of the edge that is opposite the direction
+    def Edge_Extract_Static(windowgram_lines, axis, fulledge, direction):
+        # Returns a string of characters that border the one side of the fulledge that is opposite the direction
         wgw, wgh = Windowgram.Analyze_WidthHeight_Static( windowgram_lines )
         # Note special cases (effectively "drag r * l 1" and "drag l * r 1") return transparency since those edges
         # are completely out of range.  The smudgecore caller translates this transparency into a subtraction.
         if axis == "v":
-            if (direction == "" and edge == wgw) or (direction == "-" and edge == 0): return MASKPANE_X * wgh
-            return "".join( [ line[edge-1 if direction == "-" else edge] for line in windowgram_lines ] )
+            if (direction == "" and fulledge == wgw) or (direction == "-" and fulledge == 0): return MASKPANE_X * wgh
+            return "".join( [ line[fulledge-1 if direction == "-" else fulledge] for line in windowgram_lines ] )
         else: # if axis == "h":
-            if (direction == "" and edge == wgh) or (direction == "-" and edge == 0): return MASKPANE_X * wgw
-            return windowgram_lines[edge-1 if direction == "-" else edge]
+            if (direction == "" and fulledge == wgh) or (direction == "-" and fulledge == 0): return MASKPANE_X * wgw
+            return windowgram_lines[fulledge-1 if direction == "-" else fulledge]
 
-    def Edge_Extract(self, axis, edge, direction):
-        # Returns a string of characters that border the one side of the edge that is opposite the direction
+    def Edge_Extract(self, axis, fulledge, direction):
+        # Returns a string of characters that border the one side of the fulledge that is opposite the direction
         windowgram_lines = Windowgram_Convert.String_To_Lines( self.windowgram_string )
-        return Windowgram.Edge_Extract_Static( windowgram_lines, axis, edge, direction )
+        return Windowgram.Edge_Extract_Static( windowgram_lines, axis, fulledge, direction )
 
     def Edge_ClipOuterTransparents(self):
         # Any fully transparent lines on any outer edge are clipped entirely
@@ -1018,6 +1016,26 @@ class Windowgram():
             wgy2 = wgy2 - 1
         wgc = self.Export_Chars()
         self.Import_Chars( [ [ wgc[iy][ix] for ix in range(wgx1-1, wgx2+1) ] for iy in range(wgy1-1, wgy2+1) ] )
+
+    ##
+    ## Edge (sub) ... Edge format is the description of a sub edge within the windowgram: [ xy, from, to ]
+    ##
+
+    def EdgeSub_PanesAlong(self, axis, edge):
+        # Returns a unique unsorted set of panes that touch the edge on either side
+        windowgram_chars = Windowgram_Convert.String_To_Chars( self.windowgram_string )
+        w = len(windowgram_chars[0])
+        h = len(windowgram_chars)
+        panes = []
+        if axis == "v":
+            for y in range(edge[1], edge[2]):
+                if edge[0] == 0:    panes.append( windowgram_chars[y][0] )
+                elif edge[0] == w:  panes.append( windowgram_chars[y][w-1] )
+                else:               panes += [ windowgram_chars[y][edge[0]-1], windowgram_chars[y][edge[0]] ]
+        else: # if axis == "h":
+            if edge[0] is not 0:    panes += [ windowgram_chars[edge[0]-1][x] for x in range(edge[1], edge[2]) ]
+            if edge[0] is not h:    panes += [ windowgram_chars[edge[0]  ][x] for x in range(edge[1], edge[2]) ]
+        return "".join( set( panes ) )
 
     ##
     ## CopyMasked
@@ -1770,13 +1788,13 @@ flexsense_reset = {
 
 def arg_is_multiplier(arg):
     if type(arg) is str:
-        if arg[:-1] == "".join([ch for ch in arg[:-1] if ch in "0123456789.,"]): # Fixed float support
+        if arg[:-1] == "".join([ch for ch in arg[:-1] if ch in "+-0123456789.,"]):
             if arg[-1:] == "x" or arg[-1:] == "X" or arg[-1:] == "*": return True
     return False
 
 def arg_is_percentage(arg):
     if type(arg) is str:
-        if arg[:-1] == "".join([ch for ch in arg[:-1] if ch in "0123456789.,"]): # Fixed float support
+        if arg[:-1] == "".join([ch for ch in arg[:-1] if ch in "+-0123456789.,"]):
             if arg[-1:] == "%": return True
     return False
 
@@ -1808,6 +1826,13 @@ def size_ConvertToCharacters(arg, base_characters):
         if arg_is_percentage(arg): return int(float(base_characters) * (float(arg[:-1]) / 100.0))
         if arg_is_characters(arg): return int(arg)
     return None
+
+def size_ValidUnit(arg):
+    # If percentage or multiplier, and if 0.0x-1.0x or 0.0%-100.0%, return True
+    if size_GetType(arg) is not None:
+        if arg_is_multiplier(arg): return True if float(arg[:-1]) >= 0.0 and float(arg[:-1]) <= 1.0 else False
+        if arg_is_percentage(arg): return True if float(arg[:-1]) >= 0.0 and float(arg[:-1]) <= 100.0 else False
+    return False
 
 ##
 ## Flex: Handling of newpanes parameter
@@ -2939,7 +2964,7 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     # Reduce edge, resolve hint, deduce scalegroup, expand wildcards ... Supports swapping of hint and edge
     error, res_hint, res_edge, res_scalegroup = argument_processor_edge(hint, edge, used, unused, True)
     if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( error ) )
-    hint = edge = None # From here only use: res_hint, res_edge
+    hint = edge = None
     # Get edge from res_hint + res_edge; this yields the official edge axis, required to resolve direction and size
     status, res_hint, minimal, optimal = edgecore( wg, res_edge, res_hint )
     status_print = EdgeStatus.error2string( status )
@@ -2956,9 +2981,12 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Size error: " + error ) )
     # Resolve spread parameter
     if spread is None: spread = "50%"
-    res_spread = size_ConvertToCharacters(spread, res_size)
-    if res_spread < 0 or res_spread > res_size: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
-        "The spread parameter must be between 0% and 100%" ) )
+    if size_ValidUnit(spread) is False: # Ignore None (not percentage or multiplier) and True (valid range)
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Spread must be equivalent the range 0% <-> 100%" ) )
+    res_spread = size_ConvertToCharacters(spread, res_size + 1) # Favor top/left
+    if res_spread == res_size + 1 and size_ValidUnit(spread) is True: res_spread = res_size # Favor top/left fix
+    if res_spread < 0 or res_spread > res_size:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Spread value is not in range, try a percentage" ) )
     spread = None
     # Verify newpane ... Set to first available if not specified
     if len(unused) < 1: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Insufficient panes for insert" ) )
@@ -2983,54 +3011,53 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
         wg, wgout = Windowgram_Convert.Transpose_Windowgrams( \
         wg, wgout )
     if res_hint == "h": transposer()
-    # Two pass assembly
-    # With a scalegroup there will be overdraw, but layering is simpler to implement, and the result will be identical
-    l, m, r = axis_location, axis_location + res_spread, axis_location + res_size
-    span = r - l
+    # Find panes that border the minimal edge, it may be different than res_edge ("12" from "right 1" or "vertical 12")
+    res_edgepanes = wg.EdgeSub_PanesAlong("v", minimal[0]) # Transposed hint is "v"
+    # Two pass assembly; there will be overdraw with a scalegroup, but layering is simpler and the result is identical
     # Pass 1:
     #   A1) Fill in the new inserted pane (minimal edge)
     #   A2) Copy the locked portions of the surrounding gap (optimal edge)
     #   A3) Fill in the surrounding gap according to the [spread] value (windowgram split)
     #   A4) Copy the original windowgram halves
+    l, m, r = axis_location, axis_location + res_spread, axis_location + res_size
     wgc_i = wg.Export_Chars()
     wgc_o = wgout.Export_Chars()
     wgc_x = []
-    def lock_detection(res_edge, wgc_i, xpos, ypos, threshold):
+    def lock_detection(res_edgepanes, wgc_i, xpos, ypos, threshold):
         if ypos == threshold: return None
-        return 0 if wgc_i[ypos][xpos-1] in res_edge else -1 if wgc_i[ypos][xpos] in res_edge else 0
-    lock_t = lock_detection(res_edge, wgc_i, l, minimal[0][1]-1, 0)
-    lock_b = lock_detection(res_edge, wgc_i, l, minimal[0][2], len(wgc_i))
+        return 0 if wgc_i[ypos][xpos-1] in res_edgepanes else -1 if wgc_i[ypos][xpos] in res_edgepanes else 0
+    lock_t = lock_detection(res_edgepanes, wgc_i, l, minimal[0][1]-1, 0)
+    lock_b = lock_detection(res_edgepanes, wgc_i, l, minimal[0][2], len(wgc_i))
     for y, (row_i, row_o) in enumerate(zip(wgc_i, wgc_o)):
         run = []
         for x in range(len(row_o)):
             if x >= l and x < r:
-                if y >= minimal[0][1] and y < minimal[0][2]:    run.append( newpane )                           # A1
+                if y >= minimal[0][1] and y < minimal[0][2]:    run.append( newpane )                               # A1
                 elif y >= optimal[0][1] and y < optimal[0][2]:
-                    if y < minimal[0][1]:                       run.append( row_i[l + lock_t] )                 # A2
-                    if y >= minimal[0][2]:                      run.append( row_i[l + lock_b] )                 # A2
-                else:                                           run.append( row_i[l-1] if x < m else row_i[l] ) # A3
-            else:                                               run.append( row_i[x if x < l else (x - span)] ) # A4
+                    if y < minimal[0][1]:                       run.append( row_i[l + lock_t] )                     # A2
+                    if y >= minimal[0][2]:                      run.append( row_i[l + lock_b] )                     # A2
+                else:                                           run.append( row_i[l-1] if x < m else row_i[l] )     # A3
+            else:                                               run.append( row_i[x if x < l else (x-res_size)] )   # A4
         wgc_x.append( run )
     wgout.Import_Chars(wgc_x)
     if wgout.Panes_HasPane(MASKPANE_X): # The entire output windowgram should have been overwritten or an error occurred
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Pass 1 error: Windowgram was not fully replaced" ) )
     # Pass 2:
-    res_scalegroup, _ = PaneList_MovePanes( res_scalegroup, "", res_edge ) # Edge panes must be removed from scalegroup
+    res_scalegroup, _ = PaneList_MovePanes( res_scalegroup, "", res_edgepanes ) # Panes touching insertion don't scale
     if res_scalegroup:
-        # B1) Build two scalegroup masks, for input and output, then verify the scalegroup is valid
+        # Build two scalegroup masks, for input and output, then verify the scalegroup is valid
         wgms_i = Windowgram_Mask_Generate(wg, res_scalegroup)
         wgms_o = Windowgram_Mask_Generate(wgout, res_scalegroup)
         error = Windowgram_Mask_Macro_ValidateRegularity( wgms_i, wgms_o, "v", axis_location ) # Transposed hint is "v"
         if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to insert: " + error ) )
-        # B2) Extract the scalegroup from the source windowgram into its own cropped windowgram
+        # Extract the scalegroup from the source windowgram into its own cropped windowgram
         wgcrop = wg.CopyMasked_Out(wgms_i)
-        # B3) Scale the cropped windowgram according to the output mask dimensions
+        # Scale the cropped windowgram according to the output mask dimensions
         _, _, sw, sh = wgms_o.Panes_PaneXYWH(MASKPANE_1)
-        print((sw, sh))
         wgcrop = Windowgram( scalecore( wgcrop.Export_String(), sw, sh ) )
-        # B4) Paste the scaled cropped windowgram into the output windowgram using the output mask
+        # Paste the scaled cropped windowgram into the output windowgram using the output mask
         wgout.CopyMasked_In(wgms_o, wgcrop)
-    # Return to correct orientation
+    # Restore correct orientation
     if res_hint == "h": transposer()
     # Replace windowgram
     fpp_PRIVATE.wg.Import_Wg( wgout )
