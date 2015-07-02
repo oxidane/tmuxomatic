@@ -2997,8 +2997,7 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     wgc_x = []
     def lock_detection(res_edge, wgc_i, xpos, ypos, threshold):
         if ypos == threshold: return None
-        lt, rt = wgc_i[ypos][xpos-1], wgc_i[ypos][xpos]
-        return rt if lt in res_edge else lt if rt in res_edge else None
+        return 0 if wgc_i[ypos][xpos-1] in res_edge else -1 if wgc_i[ypos][xpos] in res_edge else 0
     lock_t = lock_detection(res_edge, wgc_i, l, minimal[0][1]-1, 0)
     lock_b = lock_detection(res_edge, wgc_i, l, minimal[0][2], len(wgc_i))
     for y, (row_i, row_o) in enumerate(zip(wgc_i, wgc_o)):
@@ -3007,34 +3006,32 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
             if x >= l and x < r:
                 if y >= minimal[0][1] and y < minimal[0][2]:    run.append( newpane )                           # A1
                 elif y >= optimal[0][1] and y < optimal[0][2]:
-                    if y < minimal[0][1]:                       run.append( lock_t )                            # A2
-                    if y >= minimal[0][2]:                      run.append( lock_b )                            # A2
+                    if y < minimal[0][1]:                       run.append( row_i[l + lock_t] )                 # A2
+                    if y >= minimal[0][2]:                      run.append( row_i[l + lock_b] )                 # A2
                 else:                                           run.append( row_i[l-1] if x < m else row_i[l] ) # A3
             else:                                               run.append( row_i[x if x < l else (x - span)] ) # A4
         wgc_x.append( run )
     wgout.Import_Chars(wgc_x)
+    if wgout.Panes_HasPane(MASKPANE_X): # The entire output windowgram should have been overwritten or an error occurred
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Pass 1 error: Windowgram was not fully replaced" ) )
+    # Pass 2:
+    res_scalegroup, _ = PaneList_MovePanes( res_scalegroup, "", res_edge ) # Edge panes must be removed from scalegroup
+    if res_scalegroup:
+        # B1) Build two scalegroup masks, for input and output, then verify the scalegroup is valid
+        wgms_i = Windowgram_Mask_Generate(wg, res_scalegroup)
+        wgms_o = Windowgram_Mask_Generate(wgout, res_scalegroup)
+        error = Windowgram_Mask_Macro_ValidateRegularity( wgms_i, wgms_o, "v", axis_location ) # Transposed hint is "v"
+        if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to insert: " + error ) )
+        # B2) Extract the scalegroup from the source windowgram into its own cropped windowgram
+        wgcrop = wg.CopyMasked_Out(wgms_i)
+        # B3) Scale the cropped windowgram according to the output mask dimensions
+        _, _, sw, sh = wgms_o.Panes_PaneXYWH(MASKPANE_1)
+        print((sw, sh))
+        wgcrop = Windowgram( scalecore( wgcrop.Export_String(), sw, sh ) )
+        # B4) Paste the scaled cropped windowgram into the output windowgram using the output mask
+        wgout.CopyMasked_In(wgms_o, wgcrop)
     # Return to correct orientation
     if res_hint == "h": transposer()
-    # The entire output windowgram should have been overwritten or an error occurred
-    if wgout.Panes_HasPane(MASKPANE_X):
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Pass 1 error: Windowgram not replaced" ) )
-    # Pass 2:
-    #   B1) Scale the scalegroup (using method 1)
-    #   B2) Copy the scaled portion of the windowgram (using scalegroup mask)
-
-    # Produce mutually-exclusive side masks
-    wgm0, wgm1 = Windowgram_Mask_Macro_BuildSplitMasks( wg, res_hint, axis_location )
-    # Remove edge panes from scalegroup since they cannot be scaled and including them would overwrite the new pane
-    res_scalegroup, _ = PaneList_MovePanes( res_scalegroup, "", res_edge )
-    # Produce scale masks for the scalegroup (if specified)
-    wgm0x, wgm1x = Windowgram_Mask_Macro_GenerateAndSplitMasks( wg, wgm0, wgm1, res_scalegroup )
-    error = Windowgram_Mask_Macro_ValidateRegularity( wgm0x, wgm1x, res_hint, axis_location )
-    if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to insert: " + error ) )
-
-    # TODO: Now using chars instead of masks, so some of the transpositions may not be needed
-
-    return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The insert command is in development" ) )
-
     # Replace windowgram
     fpp_PRIVATE.wg.Import_Wg( wgout )
 
