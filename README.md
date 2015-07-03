@@ -265,6 +265,21 @@ For this demonstration, we modify the windowgram from the previous demonstration
 
 **Insert**:
 
+> Insert to the `left` of pane `s` (scaling group `BDLbdl`), a pane `6` characters wide.
+
+	flex> insert left s:BDLbdl 6
+
+	1111111111111000000ssssssssssssssssssssssss
+	1111111111111000000ssssssssssssssssssssssss
+	1111111111111BBBBBBBBBBDDDDDDDDDDLLLLLLLLLL
+	1111111111111BBBBBBBBBBDDDDDDDDDDLLLLLLLLLL
+	1111111111111BBBBBBBBBBDDDDDDDDDDLLLLLLLLLL
+	1111111111111BBBBBBBBBBDDDDDDDDDDLLLLLLLLLL
+	1111111111111bbbbbbbbbbddddddddddllllllllll
+	zzzzzzzzzzzzzbbbbbbbbbbddddddddddllllllllll
+	zzzzzzzzzzzzzbbbbbbbbbbddddddddddllllllllll
+	zzzzzzzzzzzzzbbbbbbbbbbddddddddddllllllllll
+
 **Clone**:
 
 **Delete**:
