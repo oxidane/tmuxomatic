@@ -1412,6 +1412,491 @@ class Test_FlexModifier_Drag(SenseTestCase):
 
 
 
+##----------------------------------------------------------------------------------------------------------------------
+##
+## Unit Testing :: Flex Modifier :: Insert
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+class Test_FlexModifier_Insert(SenseTestCase):
+
+    def test_Insert_SpreadFavorsTopLeft_50(self): # Created in flex using "new unittest Insert_SpreadFavorsTopLeft_50"
+        self.assertFlexSequence( [
+            "reset ; break 1 2x2 w",
+            "reset ; break 1 2x2 w ; insert xz 1",
+            "reset ; break 1 2x2 w ; insert xz 2",
+            "reset ; break 1 2x2 w ; insert xz 3",
+            "reset ; break 1 2x2 w ; insert xz 4",
+            "reset ; break 1 2x2 w ; insert xz 5",
+            "reset ; break 1 2x2 w ; insert xz 6",
+            "reset ; break 1 2x2 w",
+            "reset ; break 1 2x2 w ; insert yz 1",
+            "reset ; break 1 2x2 w ; insert yz 2",
+            "reset ; break 1 2x2 w ; insert yz 3",
+            "reset ; break 1 2x2 w ; insert yz 4",
+            "reset ; break 1 2x2 w ; insert yz 5",
+            "reset ; break 1 2x2 w ; insert yz 6",
+        ], """
+            wx wx wx wx wx wx wx wx wwx wwxx wwwxx wwwxxx wwwwxxx wwwwxxxx
+            yz w0 w0 w0 w0 w0 w0 yz y0z y00z y000z y0000z y00000z y000000z
+               yz y0 w0 w0 w0 w0
+                  yz y0 y0 w0 w0
+                     yz y0 y0 y0
+                        yz y0 y0
+                           yz y0
+                              yz
+        """ )
+
+    def test_Insert_SpreadTests(self): # Created in flex using "new unittest Insert_SpreadTests"
+        self.assertFlexSequence( [
+            "reset ; break 1 2x2 w",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 0%",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 25%",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 50%",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 75%",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 100%",
+            "reset ; break 1 2x2 w ; insert vertical wx 10 0 0x",
+            "reset ; break 1 2x2 w ; insert vertical wx 10 0 .2x",
+            "reset ; break 1 2x2 w ; insert vertical wx 10 0 .5x",
+            "reset ; break 1 2x2 w ; insert vertical wx 10 0 .8x",
+            "reset ; break 1 2x2 w ; insert vertical wx 10 0 1x",
+        ], """
+            wx w0000x w0000x w0000x w0000x w0000x w0000000000x w0000000000x w0000000000x w0000000000x w0000000000x
+            yz yzzzzz yyzzzz yyyzzz yyyyzz yyyyyz yzzzzzzzzzzz yyyzzzzzzzzz yyyyyyzzzzzz yyyyyyyyyzzz yyyyyyyyyyyz
+        """ )
+
+    def test_Insert_SpreadFails(self): # Created in flex using "new unittest Insert_SpreadFails"
+        self.assertFlexSequence( [
+            "reset ; break 1 2x2 w",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 -0.0001%",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 -1%",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 100.0001%",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 101%",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 -0.1x",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 -1x",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 -1.0001x",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 -1.1x",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 -1",
+            "reset ; break 1 2x2 w ; insert vertical wx 4 0 5",
+        ], """
+            wx wx wx wx wx wx wx wx wx wx wx
+            yz yz yz yz yz yz yz yz yz yz yz
+        """, True ) # Ignore notices
+
+    def test_Insert_LockTest_Edge(self): # Created in flex using "new unittest Insert_LockTest_Edge"
+        self.assertFlexSequence( [
+            "reset ; break 1 3x3 a ; scale 14x:5x ; drag top h:be up 2",
+            "insert right g 5 X",
+            "reset ; break 1 3x3 a ; scale 14x:5x ; drag right d:ef right 2",
+            "insert bottom a 5 X",
+        ], """
+            aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc aaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc
+            aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc aaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc
+            aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc aaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc
+            aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc aaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc
+            aaaaaaaaaaaaaaeeeeeeeeeeeeeecccccccccccccc aaaaaaaaaaaaaaaaaaaeeeeeeeeeeeeeecccccccccccccc
+            ddddddddddddddeeeeeeeeeeeeeeffffffffffffff dddddddddddddddddddeeeeeeeeeeeeeeffffffffffffff
+            ddddddddddddddeeeeeeeeeeeeeeffffffffffffff dddddddddddddddddddeeeeeeeeeeeeeeffffffffffffff
+            ddddddddddddddeeeeeeeeeeeeeeffffffffffffff dddddddddddddddddddeeeeeeeeeeeeeeffffffffffffff
+            ddddddddddddddhhhhhhhhhhhhhhffffffffffffff dddddddddddddddddddhhhhhhhhhhhhhhffffffffffffff
+            ddddddddddddddhhhhhhhhhhhhhhffffffffffffff dddddddddddddddddddhhhhhhhhhhhhhhffffffffffffff
+            gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii ggggggggggggggXXXXXhhhhhhhhhhhhhhiiiiiiiiiiiiii
+            gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii ggggggggggggggXXXXXhhhhhhhhhhhhhhiiiiiiiiiiiiii
+            gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii ggggggggggggggXXXXXhhhhhhhhhhhhhhiiiiiiiiiiiiii
+            gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii ggggggggggggggXXXXXhhhhhhhhhhhhhhiiiiiiiiiiiiii
+            gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii ggggggggggggggXXXXXhhhhhhhhhhhhhhiiiiiiiiiiiiii
+
+            aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc
+            aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc
+            aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc
+            aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc
+            aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc aaaaaaaaaaaaaabbbbbbbbbbbbbbcccccccccccccc
+            ddddddddddddddddeeeeeeeeeeeeefffffffffffff XXXXXXXXXXXXXXbbbbbbbbbbbbbbcccccccccccccc
+            ddddddddddddddddeeeeeeeeeeeeefffffffffffff XXXXXXXXXXXXXXbbbbbbbbbbbbbbcccccccccccccc
+            ddddddddddddddddeeeeeeeeeeeeefffffffffffff XXXXXXXXXXXXXXbbbbbbbbbbbbbbcccccccccccccc
+            ddddddddddddddddeeeeeeeeeeeeefffffffffffff XXXXXXXXXXXXXXbbbbbbbbbbbbbbcccccccccccccc
+            ddddddddddddddddeeeeeeeeeeeeefffffffffffff XXXXXXXXXXXXXXbbbbbbbbbbbbbbcccccccccccccc
+            gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii ddddddddddddddddeeeeeeeeeeeeefffffffffffff
+            gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii ddddddddddddddddeeeeeeeeeeeeefffffffffffff
+            gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii ddddddddddddddddeeeeeeeeeeeeefffffffffffff
+            gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii ddddddddddddddddeeeeeeeeeeeeefffffffffffff
+            gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii ddddddddddddddddeeeeeeeeeeeeefffffffffffff
+                                                       gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii
+                                                       gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii
+                                                       gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii
+                                                       gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii
+                                                       gggggggggggggghhhhhhhhhhhhhhiiiiiiiiiiiiii
+        """ )
+
+    def test_Insert_LockTest_Center(self): # Created in flex using "new unittest Insert_LockTest_Center"
+        self.assertFlexSequence( [
+            "reset ; break 1 2x2 W ; scale 10x:5x ; drag WY up 1 ; drag XZ down 1",
+            "insert XY 4",
+            "reset ; break 1 2x2 W ; scale 10x:5x ; drag WY down 1 ; drag XZ up 1",
+            "insert WZ 4",
+            "reset ; break 1 2x2 W ; scale 10x:5x ; drag WX right 1 ; drag YZ left 1",
+            "insert WZ 2",
+            "reset ; break 1 2x2 W ; scale 10x:5x ; drag WX left 1 ; drag YZ right 1",
+            "insert XY 2",
+        ], """
+            WWWWWWWWWWXXXXXXXXXX WWWWWWWWWWWWWWXXXXXXXXXX WWWWWWWWWWXXXXXXXXXX WWWWWWWWWWXXXXXXXXXXXXXX
+            WWWWWWWWWWXXXXXXXXXX WWWWWWWWWWWWWWXXXXXXXXXX WWWWWWWWWWXXXXXXXXXX WWWWWWWWWWXXXXXXXXXXXXXX
+            WWWWWWWWWWXXXXXXXXXX WWWWWWWWWWWWWWXXXXXXXXXX WWWWWWWWWWXXXXXXXXXX WWWWWWWWWWXXXXXXXXXXXXXX
+            WWWWWWWWWWXXXXXXXXXX WWWWWWWWWWWWWWXXXXXXXXXX WWWWWWWWWWXXXXXXXXXX WWWWWWWWWWXXXXXXXXXXXXXX
+            YYYYYYYYYYXXXXXXXXXX YYYYYYYYYY0000XXXXXXXXXX WWWWWWWWWWZZZZZZZZZZ WWWWWWWWWW0000ZZZZZZZZZZ
+            YYYYYYYYYYXXXXXXXXXX YYYYYYYYYY0000XXXXXXXXXX WWWWWWWWWWZZZZZZZZZZ WWWWWWWWWW0000ZZZZZZZZZZ
+            YYYYYYYYYYZZZZZZZZZZ YYYYYYYYYYZZZZZZZZZZZZZZ YYYYYYYYYYZZZZZZZZZZ YYYYYYYYYYYYYYZZZZZZZZZZ
+            YYYYYYYYYYZZZZZZZZZZ YYYYYYYYYYZZZZZZZZZZZZZZ YYYYYYYYYYZZZZZZZZZZ YYYYYYYYYYYYYYZZZZZZZZZZ
+            YYYYYYYYYYZZZZZZZZZZ YYYYYYYYYYZZZZZZZZZZZZZZ YYYYYYYYYYZZZZZZZZZZ YYYYYYYYYYYYYYZZZZZZZZZZ
+            YYYYYYYYYYZZZZZZZZZZ YYYYYYYYYYZZZZZZZZZZZZZZ YYYYYYYYYYZZZZZZZZZZ YYYYYYYYYYYYYYZZZZZZZZZZ
+
+            WWWWWWWWWWWXXXXXXXXX WWWWWWWWWWWXXXXXXXXX WWWWWWWWWXXXXXXXXXXX WWWWWWWWWXXXXXXXXXXX
+            WWWWWWWWWWWXXXXXXXXX WWWWWWWWWWWXXXXXXXXX WWWWWWWWWXXXXXXXXXXX WWWWWWWWWXXXXXXXXXXX
+            WWWWWWWWWWWXXXXXXXXX WWWWWWWWWWWXXXXXXXXX WWWWWWWWWXXXXXXXXXXX WWWWWWWWWXXXXXXXXXXX
+            WWWWWWWWWWWXXXXXXXXX WWWWWWWWWWWXXXXXXXXX WWWWWWWWWXXXXXXXXXXX WWWWWWWWWXXXXXXXXXXX
+            WWWWWWWWWWWXXXXXXXXX WWWWWWWWWWWXXXXXXXXX WWWWWWWWWXXXXXXXXXXX WWWWWWWWWXXXXXXXXXXX
+            YYYYYYYYYZZZZZZZZZZZ YYYYYYYYY00XXXXXXXXX YYYYYYYYYYYZZZZZZZZZ WWWWWWWWW00ZZZZZZZZZ
+            YYYYYYYYYZZZZZZZZZZZ YYYYYYYYY00XXXXXXXXX YYYYYYYYYYYZZZZZZZZZ WWWWWWWWW00ZZZZZZZZZ
+            YYYYYYYYYZZZZZZZZZZZ YYYYYYYYYZZZZZZZZZZZ YYYYYYYYYYYZZZZZZZZZ YYYYYYYYYYYZZZZZZZZZ
+            YYYYYYYYYZZZZZZZZZZZ YYYYYYYYYZZZZZZZZZZZ YYYYYYYYYYYZZZZZZZZZ YYYYYYYYYYYZZZZZZZZZ
+            YYYYYYYYYZZZZZZZZZZZ YYYYYYYYYZZZZZZZZZZZ YYYYYYYYYYYZZZZZZZZZ YYYYYYYYYYYZZZZZZZZZ
+                                 YYYYYYYYYZZZZZZZZZZZ                      YYYYYYYYYYYZZZZZZZZZ
+                                 YYYYYYYYYZZZZZZZZZZZ                      YYYYYYYYYYYZZZZZZZZZ
+        """ )
+
+    def test_Insert_LockTest_Mixed(self): # Created in flex using "new unittest Insert_LockTest_Mixed"
+        self.assertFlexSequence( [
+            "reset ; break 1 6x4 a ; scale 5x:3x",
+            "drag ag:ms up 2 ; drag ou:ci down 2 ; drag xw:v left 2 ; drag jk:l right 2",
+            "insert ni 1",
+            "insert ij 1",
+            "insert wp 1",
+            "insert mn 1",
+            "insert fk 1",
+            "insert ba 1",
+            "insert gh 1",
+            "insert left m 1",
+            "insert kr 1",
+            "insert right x 1",
+        ], """
+            aaaaabbbbbcccccdddddeeeeefffff aaaaabbbbbcccccdddddeeeeefffff aaaaabbbbbbcccccdddddeeeeefffff
+            aaaaabbbbbcccccdddddeeeeefffff gggggbbbbbcccccdddddeeeeefffff gggggbbbbbbcccccdddddeeeeefffff
+            aaaaabbbbbcccccdddddeeeeefffff gggggbbbbbcccccdddddeeeeefffff gggggbbbbbbcccccdddddeeeeefffff
+            ggggghhhhhiiiiijjjjjkkkkklllll ggggghhhhhcccccjjjjjjjkkkkllll ggggghhhhhhcccccjjjjjjjkkkkllll
+            ggggghhhhhiiiiijjjjjkkkkklllll ggggghhhhhiiiiijjjjjjjkkkkllll ggggghhhhhhiiiiijjjjjjjkkkkllll
+            ggggghhhhhiiiiijjjjjkkkkklllll mmmmmhhhhhiiiiijjjjjjjkkkkllll mmmmmhhhhhhiiiiijjjjjjjkkkkllll
+            mmmmmnnnnnooooopppppqqqqqrrrrr mmmmmnnnnniiiiipppppqqqqqrrrrr mmmmmnnnnn0iiiiipppppqqqqqrrrrr
+            mmmmmnnnnnooooopppppqqqqqrrrrr mmmmmnnnnnooooopppppqqqqqrrrrr mmmmmnnnnnoooooopppppqqqqqrrrrr
+            mmmmmnnnnnooooopppppqqqqqrrrrr sssssnnnnnooooopppppqqqqqrrrrr sssssnnnnnoooooopppppqqqqqrrrrr
+            ssssstttttuuuuuvvvvvwwwwwxxxxx ssssstttttooooovvvvwwwwxxxxxxx ssssstttttoooooovvvvwwwwxxxxxxx
+            ssssstttttuuuuuvvvvvwwwwwxxxxx ssssstttttooooovvvvwwwwxxxxxxx ssssstttttoooooovvvvwwwwxxxxxxx
+            ssssstttttuuuuuvvvvvwwwwwxxxxx ssssstttttuuuuuvvvvwwwwxxxxxxx ssssstttttuuuuuuvvvvwwwwxxxxxxx
+
+            aaaaabbbbbbccccccdddddeeeeefffff aaaaabbbbbbccccccdddddeeeeefffff aaaaabbbbbbbccccccdddddeeeeefffff
+            gggggbbbbbbccccccdddddeeeeefffff gggggbbbbbbccccccdddddeeeeefffff gggggbbbbbbbccccccdddddeeeeefffff
+            gggggbbbbbbccccccdddddeeeeefffff gggggbbbbbbccccccdddddeeeeefffff gggggbbbbbbbccccccdddddeeeeefffff
+            ggggghhhhhhccccccjjjjjjjkkkkllll ggggghhhhhhccccccjjjjjjjkkkkllll ggggghhhhhhhccccccjjjjjjjkkkkllll
+            ggggghhhhhhiiiii1jjjjjjjkkkkllll ggggghhhhhhiiiii1jjjjjjjkkkkllll ggggghhhhhhhiiiii1jjjjjjjkkkkllll
+            mmmmmhhhhhhiiiii1jjjjjjjkkkkllll mmmmmhhhhhhiiiii1jjjjjjjkkkkllll mmmmmhhhhhhhiiiii1jjjjjjjkkkkllll
+            mmmmmnnnnn0iiiiippppppqqqqqrrrrr mmmmmnnnnn0iiiiippppppqqqqqrrrrr mmmmm3nnnnn0iiiiippppppqqqqqrrrrr
+            mmmmmnnnnnooooooppppppqqqqqrrrrr mmmmmnnnnnooooooppppppqqqqqrrrrr mmmmm3nnnnnooooooppppppqqqqqrrrrr
+            sssssnnnnnooooooppppppqqqqqrrrrr sssssnnnnnooooooppppppqqqqqrrrrr ssssssnnnnnooooooppppppqqqqqrrrrr
+            ssssstttttoooooovvvvvwwwwxxxxxxx sssssnnnnnoooooovvvvv2qqqqqrrrrr ssssssnnnnnoooooovvvvv2qqqqqrrrrr
+            ssssstttttoooooovvvvvwwwwxxxxxxx ssssstttttoooooovvvvvwwwwxxxxxxx sssssstttttoooooovvvvvwwwwxxxxxxx
+            ssssstttttuuuuuuvvvvvwwwwxxxxxxx ssssstttttoooooovvvvvwwwwxxxxxxx sssssstttttoooooovvvvvwwwwxxxxxxx
+                                             ssssstttttuuuuuuvvvvvwwwwxxxxxxx sssssstttttuuuuuuvvvvvwwwwxxxxxxx
+
+            aaaaabbbbbbbccccccdddddeeeeefffff aaaaa5bbbbbbbccccccdddddeeeeefffff aaaaa5bbbbbbbbccccccdddddeeeeefffff
+            gggggbbbbbbbccccccdddddeeeeefffff ggggggbbbbbbbccccccdddddeeeeefffff ggggggbbbbbbbbccccccdddddeeeeefffff
+            gggggbbbbbbbccccccdddddeeeeefffff ggggggbbbbbbbccccccdddddeeeeefffff ggggggbbbbbbbbccccccdddddeeeeefffff
+            gggggbbbbbbbccccccdddddeeeee4llll ggggggbbbbbbbccccccdddddeeeee4llll ggggggbbbbbbbbccccccdddddeeeee4llll
+            ggggghhhhhhhccccccjjjjjjjkkkkllll gggggghhhhhhhccccccjjjjjjjkkkkllll gggggg6hhhhhhhccccccjjjjjjjkkkkllll
+            ggggghhhhhhhiiiii1jjjjjjjkkkkllll gggggghhhhhhhiiiii1jjjjjjjkkkkllll gggggg6hhhhhhhiiiii1jjjjjjjkkkkllll
+            mmmmmhhhhhhhiiiii1jjjjjjjkkkkllll mmmmmmhhhhhhhiiiii1jjjjjjjkkkkllll mmmmmmmhhhhhhhiiiii1jjjjjjjkkkkllll
+            mmmmm3nnnnn0iiiiippppppqqqqqrrrrr mmmmmm3nnnnn0iiiiippppppqqqqqrrrrr mmmmmmm3nnnnn0iiiiippppppqqqqqrrrrr
+            mmmmm3nnnnnooooooppppppqqqqqrrrrr mmmmmm3nnnnnooooooppppppqqqqqrrrrr mmmmmmm3nnnnnooooooppppppqqqqqrrrrr
+            ssssssnnnnnooooooppppppqqqqqrrrrr sssssssnnnnnooooooppppppqqqqqrrrrr ssssssssnnnnnooooooppppppqqqqqrrrrr
+            ssssssnnnnnoooooovvvvv2qqqqqrrrrr sssssssnnnnnoooooovvvvv2qqqqqrrrrr ssssssssnnnnnoooooovvvvv2qqqqqrrrrr
+            sssssstttttoooooovvvvvwwwwxxxxxxx ssssssstttttoooooovvvvvwwwwxxxxxxx sssssssstttttoooooovvvvvwwwwxxxxxxx
+            sssssstttttoooooovvvvvwwwwxxxxxxx ssssssstttttoooooovvvvvwwwwxxxxxxx sssssssstttttoooooovvvvvwwwwxxxxxxx
+            sssssstttttuuuuuuvvvvvwwwwxxxxxxx ssssssstttttuuuuuuvvvvvwwwwxxxxxxx sssssssstttttuuuuuuvvvvvwwwwxxxxxxx
+
+            aaaaaa5bbbbbbbbccccccdddddeeeeefffff aaaaaa5bbbbbbbbccccccdddddeeeeefffff
+            gggggggbbbbbbbbccccccdddddeeeeefffff gggggggbbbbbbbbccccccdddddeeeeefffff
+            gggggggbbbbbbbbccccccdddddeeeeefffff gggggggbbbbbbbbccccccdddddeeeeefffff
+            gggggggbbbbbbbbccccccdddddeeeee4llll gggggggbbbbbbbbccccccdddddeeeee4llll
+            ggggggg6hhhhhhhccccccjjjjjjjkkkkllll ggggggg6hhhhhhhccccccjjjjjjjkkkkllll
+            ggggggg6hhhhhhhiiiii1jjjjjjjkkkkllll ggggggg6hhhhhhhiiiii1jjjjjjjkkkkllll
+            7mmmmmmmhhhhhhhiiiii1jjjjjjjkkkkllll 7mmmmmmmhhhhhhhiiiii1jjjjjjjkkkkllll
+            7mmmmmmm3nnnnn0iiiiippppppqqqqqrrrrr 7mmmmmmmhhhhhhhiiiiippppppqqqqq8llll
+            7mmmmmmm3nnnnnooooooppppppqqqqqrrrrr 7mmmmmmm3nnnnn0iiiiippppppqqqqqrrrrr
+            sssssssssnnnnnooooooppppppqqqqqrrrrr 7mmmmmmm3nnnnnooooooppppppqqqqqrrrrr
+            sssssssssnnnnnoooooovvvvv2qqqqqrrrrr sssssssssnnnnnooooooppppppqqqqqrrrrr
+            ssssssssstttttoooooovvvvvwwwwxxxxxxx sssssssssnnnnnoooooovvvvv2qqqqqrrrrr
+            ssssssssstttttoooooovvvvvwwwwxxxxxxx ssssssssstttttoooooovvvvvwwwwxxxxxxx
+            ssssssssstttttuuuuuuvvvvvwwwwxxxxxxx ssssssssstttttoooooovvvvvwwwwxxxxxxx
+                                                 ssssssssstttttuuuuuuvvvvvwwwwxxxxxxx
+
+            aaaaaa5bbbbbbbbccccccdddddeeeeeffffff
+            gggggggbbbbbbbbccccccdddddeeeeeffffff
+            gggggggbbbbbbbbccccccdddddeeeeeffffff
+            gggggggbbbbbbbbccccccdddddeeeee4lllll
+            ggggggg6hhhhhhhccccccjjjjjjjkkkklllll
+            ggggggg6hhhhhhhiiiii1jjjjjjjkkkklllll
+            7mmmmmmmhhhhhhhiiiii1jjjjjjjkkkklllll
+            7mmmmmmmhhhhhhhiiiiippppppqqqqq8lllll
+            7mmmmmmm3nnnnn0iiiiippppppqqqqqrrrrrr
+            7mmmmmmm3nnnnnooooooppppppqqqqqrrrrrr
+            sssssssssnnnnnooooooppppppqqqqqrrrrrr
+            sssssssssnnnnnoooooovvvvv2qqqqqrrrrrr
+            ssssssssstttttoooooovvvvvwwwwxxxxxxx9
+            ssssssssstttttoooooovvvvvwwwwxxxxxxx9
+            ssssssssstttttuuuuuuvvvvvwwwwxxxxxxx9
+        """ )
+
+    def test_Insert_LockTest_Small(self): # Created in flex using "new unittest Insert_LockTest_Small"
+        self.assertFlexSequence( [
+            "reset ; break 1 2x3 1",
+            "insert 34 2",
+            "reset ; break 1 2x3 1 ; join 24 35 ; rename 6 4",
+            "insert 32 2",
+            "reset ; break 1 3x2 1 ; join 12 56 ; rename 345 234",
+            "insert 14 2",
+        ], """
+            12 1122 12 1112 112 112
+            34 3004 32 3002 344 302
+            56 5566 34 3444     302
+                                344
+        """ )
+
+    def test_Insert_WindowgramEdge_Full(self): # Created in flex using "new unittest Insert_WindowgramEdge_Full"
+        self.assertFlexSequence( [
+            "break 1 2x2 ; scale 20x10",
+            "insert left * 1 L",
+            "insert right * 1 R",
+            "insert top * 1 T",
+            "insert bottom * 1 B",
+        ], """
+            00000000001111111111 L00000000001111111111 L00000000001111111111R TTTTTTTTTTTTTTTTTTTTTT
+            00000000001111111111 L00000000001111111111 L00000000001111111111R L00000000001111111111R
+            00000000001111111111 L00000000001111111111 L00000000001111111111R L00000000001111111111R
+            00000000001111111111 L00000000001111111111 L00000000001111111111R L00000000001111111111R
+            00000000001111111111 L00000000001111111111 L00000000001111111111R L00000000001111111111R
+            22222222223333333333 L22222222223333333333 L22222222223333333333R L00000000001111111111R
+            22222222223333333333 L22222222223333333333 L22222222223333333333R L22222222223333333333R
+            22222222223333333333 L22222222223333333333 L22222222223333333333R L22222222223333333333R
+            22222222223333333333 L22222222223333333333 L22222222223333333333R L22222222223333333333R
+            22222222223333333333 L22222222223333333333 L22222222223333333333R L22222222223333333333R
+                                                                              L22222222223333333333R
+
+            TTTTTTTTTTTTTTTTTTTTTT
+            L00000000001111111111R
+            L00000000001111111111R
+            L00000000001111111111R
+            L00000000001111111111R
+            L00000000001111111111R
+            L22222222223333333333R
+            L22222222223333333333R
+            L22222222223333333333R
+            L22222222223333333333R
+            L22222222223333333333R
+            BBBBBBBBBBBBBBBBBBBBBB
+        """ )
+
+    def test_Insert_WindowgramEdge_Partial(self): # Created in flex using "new unittest Insert_WindowgramEdge_Partial"
+        self.assertFlexSequence( [
+            "reset ; break 1 4x2 ; scale 40x10",
+            "insert left 4 1 L",
+            "insert right 3 1 R",
+            "insert top 0 1 T",
+            "insert bottom 7 1 B",
+            "insert top 12 1 t",
+            "insert bottom 56 1 b",
+        ], """
+            0000000000111111111122222222223333333333 00000000000111111111122222222223333333333
+            0000000000111111111122222222223333333333 00000000000111111111122222222223333333333
+            0000000000111111111122222222223333333333 00000000000111111111122222222223333333333
+            0000000000111111111122222222223333333333 00000000000111111111122222222223333333333
+            0000000000111111111122222222223333333333 00000000000111111111122222222223333333333
+            4444444444555555555566666666667777777777 L4444444444555555555566666666667777777777
+            4444444444555555555566666666667777777777 L4444444444555555555566666666667777777777
+            4444444444555555555566666666667777777777 L4444444444555555555566666666667777777777
+            4444444444555555555566666666667777777777 L4444444444555555555566666666667777777777
+            4444444444555555555566666666667777777777 L4444444444555555555566666666667777777777
+
+            00000000000111111111122222222223333333333R TTTTTTTTTTT111111111122222222223333333333R
+            00000000000111111111122222222223333333333R 00000000000111111111122222222223333333333R
+            00000000000111111111122222222223333333333R 00000000000111111111122222222223333333333R
+            00000000000111111111122222222223333333333R 00000000000111111111122222222223333333333R
+            00000000000111111111122222222223333333333R 00000000000111111111122222222223333333333R
+            L44444444445555555555666666666677777777777 00000000000111111111122222222223333333333R
+            L44444444445555555555666666666677777777777 L44444444445555555555666666666677777777777
+            L44444444445555555555666666666677777777777 L44444444445555555555666666666677777777777
+            L44444444445555555555666666666677777777777 L44444444445555555555666666666677777777777
+            L44444444445555555555666666666677777777777 L44444444445555555555666666666677777777777
+                                                       L44444444445555555555666666666677777777777
+
+            TTTTTTTTTTT111111111122222222223333333333R TTTTTTTTTTTtttttttttttttttttttt3333333333R
+            00000000000111111111122222222223333333333R TTTTTTTTTTT111111111122222222223333333333R
+            00000000000111111111122222222223333333333R 00000000000111111111122222222223333333333R
+            00000000000111111111122222222223333333333R 00000000000111111111122222222223333333333R
+            00000000000111111111122222222223333333333R 00000000000111111111122222222223333333333R
+            00000000000111111111122222222223333333333R 00000000000111111111122222222223333333333R
+            L44444444445555555555666666666677777777777 00000000000111111111122222222223333333333R
+            L44444444445555555555666666666677777777777 L44444444445555555555666666666677777777777
+            L44444444445555555555666666666677777777777 L44444444445555555555666666666677777777777
+            L44444444445555555555666666666677777777777 L44444444445555555555666666666677777777777
+            L44444444445555555555666666666677777777777 L44444444445555555555666666666677777777777
+            L444444444455555555556666666666BBBBBBBBBBB L44444444445555555555666666666677777777777
+                                                       L444444444455555555556666666666BBBBBBBBBBB
+
+            TTTTTTTTTTTtttttttttttttttttttt3333333333R
+            TTTTTTTTTTT111111111122222222223333333333R
+            00000000000111111111122222222223333333333R
+            00000000000111111111122222222223333333333R
+            00000000000111111111122222222223333333333R
+            00000000000111111111122222222223333333333R
+            00000000000111111111122222222223333333333R
+            L44444444445555555555666666666677777777777
+            L44444444445555555555666666666677777777777
+            L44444444445555555555666666666677777777777
+            L44444444445555555555666666666677777777777
+            L44444444445555555555666666666677777777777
+            L444444444455555555556666666666BBBBBBBBBBB
+            L4444444444bbbbbbbbbbbbbbbbbbbbBBBBBBBBBBB
+        """ )
+
+    def test_Insert_ExamplesFromOutline(self): # Created in flex using "new unittest Insert_ExamplesFromOutline"
+        self.assertFlexSequence( [
+            "reset ; break 1 3x3 1",
+            "reset ; break 1 3x3 1 ; insert v 12 2 X",
+            "reset ; break 1 3x3 1 ; insert r 3 1 X",
+            "reset ; break 1 3x3 1 ; insert r * 1 X",
+            "reset ; break 1 3x3 1 ; insert v 1245 1 X",
+        ], """
+            123 1XX23 123X 123X 1X23
+            456 44556 4566 456X 4X56
+            789 77889 7899 789X 7789
+        """ )
+
+    def test_Insert_Various_1(self): # Created in flex using "new unittest Insert_Various_1"
+        self.assertFlexSequence( [
+            "break 1 3x3 1",
+            "insert 12 4",
+            "insert 23 2",
+            "insert 58 2",
+            "insert 69 1",
+            "insert r * 1",
+            "insert l * 1",
+            "insert t * 1",
+            "insert b * 1",
+        ], """
+            123 1000023 100002aa3 100002aa3 100002aa3 100002aa3d e100002aa3d fffffffffff fffffffffff
+            456 4445556 444555566 444555566 444555566 444555566d e444555566d e100002aa3d e100002aa3d
+            789 7778889 777888899 444bbbb66 444bbbb66 444bbbb66d e444bbbb66d e444555566d e444555566d
+                                  777bbbb99 444bbbbcc 444bbbbccd e444bbbbccd e444bbbb66d e444bbbb66d
+                                  777888899 777bbbb99 777bbbb99d e777bbbb99d e444bbbbccd e444bbbbccd
+                                            777888899 777888899d e777888899d e777bbbb99d e777bbbb99d
+                                                                             e777888899d e777888899d
+                                                                                         ggggggggggg
+        """ )
+
+    def test_Insert_Various_2(self): # Created in flex using "new unittest Insert_Various_2"
+        self.assertFlexSequence( [
+            "reset ; break 1 5x4 ; scale 5x:2x",
+            "ins v 23:567abcfgh 45 A 100%",
+            "ins A5 2",
+        ], """
+            0000011111222223333344444 000001111122222AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA3333344444
+            0000011111222223333344444 000001111122222AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA3333344444
+            5555566666777778888899999 5555555555555555555566666666666666666666777777777777777777778888899999
+            5555566666777778888899999 5555555555555555555566666666666666666666777777777777777777778888899999
+            aaaaabbbbbcccccdddddeeeee aaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccccccdddddeeeee
+            aaaaabbbbbcccccdddddeeeee aaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccccccdddddeeeee
+            fffffggggghhhhhiiiiijjjjj ffffffffffffffffffffgggggggggggggggggggghhhhhhhhhhhhhhhhhhhhiiiiijjjjj
+            fffffggggghhhhhiiiiijjjjj ffffffffffffffffffffgggggggggggggggggggghhhhhhhhhhhhhhhhhhhhiiiiijjjjj
+
+            000001111122222AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA3333344444
+            000001111122222AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA3333344444
+            000001111122222kkkkk66666666666666666666777777777777777777773333344444
+            000001111122222kkkkk66666666666666666666777777777777777777778888899999
+            5555555555555555555566666666666666666666777777777777777777778888899999
+            5555555555555555555566666666666666666666777777777777777777778888899999
+            aaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccccccdddddeeeee
+            aaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccccccdddddeeeee
+            ffffffffffffffffffffgggggggggggggggggggghhhhhhhhhhhhhhhhhhhhiiiiijjjjj
+            ffffffffffffffffffffgggggggggggggggggggghhhhhhhhhhhhhhhhhhhhiiiiijjjjj
+        """ )
+
+    def test_Insert_Various_3(self): # Created in flex using "new unittest Insert_Various_3"
+        self.assertFlexSequence( [
+            "reset ; break 1 4x3 d ; scale 5x:3x",
+            "insert vertical hilm 2",
+            "insert vertical efij 2",
+            "insert vertical jkno 2",
+            "insert horizontal deh0i 2",
+            "insert horizontal i1jmn 2",
+            "insert top fg 2",
+            "insert right ko 2",
+            "insert bottom mn 2",
+            "insert left lh 2",
+        ], """
+            dddddeeeeefffffggggg ddddddeeeeeefffffggggg ddddddeeeeee11fffffggggg ddddddeeeeee11ffffffgggggg
+            dddddeeeeefffffggggg ddddddeeeeeefffffggggg ddddddeeeeee11fffffggggg ddddddeeeeee11ffffffgggggg
+            dddddeeeeefffffggggg ddddddeeeeeefffffggggg ddddddeeeeee11fffffggggg ddddddeeeeee11ffffffgggggg
+            hhhhhiiiiijjjjjkkkkk hhhhh00iiiiijjjjjkkkkk hhhhh00iiiii11jjjjjkkkkk hhhhh00iiiii11jjjjj22kkkkk
+            hhhhhiiiiijjjjjkkkkk hhhhh00iiiiijjjjjkkkkk hhhhh00iiiii11jjjjjkkkkk hhhhh00iiiii11jjjjj22kkkkk
+            hhhhhiiiiijjjjjkkkkk hhhhh00iiiiijjjjjkkkkk hhhhh00iiiii11jjjjjkkkkk hhhhh00iiiii11jjjjj22kkkkk
+            lllllmmmmmnnnnnooooo lllll00mmmmmnnnnnooooo lllll00mmmmmmnnnnnnooooo lllll00mmmmmmnnnnnn22ooooo
+            lllllmmmmmnnnnnooooo lllll00mmmmmnnnnnooooo lllll00mmmmmmnnnnnnooooo lllll00mmmmmmnnnnnn22ooooo
+            lllllmmmmmnnnnnooooo lllll00mmmmmnnnnnooooo lllll00mmmmmmnnnnnnooooo lllll00mmmmmmnnnnnn22ooooo
+
+            ddddddeeeeee11ffffffgggggg ddddddeeeeee11ffffffgggggg ddddddeeeeee11555555555555
+            ddddddeeeeee11ffffffgggggg ddddddeeeeee11ffffffgggggg ddddddeeeeee11555555555555
+            ddddddeeeeee11ffffffgggggg ddddddeeeeee11ffffffgggggg ddddddeeeeee11ffffffgggggg
+            33333333333311ffffffgggggg 33333333333311ffffffgggggg ddddddeeeeee11ffffffgggggg
+            33333333333311jjjjj22kkkkk 33333333333311jjjjj22kkkkk ddddddeeeeee11ffffffgggggg
+            hhhhh00iiiii11jjjjj22kkkkk hhhhh00iiiii11jjjjj22kkkkk 33333333333311ffffffgggggg
+            hhhhh00iiiii11jjjjj22kkkkk hhhhh00iiiii11jjjjj22kkkkk 33333333333311jjjjj22kkkkk
+            hhhhh00iiiii11jjjjj22kkkkk hhhhh00iiiii11jjjjj22kkkkk hhhhh00iiiii11jjjjj22kkkkk
+            lllll00mmmmmmnnnnnn22ooooo hhhhh0044444444444422kkkkk hhhhh00iiiii11jjjjj22kkkkk
+            lllll00mmmmmmnnnnnn22ooooo lllll0044444444444422ooooo hhhhh00iiiii11jjjjj22kkkkk
+            lllll00mmmmmmnnnnnn22ooooo lllll00mmmmmmnnnnnn22ooooo hhhhh0044444444444422kkkkk
+                                       lllll00mmmmmmnnnnnn22ooooo lllll0044444444444422ooooo
+                                       lllll00mmmmmmnnnnnn22ooooo lllll00mmmmmmnnnnnn22ooooo
+                                                                  lllll00mmmmmmnnnnnn22ooooo
+                                                                  lllll00mmmmmmnnnnnn22ooooo
+
+            ddddddeeeeee1155555555555555 ddddddeeeeee1155555555555555 ddddddddeeeeee1155555555555555
+            ddddddeeeeee1155555555555555 ddddddeeeeee1155555555555555 ddddddddeeeeee1155555555555555
+            ddddddeeeeee11ffffffgggggggg ddddddeeeeee11ffffffgggggggg ddddddddeeeeee11ffffffgggggggg
+            ddddddeeeeee11ffffffgggggggg ddddddeeeeee11ffffffgggggggg ddddddddeeeeee11ffffffgggggggg
+            ddddddeeeeee11ffffffgggggggg ddddddeeeeee11ffffffgggggggg ddddddddeeeeee11ffffffgggggggg
+            33333333333311ffffffgggggggg 33333333333311ffffffgggggggg 3333333333333311ffffffgggggggg
+            33333333333311jjjjj22kkkkk66 33333333333311jjjjj22kkkkk66 3333333333333311jjjjj22kkkkk66
+            hhhhh00iiiii11jjjjj22kkkkk66 hhhhh00iiiii11jjjjj22kkkkk66 88hhhhh00iiiii11jjjjj22kkkkk66
+            hhhhh00iiiii11jjjjj22kkkkk66 hhhhh00iiiii11jjjjj22kkkkk66 88hhhhh00iiiii11jjjjj22kkkkk66
+            hhhhh00iiiii11jjjjj22kkkkk66 hhhhh00iiiii11jjjjj22kkkkk66 88hhhhh00iiiii11jjjjj22kkkkk66
+            hhhhh0044444444444422kkkkk66 hhhhh0044444444444422kkkkk66 88hhhhh0044444444444422kkkkk66
+            lllll0044444444444422ooooo66 lllll0044444444444422ooooo66 88lllll0044444444444422ooooo66
+            lllll00mmmmmmnnnnnn22ooooo66 lllll00mmmmmmnnnnnn22ooooo66 88lllll00mmmmmmnnnnnn22ooooo66
+            lllll00mmmmmmnnnnnn22ooooo66 lllll00mmmmmmnnnnnn22ooooo66 88lllll00mmmmmmnnnnnn22ooooo66
+            lllll00mmmmmmnnnnnn22ooooo66 lllll00mmmmmmnnnnnn22ooooo66 88lllll00mmmmmmnnnnnn22ooooo66
+                                         lllll0077777777777722ooooo66 88lllll0077777777777722ooooo66
+                                         lllll0077777777777722ooooo66 88lllll0077777777777722ooooo66
+        """ )
+
+    def test_Insert_Various_4(self): # Created in flex using "new unittest Insert_Various_4"
+        self.assertFlexSequence( [
+            "break 1 4x2 1",
+            "insert 78:1234 12",
+        ], """
+            1234 1111222233334444
+            5678 5670000000000008
+        """ )
+
+
+
 ##----------------------------------------------------------------------------------------------------------
 ##
 ## Keep this note for adding new unit tests for flex
@@ -1522,6 +2007,7 @@ class Test_ReadmeDemonstrations(SenseTestCase):
             "rename Nn Dd",
             "swap z s Ll Dd",
             "drag left BDLbdl left 50%",
+            "insert left s:BDLbdl 6",
         ], """
             1111111111111111111111111zzzzzzzzzzzz 1111111111111111111111111zzzzzzzzzzzz
             1111111111111111111111111zzzzzzzzzzzz 1111111111111111111111111zzzzzzzzzzzz
@@ -1545,16 +2031,16 @@ class Test_ReadmeDemonstrations(SenseTestCase):
             sssssssssssssssssssssssssbbbblllldddd zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
             sssssssssssssssssssssssssbbbblllldddd zzzzzzzzzzzzzzzzzzzzzzzzzbbbbddddllll
 
-            1111111111111ssssssssssssssssssssssss
-            1111111111111ssssssssssssssssssssssss
-            1111111111111BBBBBBBBDDDDDDDDLLLLLLLL
-            1111111111111BBBBBBBBDDDDDDDDLLLLLLLL
-            1111111111111BBBBBBBBDDDDDDDDLLLLLLLL
-            1111111111111BBBBBBBBDDDDDDDDLLLLLLLL
-            1111111111111bbbbbbbbddddddddllllllll
-            zzzzzzzzzzzzzbbbbbbbbddddddddllllllll
-            zzzzzzzzzzzzzbbbbbbbbddddddddllllllll
-            zzzzzzzzzzzzzbbbbbbbbddddddddllllllll
+            1111111111111ssssssssssssssssssssssss 1111111111111000000ssssssssssssssssssssssss
+            1111111111111ssssssssssssssssssssssss 1111111111111000000ssssssssssssssssssssssss
+            1111111111111BBBBBBBBDDDDDDDDLLLLLLLL 1111111111111BBBBBBBBBBDDDDDDDDDDLLLLLLLLLL
+            1111111111111BBBBBBBBDDDDDDDDLLLLLLLL 1111111111111BBBBBBBBBBDDDDDDDDDDLLLLLLLLLL
+            1111111111111BBBBBBBBDDDDDDDDLLLLLLLL 1111111111111BBBBBBBBBBDDDDDDDDDDLLLLLLLLLL
+            1111111111111BBBBBBBBDDDDDDDDLLLLLLLL 1111111111111BBBBBBBBBBDDDDDDDDDDLLLLLLLLLL
+            1111111111111bbbbbbbbddddddddllllllll 1111111111111bbbbbbbbbbddddddddddllllllllll
+            zzzzzzzzzzzzzbbbbbbbbddddddddllllllll zzzzzzzzzzzzzbbbbbbbbbbddddddddddllllllllll
+            zzzzzzzzzzzzzbbbbbbbbddddddddllllllll zzzzzzzzzzzzzbbbbbbbbbbddddddddddllllllllll
+            zzzzzzzzzzzzzbbbbbbbbddddddddllllllll zzzzzzzzzzzzzbbbbbbbbbbddddddddddllllllllll
         """ )
 
 
