@@ -2983,8 +2983,8 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     if spread is None: spread = "50%"
     if size_ValidUnit(spread) is False: # Ignore None (not percentage or multiplier) and True (valid range)
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Spread must be equivalent the range 0% <-> 100%" ) )
-    res_spread = size_ConvertToCharacters(spread, res_size + 1) # Favor top/left
-    if res_spread == res_size + 1 and size_ValidUnit(spread) is True: res_spread = res_size # Favor top/left fix
+    res_spread = size_ConvertToCharacters(spread, res_size + 1)                             # Favor top/left
+    if res_spread == res_size + 1 and size_ValidUnit(spread) is True: res_spread = res_size # Favor top/left
     if res_spread < 0 or res_spread > res_size:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Spread value is not in range, try a percentage" ) )
     spread = None
@@ -3000,7 +3000,7 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     panes_in_use_message = panes_in_use_message_generate( panes_in_use )
     if panes_in_use_message: return fpp_PRIVATE.flexsense['notices'].append( FlexError( panes_in_use_message ) )
     used, unused = newpanes_RebuildPaneListsInPreferentialOrder( used, unused, newpane )
-    # Create a blank target windowgram compatible with masking (for error checking)
+    # Create a blank target windowgram compatible with masking (used for error checking)
     wgw_new = wgw if res_hint == "h" else wgw + res_size
     wgh_new = wgh if res_hint == "v" else wgh + res_size
     wgout = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_X, dict(x=1, w=wgw_new, y=1, h=wgh_new)))
@@ -3016,8 +3016,8 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     # Two pass assembly; there will be overdraw with a scalegroup, but layering is simpler and the result is identical
     # Pass 1:
     #   A1) Fill in the new inserted pane (minimal edge)
-    #   A2) Copy the locked portions of the surrounding gap (optimal edge)
-    #   A3) Fill in the surrounding gap according to the [spread] value (windowgram split)
+    #   A2) Copy the locked portions of the surrounding gap (optimal edge) / inline smudgecore
+    #   A3) Fill in the surrounding gap according to the [spread] value (windowgram split) / inline smudgecore
     #   A4) Copy the original windowgram halves
     l, m, r = axis_location, axis_location + res_spread, axis_location + res_size
     wgc_i = wg.Export_Chars()
@@ -3028,7 +3028,7 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     def lock_detection(res_edgepanes, wgc_i, wge, xpos, ypos, threshold):
         if ypos == threshold or wge: return None # No lock processing (A2), also if wge != 0 then optimal == minimal
         return 0 if wgc_i[ypos][xpos-1] in res_edgepanes else -1 if wgc_i[ypos][xpos] in res_edgepanes else 0
-    lock_t = lock_detection(res_edgepanes, wgc_i, wge, l, minimal[0][1]-1, 0)
+    lock_t = lock_detection(res_edgepanes, wgc_i, wge, l, minimal[0][1]-1, -1)
     lock_b = lock_detection(res_edgepanes, wgc_i, wge, l, minimal[0][2], len(wgc_i))
     for y, (row_i, row_o) in enumerate(zip(wgc_i, wgc_o)):
         run = []
@@ -3062,7 +3062,7 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
         wgcrop = Windowgram( scalecore( wgcrop.Export_String(), sw, sh ) )
         # Paste the scaled cropped windowgram into the output windowgram using the output mask
         wgout.CopyMasked_In(wgms_o, wgcrop)
-    # Restore correct orientation
+    # Restore original orientation
     if res_hint == "h": transposer()
     # Replace windowgram
     fpp_PRIVATE.wg.Import_Wg( wgout )
