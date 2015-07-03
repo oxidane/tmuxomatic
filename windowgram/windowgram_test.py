@@ -1804,8 +1804,8 @@ class Test_FlexModifier_Insert(SenseTestCase):
     def test_Insert_Various_2(self): # Created in flex using "new unittest Insert_Various_2"
         self.assertFlexSequence( [
             "reset ; break 1 5x4 ; scale 5x:2x",
-            "ins v 23:567abcfgh 45 A 100%",
-            "ins A5 2",
+            "insert vertical 23:567abcfgh 45 A 100%",
+            "insert A5 2",
         ], """
             0000011111222223333344444 000001111122222AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA3333344444
             0000011111222223333344444 000001111122222AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA3333344444
