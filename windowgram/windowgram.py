@@ -1828,11 +1828,11 @@ def size_ConvertToCharacters(arg, base_characters):
     return None
 
 def size_ValidUnit(arg):
-    # If percentage or multiplier, and if 0.0x-1.0x or 0.0%-100.0%, return True
+    # Return None if not percentage or multiplier, otherwise True if unit (0.0x-1.0x or 0.0%-100.0%) else False
     if size_GetType(arg) is not None:
         if arg_is_multiplier(arg): return True if float(arg[:-1]) >= 0.0 and float(arg[:-1]) <= 1.0 else False
         if arg_is_percentage(arg): return True if float(arg[:-1]) >= 0.0 and float(arg[:-1]) <= 100.0 else False
-    return False
+    return None
 
 ##
 ## Flex: Handling of newpanes parameter
@@ -3023,11 +3023,13 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     wgc_i = wg.Export_Chars()
     wgc_o = wgout.Export_Chars()
     wgc_x = []
-    def lock_detection(res_edgepanes, wgc_i, xpos, ypos, threshold):
-        if ypos == threshold: return None
+    wge = -1 if minimal[0][0] == 0 else -2 if minimal[0][0] == len(wgc_i[0]) else 0 # Nonzero if edge is windowgram edge
+    if wge and optimal != minimal: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Pass 1 edge error" ) )
+    def lock_detection(res_edgepanes, wgc_i, wge, xpos, ypos, threshold):
+        if ypos == threshold or wge: return None # No lock processing (A2), also if wge != 0 then optimal == minimal
         return 0 if wgc_i[ypos][xpos-1] in res_edgepanes else -1 if wgc_i[ypos][xpos] in res_edgepanes else 0
-    lock_t = lock_detection(res_edgepanes, wgc_i, l, minimal[0][1]-1, 0)
-    lock_b = lock_detection(res_edgepanes, wgc_i, l, minimal[0][2], len(wgc_i))
+    lock_t = lock_detection(res_edgepanes, wgc_i, wge, l, minimal[0][1]-1, 0)
+    lock_b = lock_detection(res_edgepanes, wgc_i, wge, l, minimal[0][2], len(wgc_i))
     for y, (row_i, row_o) in enumerate(zip(wgc_i, wgc_o)):
         run = []
         for x in range(len(row_o)):
@@ -3036,8 +3038,11 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
                 elif y >= optimal[0][1] and y < optimal[0][2]:
                     if y < minimal[0][1]:                       run.append( row_i[l + lock_t] )                     # A2
                     if y >= minimal[0][2]:                      run.append( row_i[l + lock_b] )                     # A2
-                else:                                           run.append( row_i[l-1] if x < m else row_i[l] )     # A3
-            else:                                               run.append( row_i[x if x < l else (x-res_size)] )   # A4
+                else:
+                    if wge:                                     run.append( row_i[l + wge + 1] )                    # A3
+                    else:                                       run.append( row_i[l-1] if x < m else row_i[l] )     # A3
+            else:
+                                                                run.append( row_i[x if x < l else (x-res_size)] )   # A4
         wgc_x.append( run )
     wgout.Import_Chars(wgc_x)
     if wgout.Panes_HasPane(MASKPANE_X): # The entire output windowgram should have been overwritten or an error occurred
