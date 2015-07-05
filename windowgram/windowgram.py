@@ -1278,7 +1278,7 @@ def resolve_size(size, axis_length, inverse, showinv, restrict=True): # error_or
 ##
 ## Scale core ... Scales a windowgram
 ##
-## Callers: scale, break, drag
+## Callers: scale, break, drag, insert
 ##
 
 def scalecore_v1(windowgram_string, w_chars, h_chars):
@@ -1293,7 +1293,6 @@ def scalecore_v1(windowgram_string, w_chars, h_chars):
         return int(r) + 1
     def scale_windowgram(list_panes, ax, ay): # lost_count
         # Scales the windowgram
-        lost = 0
         for paneid in list_panes.keys():
             pane = list_panes[paneid]
             # The following were conditional prior to 2.4, removed to allow scale to 0 since it's handled by caller
@@ -1303,8 +1302,6 @@ def scalecore_v1(windowgram_string, w_chars, h_chars):
             pane['y'] = scale_one( pane['y'], ay )
             pane['w'] -= pane['x']
             pane['h'] -= pane['y']
-            if not pane['x'] or not pane['y'] or not pane['w'] or not pane['h']: lost += 1
-        return lost
     # Get pane list
     list_panes = Windowgram(windowgram_string).Export_Parsed()
     # Set the multipliers
@@ -1366,7 +1363,7 @@ def scalecore(windowgram, w_chars, h_chars, retry=None): # TODO: Scale by wg to 
 ##
 ## Group core ... Tests group of panes for contiguity, returns group capability, if panes are missing it suggests them
 ##
-## Callers: join, drag
+## Callers: join, drag, insert
 ##
 
 class GroupStatus:
@@ -1415,7 +1412,7 @@ def groupcore(wg, panes): # flag_groupstatus, string_suggestions
 ##
 ## Edge core ... Tests group of panes for contiguous edge and if valid reduces it to a common form for processing
 ##
-## Callers: drag
+## Callers: drag, insert
 ##
 
 class EdgeStatus:
@@ -1654,7 +1651,7 @@ def edgecore_edgetoedge(axis, edge, width, height):
 ##
 ## Smudge core ... This copies the border of specified edge in the perpendicular direction of length
 ##
-## Callers: drag
+## Callers: drag, insert (inline)
 ##
 
 def smudgecore(wg, edge, axis, length, direction, run=None): # wg
