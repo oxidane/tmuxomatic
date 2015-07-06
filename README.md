@@ -265,7 +265,7 @@ For this demonstration, we modify the windowgram from the previous demonstration
 
 **Insert**:
 
-> Insert to the `left` of pane `s` (scaling group `BDLbdl`), a pane `6` characters wide.
+> Insert a pane to the `left` of pane `s` (while scaling group `BDLbdl`) exactly `6` characters wide
 
 	flex> insert left s:BDLbdl 6
 
