@@ -1784,13 +1784,13 @@ flexsense_reset = {
 ##
 
 def arg_is_multiplier(arg):
-    if type(arg) is str:
+    if type(arg) is str and len(arg) > 1:
         if arg[:-1] == "".join([ch for ch in arg[:-1] if ch in "+-0123456789.,"]):
             if arg[-1:] == "x" or arg[-1:] == "X" or arg[-1:] == "*": return True
     return False
 
 def arg_is_percentage(arg):
-    if type(arg) is str:
+    if type(arg) is str and len(arg) > 1:
         if arg[:-1] == "".join([ch for ch in arg[:-1] if ch in "+-0123456789.,"]):
             if arg[-1:] == "%": return True
     return False
@@ -2462,8 +2462,8 @@ def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
     if axis_length < 2: # Single character length on the specified axis
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Pane is too small to be split in that way" ) )
     # Verify size
-    error, inverse, size_chars = resolve_size(size, axis_length, inverse, showinv)
-    if error: return fpp_PRIVATE.flexsense['notices'].append( error )
+    (error, inverse, size_chars), size = resolve_size(size, axis_length, inverse, showinv), None
+    if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( error ) )
     if inverse: size_chars = axis_length - size_chars # Flip
     # Verify newpanes ... Set to first available if not specified
     if len(unused) < 1: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Insufficient panes to split" ) )
