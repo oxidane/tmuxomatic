@@ -922,7 +922,8 @@ class SessionFile(object):
 ##      link [data...]                              add line to directions
 ##      unlink <line>                               remove from directions by line number
 ##      mvlink <line_from> <line_to>                move line in directions
-##      clonewindow <newname>                       copy current selected window into a new window and select
+##      duplicate <newname>                         copy current selected window into a new window and select
+##      erase <window>                              remove a windowgram from the session (maybe "deletewindow")
 ##      arguments <command>                         like help but only shows the arguments
 ##      examples <command>                          like help but only shows the examples
 ##

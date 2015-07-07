@@ -1713,9 +1713,10 @@ def smudgecore(wg, edge, axis, length, direction, run=None): # wg
 ## Possible modifiers:
 ##
 ##      breakout <pane> [shapes]                    break with axial concatenated shapes, "2x2; x 2x2 3x1; y 1 3x3 1"
-##      shuffle <panegroup1> <panegroup2>           shuffle if all bounding boxes share full edge, or are of equal size
+##      cycle <panegroup1> <panegroup2> ...         cycle if all bounding boxes share full edge, or are of equal size
 ##      move <panes1> <panes2>                      swap if both panes are defined otherwise rename (probably redundant)
 ##      blockswap <panes1> <panes2>                 swaps one block of panes for another, e.g. `BLDbld` with `1` in demo
+##      subscale <group> <xy>                       exactly like scale but on a group of panes within the windowgram
 ##
 ## Other features:
 ##
@@ -3084,23 +3085,33 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
 ##
 ## Flex: Clone
 ##
-##          The clone command takes the first group of panes (forming a full rectangle), and along the specified edge,
-##          it stretches (like scale) the surrounding windowgram to accommodate, and inserts it in.  Most useful for
-##          rapidly expanding common windowgram patterns.
+## Analogues:
 ##
-##          The [newpanes] argument follows the same order as the first <group> parameter.
+##      Cloning one pane is the same as insert
 ##
-##          Clone could be thought of as:
-##              1) insert <pane> ...        Axis 1 stretch/scale and insert
-##              2) scale ...                Axis 2 scale to fit
-##              3) rename ...               Rename the panes so they don't conflict
-##              3) copy it in
-##          This is pretty easy to implement.
+## Implementation Sketch:
 ##
-##          Requires 3 functions: public by edge, public by group, hidden internal that is core of both wrappers
+##      This command takes a group of panes (forming a full rectangle), and along the specified edge, inserts it into
+##      place with new pane ids.  If necessary, it will stretch the surrounding windowgram to accommodate, exactly like
+##      break does.  Most useful for rapidly expanding common windowgram patterns.
 ##
 ##      clone <group> <edge> [newpanes]
-##      clone <group> <how> <group> [newpanes]
+##      clone <group> <hint> <edge> [newpanes]
+##
+##      The [newpanes] argument follows the same order as the first <group> parameter.
+##
+##      Possibly implement two modes: insert and replace.  Insert is described above.  Replace would be replacing a
+##      group of panes with the cloned set.  Needs an unobtrusive qualifier.
+##
+##      This is something of a metafunction, in that it depends on other flex commands, namely insert.
+##
+##      The clone command will be very easy to implement:
+##
+##          1) copy it out              Extract group of panes to be cloned
+##          2) insert ...               Calls insert command ... Counter edge scale to fit
+##          3) scale ...                Scales up (assuring no loss of panes) to accommodate ... Edge scale to fit
+##          4) rename ...               Rename the target panes so they don't conflict with the group being cloned
+##          5) copy it in               Replace the insert pane with the renamed group
 ##
 
 # TODO
@@ -3108,7 +3119,20 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
 ##
 ## Flex: Delete
 ##
-##      delete <pane>                               remove pane from edge of window (del, clip, remove, drop, rm)
+## Analogues:
+##
+##      None
+##
+## Implementation Sketch:
+##
+##      Removes the pane and contracts the area around it accordingly.  If the user does not desire the pane loss that
+##      is the effect of this action, there are two options.  First, the user could use the `join` command, which
+##      combines multiple panes into one while preserving the surrounding windowgram.  Second, an optional pane saving
+##      measure may be implemented, which could be used to preserve panes where it's possible to do so.
+##
+##      delete <panes>                               remove one or more panes anywhere in windowgram
+##
+##      Aliases: del, clip, remove, drop, rm
 ##
 
 # TODO
@@ -3116,10 +3140,16 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
 ##
 ## Flex: Mirror
 ##
+## Analogues:
+##
+##      None
+##
+## Implementation Sketch:
+##
 ##      mirror <group>                              mirrors a group, supports *
 ##
 
-# TODO: Group
+# TODO: Optional group
 
 @flex(
     command     = "mirror",
@@ -3127,7 +3157,6 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     description = "Reverse horizontally (left/right)",
 )
 def cmd_mirror(fpp_PRIVATE):
-    # TODO: Optional pane group mirror
     if not fpp_PRIVATE.wg:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
@@ -3138,10 +3167,16 @@ def cmd_mirror(fpp_PRIVATE):
 ##
 ## Flex: Flip
 ##
+## Analogues:
+##
+##      None
+##
+## Implementation Sketch:
+##
 ##      flip <group>                                flips a group, supports *
 ##
 
-# TODO: Group
+# TODO: Optional group
 
 @flex(
     command     = "flip",
@@ -3149,7 +3184,6 @@ def cmd_mirror(fpp_PRIVATE):
     description = "Reverse vertically (top/bottom)",
 )
 def cmd_flip(fpp_PRIVATE):
-    # TODO: Optional pane group flip
     if not fpp_PRIVATE.wg:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
@@ -3159,6 +3193,12 @@ def cmd_flip(fpp_PRIVATE):
 
 ##
 ## Flex: Rotate
+##
+## Analogues:
+##
+##      None
+##
+## Implementation Sketch:
 ##
 ##      rotate <how>                                how == cw, ccw, 180, interpret 1..3 and -1..-3 as multiples of 90
 ##
