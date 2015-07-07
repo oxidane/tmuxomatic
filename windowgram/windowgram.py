@@ -597,7 +597,7 @@ class Windowgram_Convert():
     ## String -> Lines -> String ... Full cycle purification of the windowgram by stripping comments and whitespace
 
     @staticmethod
-    def Purify(windowgram):
+    def PurifyString(windowgram):
         return Windowgram_Convert.Lines_To_String( Windowgram_Convert.String_To_Lines( windowgram ) )
 
     ## Transpose Chars ... Swaps columns and rows, essentially mirror ccw90
@@ -612,7 +612,7 @@ class Windowgram_Convert():
     ## Transpose Pane ... Swaps [x with y] and [w with h] in a parsed pane (dict entry of windowgram_parsed)
 
     @staticmethod
-    def Transpose_Pane(windowgram_parsedpane):
+    def Transpose_ParsedPane(windowgram_parsedpane):
         windowgram_parsedpane_transposed = copy.deepcopy( windowgram_parsedpane )
         windowgram_parsedpane_transposed['x'], windowgram_parsedpane_transposed['y'] = \
         windowgram_parsedpane_transposed['y'], windowgram_parsedpane_transposed['x']
@@ -808,7 +808,7 @@ class Windowgram():
 
     def Import_Raw(self, windowgram_raw):
         self.Reset()
-        self.windowgram_string = Windowgram_Convert.Purify( windowgram_raw ) # Strip comments and whitespace
+        self.windowgram_string = Windowgram_Convert.PurifyString( windowgram_raw ) # Strip comments and whitespace
         self.Changed()
     def Import_String(self, windowgram_string):
         return self.Import_Raw( windowgram_string )
@@ -1021,7 +1021,7 @@ class Windowgram():
     ## Edge (sub) ... Edge format is the description of a sub edge within the windowgram: [ xy, from, to ]
     ##
 
-    def EdgeSub_PanesAlong(self, axis, edge):
+    def Edge_PanesAlongSub(self, axis, edge):
         # Returns a unique unsorted set of panes that touch the edge on either side
         windowgram_chars = Windowgram_Convert.String_To_Chars( self.windowgram_string )
         w = len(windowgram_chars[0])
@@ -1115,8 +1115,8 @@ def Windowgram_Mask_Macro_BuildSplitMasks(wg, res_hint, axis_location):
     mask_0 = dict(x=1,               w=axis_location,    y=1, h=bb)
     mask_1 = dict(x=axis_location+1, w=aa-axis_location, y=1, h=bb)
     if res_hint != "v":
-        mask_0 = Windowgram_Convert.Transpose_Pane(mask_0)
-        mask_1 = Windowgram_Convert.Transpose_Pane(mask_1)
+        mask_0 = Windowgram_Convert.Transpose_ParsedPane(mask_0)
+        mask_1 = Windowgram_Convert.Transpose_ParsedPane(mask_1)
     wgm0 = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_1, mask_0, ParsedPanes_Add(MASKPANE_0, mask_1)))
     wgm1 = Windowgram("", True).Load_Parsed(ParsedPanes_Add(MASKPANE_1, mask_1, ParsedPanes_Add(MASKPANE_0, mask_0)))
     return wgm0, wgm1
@@ -1604,7 +1604,7 @@ def edgecore(wg, group, direction=None): # status, axis, minimal, optimal
             elif direction == "l" or direction == "r":
                 # Side LR (explicit)
                 topleft = True if direction == "l" else False
-                parsedpane = Windowgram_Convert.Transpose_Pane(pane1)
+                parsedpane = Windowgram_Convert.Transpose_ParsedPane(pane1)
                 edgeruns_v += edgecore_swipeside( topleft, parsedpane, group, windowgram_chars_xy )
             else: # direction == "v" or direction == "h"
                 # Axis VH (implicit or explicit)
@@ -3028,7 +3028,7 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
         wg, wgout )
     if res_hint == "h": transposer()
     # Find panes that border the minimal edge, it may be different than res_edge ("12" from "right 1" or "vertical 12")
-    res_edgepanes = wg.EdgeSub_PanesAlong("v", minimal[0]) # Transposed hint is "v"
+    res_edgepanes = wg.Edge_PanesAlongSub("v", minimal[0]) # Transposed hint is "v"
     # Two pass assembly; there will be overdraw with a scalegroup, but layering is simpler and the result is identical
     # Pass 1:
     #   A1) Fill in the new inserted pane (minimal edge)

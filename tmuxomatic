@@ -864,7 +864,7 @@ class SessionFile(object):
         if serial < 1 or serial > self.Count_Windows():
             if warning is None: return None
             return None, "Out of range"
-        windowgram_string = Windowgram_Convert.Purify(self.windows[serial-1]['windowgram'])
+        windowgram_string = Windowgram_Convert.PurifyString(self.windows[serial-1]['windowgram'])
         return windowgram_string
     def Get_Wg(self, serial): # wg
         windowgram_string = self.Get_Windowgram(serial)

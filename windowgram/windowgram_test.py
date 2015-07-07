@@ -267,10 +267,10 @@ class Test_Windowgram_Convert(SenseTestCase):
         data_x = Windowgram_Convert.Mosaic_To_String( data_i )
         self.assertTrue( data_x == data_o )
 
-    def test_Windowgram_Convert_Purify(self):
+    def test_Windowgram_Convert_PurifyString(self):
         data_i = "\n\n1135      \n1145 # etc\n2245\n\n"
         data_o = "1135\n1145\n2245\n"
-        data_x = Windowgram_Convert.Purify( data_i )
+        data_x = Windowgram_Convert.PurifyString( data_i )
         self.assertTrue( data_x == data_o )
 
     def test_Windowgram_Convert_TransposeCharacters(self):
@@ -521,7 +521,7 @@ class Test_FlexCores(SenseTestCase):
             runs = []
             for pane in list(group):
                 parsedpane = windowgram_parsed[pane]
-                if not axis: parsedpane = Windowgram_Convert.Transpose_Pane( parsedpane )
+                if not axis: parsedpane = Windowgram_Convert.Transpose_ParsedPane( parsedpane )
                 this_runs = edgecore_swipeside( direction, parsedpane, group, windowgram_chars )
                 for run in this_runs: runs.append( run )
             return edgecore_merger( runs )
