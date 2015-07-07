@@ -1640,6 +1640,14 @@ def edgecore(wg, group, direction=None): # status, axis, minimal, optimal
     # Done
     return EdgeStatus.Valid, axis, minimal, optimal
 
+# Edge to windowgram edge alignment assessment
+
+def edgecore_windowgramedgealignment(wg, hint, edge):
+    # Hint must be an axis ... Result: -1 for left/top, -2 for right/bottom, 0 for no alignment
+    wgw, wgh = wg.Analyze_WidthHeight()
+    hint = -1 if is_long_axis_vert(hint) else -2 if is_long_axis_horz(hint) else 0
+    return (-1 if edge[0] == 0 else -2 if edge[0] == (wgw if hint == -1 else wgh) else 0) if hint else 0
+
 # Located with edgecore, but used in conjunction with smudgecore
 
 def edgecore_edgetoedge(axis, edge, width, height):
@@ -2665,6 +2673,10 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
 ##
 ##      Supports limiting pane loss, if the user sets the `limit` parameter to `yes`.
 ##
+##      Relative sizes (percentages or multipliers) are based on the amount of space available in the drag direction.
+##      When dragging an edge that aligns to the windowgram edge (i.e., expanding the windowgram), there is nothing to
+##      base this relative size on, and in this case an absolute size is required.
+##
 ##      Pushing neighboring edges to preserve panes was considered, but this would just add to the overhead with no
 ##      present advantage.  Perhaps in a future version.
 ##
@@ -2760,8 +2772,8 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
         "Edge specification error: " + status_print ) )
     # Exclude contradiction in axis, this must follow edge core since the hint may not have been specified by the user
     # Note: If they're equal they're opposite, consider that the edge axis and direction axis are different expressions
-    if (is_short_axis_vert_vhtblr(res_direction) and is_short_axis_vert_vhtblr(res_hint)) or \
-    (is_short_axis_horz_vhtblr(res_direction) and is_short_axis_horz_vhtblr(res_hint)):
+    if (is_short_axis_vert_vhtblr(res_direction) and is_short_axis_vert_vhtblr(res_hint)) \
+    or (is_short_axis_horz_vhtblr(res_direction) and is_short_axis_horz_vhtblr(res_hint)):
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The direction must go against the edge axis" ) )
     # Reduce direction to "v" or "h"
     inverse = "-" if size[0] == "-" else ""
@@ -2775,6 +2787,13 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
             return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The hint you specified is invalid" ) )
         inverse = "-" if negate_flag else ""
         showinv = "" # For TBRL do not show inverse flag
+    # If edge is along windowgram edge, a relative size (percentage or multiplier) is only valid on contraction
+    wge = edgecore_windowgramedgealignment(wg, res_hint, minimal[0]) # 0 == na, -1 == tl, -2 == br
+    if wge and (arg_is_percentage(size) or arg_is_multiplier(size)):
+        contraction = True if (negate_flag ^ (True if wge == -1 else False)) else False
+        if not contraction:
+            return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+                "Expanding a windowgram by dragging its edge requires an absolute <size>" ) )
     # Get necessary metrics, axis location is required to translate to characters, and possibly limit drag movement
     wgw, wgh = wg.Analyze_WidthHeight()
     axis_length = axis_location = optimal[0][0] # Use optimal since we're dealing with a pane grid
@@ -2863,7 +2882,7 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
             break
         wgout = drag( chars, copy.deepcopy(optimal), wg.Copy(), wgm0s.Copy(), wgm0x.Copy(), wgm1s.Copy(), wgm1x.Copy() )
         wgw, wgh = wgout.Analyze_WidthHeight()
-        if (limit and PaneList_DiffLost( wg, wgout )) or not wgw or not wgh:
+        if not wgw or not wgh or (limit and PaneList_DiffLost( wg, wgout )):
             chars_max = chars
         else:
             chars_min = chars
@@ -3017,10 +3036,8 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     #   A3) Fill in the surrounding gap according to the [spread] value (windowgram split) / inline smudgecore
     #   A4) Copy the original windowgram halves
     l, m, r = axis_location, axis_location + res_spread, axis_location + res_size
-    wgc_i = wg.Export_Chars()
-    wgc_o = wgout.Export_Chars()
-    wgc_x = []
-    wge = -1 if minimal[0][0] == 0 else -2 if minimal[0][0] == len(wgc_i[0]) else 0 # Nonzero if edge is windowgram edge
+    wgc_i, wgc_o, wgc_x = wg.Export_Chars(), wgout.Export_Chars(), []
+    wge = edgecore_windowgramedgealignment(wg, "v", minimal[0]) # Transposed hint is "v" / 0 == na, -1 == tl, -2 == br
     if wge and optimal != minimal: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Pass 1 edge error" ) )
     def lock_detection(res_edgepanes, wgc_i, wge, xpos, ypos, threshold):
         if ypos == threshold or wge: return None # No lock processing (A2), also if wge != 0 then optimal == minimal

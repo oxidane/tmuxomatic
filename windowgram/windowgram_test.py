@@ -1343,6 +1343,27 @@ class Test_FlexModifier_Drag(SenseTestCase):
                          WWWXXXYYYZZZ WWWWXXXXYYYYZZZZ
         """ )
 
+    def test_Drag_ExpandAndContract_Rel(self): # Created in flex using "new unittest Drag_ExpandAndContract_Rel"
+        self.assertFlexSequence( [
+            "scale 12x4 ; break 1 4x2 wxyzWXYZ",
+            "drag top y up 100%",
+            "drag bottom X down 100%",
+            "drag left w left 100%",
+            "drag right Z right 100%",
+            "drag top y down 25%",
+            "drag bottom X up 35%",
+            "drag left w right 17%",
+            "drag right Z left 25%",
+        ], """
+            wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxyyyzzz wxxxyyyzzz
+            wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxyyyzzz WWWXXXYYYZZZ WWWXXXYYYZZZ WXXXYYYZZZ
+            WWWXXXYYYZZZ WWWXXXYYYZZZ WWWXXXYYYZZZ WWWXXXYYYZZZ WWWXXXYYYZZZ WWWXXXYYYZZZ
+            WWWXXXYYYZZZ WWWXXXYYYZZZ WWWXXXYYYZZZ WWWXXXYYYZZZ WWWXXXYYYZZZ
+
+            wxxxyyyz
+            WXXXYYYZ
+        """, True ) # Ignore notices
+
     def test_Drag_WithAndWithoutScalegroup(self): # Created in flex using "new unittest Drag_WithAndWithoutScalegroup"
         self.assertFlexSequence( [
             "break 1 4x4 A ; scale 4x",
