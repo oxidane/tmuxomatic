@@ -1159,7 +1159,7 @@ class Test_FlexModifier_Break(SenseTestCase):
 
 class Test_FlexModifier_Drag(SenseTestCase):
 
-    def test_Drag_EdgeModify_Example1(self): # Created in flex using "new unittest Drag_EdgeModify_Example1"
+    def test_Drag_EdgeModify_Example1(self): # Created in flex using "new unittest_ignore Drag_EdgeModify_Example1"
         self.assertFlexSequence( [
             "break 1 6x5 a ; join Au.0 Bvp.1 Cwqk.2 Dxrlf.3 s.w t.Q mn.x o.R ghi.y j.S abcd.z e.T y.X z.Y",
             "drag XY right 5",
@@ -1171,7 +1171,7 @@ class Test_FlexModifier_Drag(SenseTestCase):
             XY0123 XXXXXX
         """, True ) # Ignore notices
 
-    def test_Drag_EdgeModify_Example2(self): # Created in flex using "new unittest Drag_EdgeModify_Example2"
+    def test_Drag_EdgeModify_Example2(self): # Created in flex using "new unittest_ignore Drag_EdgeModify_Example2"
         self.assertFlexSequence( [
             "break 1 6x5 a ; join Au.0 Bvp.1 Cwqk.2 Dxrlf.3 s.w t.Q mn.x o.R ghi.y j.S abcd.z e.T y.X z.Y",
             "drag right XY right 4",
@@ -1183,7 +1183,7 @@ class Test_FlexModifier_Drag(SenseTestCase):
             XY0123 XXXYYY
         """, True ) # Ignore notices
 
-    def test_Drag_EdgeModify_WithScale(self): # Created in flex using "new unittest Drag_EdgeModify_WithScale"
+    def test_Drag_EdgeModify_WithScale(self): # Created in flex using "new unittest_ignore Drag_EdgeModify_WithScale"
         self.assertFlexSequence( [
             "break 1 9x6 ; join RIzqh8 QHypg PGxo OFw NE",
             "drag right ABCJKL right 6",
@@ -1198,7 +1198,7 @@ class Test_FlexModifier_Drag(SenseTestCase):
             JKLMNOPQR JJJKKKLLL
         """, True ) # Ignore notices
 
-    def test_Drag_EdgeModify_NoScale(self): # Created in flex using "new unittest Drag_EdgeModify_NoScale"
+    def test_Drag_EdgeModify_NoScale(self): # Created in flex using "new unittest_ignore Drag_EdgeModify_NoScale"
         self.assertFlexSequence( [
             "break 1 7x7 ; join 18fm 29g 3a MFyrkd6 LExqjc KDwpi JCvo IBu HA",
             "drag right l right 10",
@@ -1214,7 +1214,7 @@ class Test_FlexModifier_Drag(SenseTestCase):
             GHIJKLM GHIIIIIIIII
         """, True ) # Ignore notices
 
-    def test_Drag_Expansion_Right(self): # Created in flex using "new unittest Drag_Expansion_Right"
+    def test_Drag_Expansion_Right(self): # Created in flex using "new unittest_ignore Drag_Expansion_Right"
         self.assertFlexSequence( [
             "break 1 2x3 o ; scale 2x:1x",
             "drag right q right 5",
@@ -1226,7 +1226,7 @@ class Test_FlexModifier_Drag(SenseTestCase):
 
     # Released 2.16 without sufficient unit testing; found and fixed the following bugs
 
-    def test_Drag_Fixed1(self): # Created in flex using "new unittest Drag_Fixed1"
+    def test_Drag_Fixed1(self): # Created in flex using "new unittest_ignore Drag_Fixed1"
         self.assertFlexSequence( [
             "break 1 2x2 1 ; scale 5x",
             "drag horizontal 1234 down 4",
@@ -1343,7 +1343,7 @@ class Test_FlexModifier_Drag(SenseTestCase):
                          WWWXXXYYYZZZ WWWWXXXXYYYYZZZZ
         """ )
 
-    def test_Drag_ExpandAndContract_Rel(self): # Created in flex using "new unittest Drag_ExpandAndContract_Rel"
+    def test_Drag_ExpandAndContract_Rel(self): # Created in flex using "new unittest_ignore Drag_ExpandAndContract_Rel"
         self.assertFlexSequence( [
             "scale 12x4 ; break 1 4x2 wxyzWXYZ",
             "drag top y up 100%",
@@ -1391,7 +1391,7 @@ class Test_FlexModifier_Drag(SenseTestCase):
             MMMMNNNNOOOOPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP MMNNOOOOOOPPPPPP
         """ )
 
-    def test_Drag_AcrossWindowgramEdge(self): # Created in flex using "new unittest Drag_AcrossWindowgramEdge"
+    def test_Drag_AcrossWindowgramEdge(self): # Created in flex using "new unittest_ignore Drag_AcrossWindowgramEdge"
         self.assertFlexSequence( [
             "scale 12 ; break 1 4x4 A",
             "drag right F left 150%",
@@ -1486,7 +1486,7 @@ class Test_FlexModifier_Insert(SenseTestCase):
             yz yzzzzz yyzzzz yyyzzz yyyyzz yyyyyz yzzzzzzzzzzz yyyzzzzzzzzz yyyyyyzzzzzz yyyyyyyyyzzz yyyyyyyyyyyz
         """ )
 
-    def test_Insert_SpreadFails(self): # Created in flex using "new unittest Insert_SpreadFails"
+    def test_Insert_SpreadFails(self): # Created in flex using "new unittest_ignore Insert_SpreadFails"
         self.assertFlexSequence( [
             "reset ; break 1 2x2 w",
             "reset ; break 1 2x2 w ; insert vertical wx 4 0 -0.0001%",
