@@ -2675,8 +2675,8 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
 ##      Supports limiting pane loss, if the user sets the `limit` parameter to `yes`.
 ##
 ##      Relative sizes (percentages or multipliers) are based on the amount of space available in the drag direction.
-##      When dragging an edge that aligns to the windowgram edge (i.e., expanding the windowgram), there is nothing to
-##      base this relative size on, and in this case an absolute size is required.
+##      When dragging a windowgram-aligned edge outward (i.e., expanding the windowgram), there is nothing in that
+##      direction to base a relative size on, so an absolute size is required.
 ##
 ##      Pushing neighboring edges to preserve panes was considered, but this would just add to the overhead with no
 ##      present advantage.  Perhaps in a future version.
@@ -2791,8 +2791,8 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     # If edge is along windowgram edge, a relative size (percentage or multiplier) is only valid on contraction
     wge = edgecore_windowgramedgealignment(wg, res_hint, minimal[0]) # 0 == na, -1 == tl, -2 == br
     if wge and (arg_is_percentage(size) or arg_is_multiplier(size)):
-        contraction = True if (negate_flag ^ (True if wge == -1 else False)) else False
-        if not contraction:
+        expansion = False if (negate_flag ^ (True if wge == -1 else False)) else True
+        if expansion:
             return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
                 "Expanding a windowgram by dragging its edge requires an absolute <size>" ) )
     # Get necessary metrics, axis location is required to translate to characters, and possibly limit drag movement
