@@ -66,6 +66,8 @@ HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
 VERSION = "2.19" # x.y: x = Major feature, y = Minor feature or bug fix
 ##
 ##  2.19    TBD         TBD
+##                      Implemented #10: Adds windows to current session if run within tmux
+##                      Optimized window creation by combining tmux commands into fewer executable calls
 ##
 ##  2.18    2015-07-03  New flex command: insert
 ##                      Fixed issues #11, #12: Better handling of the "window" directive
@@ -1542,11 +1544,115 @@ def flex_shell(session, serial=0):
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
+## Informational queries for tmux
+##
+## This will break if tmux changes output format
+##
+##----------------------------------------------------------------------------------------------------------------------
+
+class QuerySession_tmux(object):
+
+    def SessionName(self):
+        return self.session_name
+
+    def WindowID(self):
+        return self.current_window_id
+
+    def HasWindow(self, check_window_name):
+        for window_id, window_name in self.all_windows:
+            if window_name == check_window_name:
+                return True
+        return False
+
+    def __init__(self):
+        self.valid = False
+        self.error = ""
+        self.session_name = None
+        self.current_window_id = None
+        self.all_windows = None
+        self.user_wh = None
+        if "TMUX_PANE" in os.environ:
+            # We're within tmux ... Find the session and get the list of windows
+            sessions = self.tmux_query_sessionnames()
+            for session_ent in sessions:
+                windows = self.tmux_query_windowidsandnames(session_ent)
+                for window_id, window_name in windows:
+                    panes = self.tmux_query_paneids(session_ent, window_id)
+                    for pane in panes:
+                        if pane == os.environ['TMUX_PANE']:
+                            self.session_name = session_ent
+                            self.current_window_id = window_id
+                            self.all_windows = windows
+                            self.valid = True
+                            break
+                    if self.valid: break
+                if self.valid: break
+            if not self.valid:
+                self.error = "Unable to locate the corresponding tmux session for the current shell!"
+        if self.valid:
+            # As we're in tmux, get the real xterm dimensions from tmux for the user
+            self.user_wh = self.tmux_get_client_wh()
+            if not self.user_wh or type(self.user_wh) is not tuple or len(self.user_wh) != 2 \
+            or not self.user_wh[0] or not self.user_wh[1]:
+                self.error = "Could not get the width and/or height of the xterm!"
+                self.valid = False
+
+    # All tmux commands must be run using tmux_run( cmd, False, False, True ) in case printonly is being used
+
+    def tmux_get_client_wh(self): # -> error, (w, h)
+        # Gets the actual xterm width height from within a tmux pane, required for proper sizing when adding windows
+        result_w = tmux_run( EXE_TMUX + " display -p \"#{client_width}\"", False, False, True )
+        result_h = tmux_run( EXE_TMUX + " display -p \"#{client_height}\"", False, False, True )
+        try:
+            return ( int( result_w.strip().split()[0] ), int( result_h.strip().split()[0] ) )
+        except ValueError:
+            return ( 0, 0 )
+
+    def tmux_query_sessionnames(self): # -> [ name, name, ... ]
+        sessions = []
+        result = tmux_run( EXE_TMUX + " list-sessions", False, False, True )
+        if result:
+            for line in result.split("\n"):
+                name = line.split(":", 1)[0]
+                if name:
+                    sessions.append( name )
+        return sessions
+
+    def tmux_query_windowidsandnames(self, session): # -> [ [window_id, window_name], [window_id, window_name], ... ]
+        windows = []
+        result = tmux_run( EXE_TMUX + " list-windows -t " + session, False, False, True )
+        for line in result.split("\n"):
+            data = line.strip()
+            if data:
+                data = line.split(":", 1)
+                if len(data) > 1:
+                    window_id = data[0].strip()
+                    window_name = data[1].strip().split(" ", 1)[0].strip()
+                    if window_id and window_name:
+                        has_flag = sum([ 1 if window_name.endswith(ch) else 0 for ch in list("*-#!+~") ])
+                        if has_flag: window_name = window_name[:-1] # Strip tmux status line flags
+                        windows.append( [window_id, window_name] )
+        return windows
+
+    def tmux_query_paneids(self, session, window_id): # -> [ id, id, ... ]
+        panes = []
+        result = tmux_run( EXE_TMUX + " list-panes -t " + session + ":" + window_id, False, False, True )
+        for line in result.split("\n"):
+            data = line.split(" ")
+            for elem in line.split(" "):
+                if elem and elem[0] == "%":
+                    panes.append( elem )
+        return panes
+
+
+
+##----------------------------------------------------------------------------------------------------------------------
+##
 ## Processing (session file -> tmux commands)
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
+def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_session ):
     """
 
     Parse session file, build commands, execute.
@@ -1567,13 +1673,13 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
         print( "(1) Sizing    : " + [ "Absolute (characters)", "Relative (percentages)" ][ARGS.relative] )
 
     # Initialize
-    list_execution = [] # List of tmux command lists for a session, only executed on successful parsing
-    list_build = [] # Separate list per window
-    window_serial = 0 # 1+
-    window_name = ""
-    window_names_seen = [] # Assert unique window names (related to issue #8)
-    focus_window_name = None # Use window name rather than window index (supports tmux option: base-index)
-    line = "" # Loaded line stored here
+    list_execution = []         # List of tmux command lists for a session, only executed on successful parsing
+    cwd_execution = ""          # Required to set the directory for the first window
+    window_serial = 0           # 1+
+    window_name = ""            # Set later
+    window_names_seen = []      # Assert unique window names (related to issue #8)
+    focus_window_name = None    # Use window name rather than window index (supports tmux option: base-index)
+    line = ""                   # Loaded line stored here
 
     #
     # Error reporting
@@ -1626,10 +1732,22 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
             synerr(errpkg, "Window serial " + str(window_serial) + " does not have a name")
         for ix, seen_name in enumerate(window_names_seen):
             if window_name == seen_name:
-                synerr(errpkg, "As of version 2.0, window names must be unique.  The duplicate name, \"" + \
+                synerr(errpkg, "Session window names must be unique.  The duplicate name, \"" + \
                     window_name + "\", for window " + str(window_serial) + ", already used by window " + str(1+ix))
         window_names_seen.append( window_name )
         if ARGS.verbose >= 2: print("")
+
+        #
+        # If adding windows, this window name must be unique
+        # No need to check windows added during this process since we're already asserting unique names
+        #
+        if run_session.valid:
+            if ARGS.printonly: print("### ", end="")
+            if run_session.HasWindow( window_name ):
+                print("Skipping existing: " + window_name)
+                continue
+            else:
+                print("Adding new window: " + window_name)
 
         #
         # 2) Windowgram parser
@@ -1762,7 +1880,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
         #
         # 5.3) Build the execution list for: a) creating windows, b) sizing panes, c) running commands
         #
-        list_build = [] # Window is independently assembled
+        list_build = []     # Window is independently assembled
 
         #
         # 5.3a) Create window panes by splitting windows
@@ -1799,38 +1917,37 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
             #
             if first_pane: # First
                 first_pane = False
-                if window_serial == 1:
-                    # First pane of first window
+                if window_serial == 1 and not run_session.valid:
+                    # First pane of first window (if not adding windows to existing session)
                     # The shell's cwd must be set, the only other way to do this is to discard the
                     # window that is automatically created when calling "new-session".
-                    cwd = "cd " + list_panes_dir + " ; " if list_panes_dir else ""
-                    list_build.append(
-                        cwd + EXE_TMUX + " new-session -d -s " + session_name + " -n \"" + window_name + "\"" )
+                    cwd_execution = ("cd " + list_panes_dir) if list_panes_dir else ""
+                    list_build.append( "new-session -d -s " + session_name + " -n \"" + window_name + "\"" )
                     # Normally, tmux automatically renames windows based on whatever is running in the focused pane.
                     # There are two ways to fix this.  1) Add "set-option -g allow-rename off" to your ".tmux.conf".
                     # 2) Add "export DISABLE_AUTO_TITLE=true" to your shell's run commands file (e.g., ".bashrc").
                     # Here we automatically do method 1 for the user, unless the user requests otherwise.
-                    list_build.append( EXE_TMUX + " set-option -t " + session_name + " quiet on" )
+                    list_build.append( "set-option -t " + session_name + " quiet on" )
                     renaming = [ "off", "on" ][ARGS.renaming]
-                    list_build.append( EXE_TMUX + " set-option -t " + session_name + " allow-rename " + renaming )
-                    list_build.append( EXE_TMUX + " set-option -t " + session_name + " automatic-rename " + renaming )
+                    list_build.append( "set-option -t " + session_name + " allow-rename " + renaming )
+                    list_build.append( "set-option -t " + session_name + " automatic-rename " + renaming )
                 else:
-                    # First pane of successive window
-                    list_build.append( EXE_TMUX + " new-window -n \"" + window_name + "\"" + adddir )
+                    # First pane of successive window (or first window if adding to existing session)
+                    list_build.append( "new-window -n \"" + window_name + "\"" + adddir )
             else: # Successive
                 # Perform the split on this pane
-                list_build.append( EXE_TMUX + " select-pane -t " + str(list_split_paneid) )
+                list_build.append( "select-pane -t " + str(list_split_paneid) )
                 # Pane sizing
                 if ARGS.relative:
                     # Relative pane sizing (percentage)
                     percentage = str( int( float( list_split_percnt ) ) ) # Integers are required by tmux 1.8
-                    list_build.append( EXE_TMUX + " split-window -" + list_split_orient + " -p " + percentage + adddir )
+                    list_build.append( "split-window -" + list_split_orient + " -p " + percentage + adddir )
                 else:
                     # Absolute pane sizing (characters)
                     if list_split_orient == 'v': addaxis = " -y " + str( list_split_inst_h )
                     else: addaxis = " -x " + str( list_split_inst_w )
-                    list_build.append( EXE_TMUX + " split-window -" + list_split_orient + adddir )
-                    list_build.append( EXE_TMUX + " resize-pane -t " + str(list_split_paneid + 1) + addaxis )
+                    list_build.append( "split-window -" + list_split_orient + adddir )
+                    list_build.append( "resize-pane -t " + str(list_split_paneid + 1) + addaxis )
 
         #
         # 5.3b) Prepare shell commands ... This is done separately after the pane size has been established
@@ -1855,27 +1972,25 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
                 for run in list_panes_run:
                     clean_run = re.sub(r'([\"])', r'\\\1', run) # Escape double-quotes
                     if clean_run:
-                        list_build.append( EXE_TMUX + " select-pane -t " + list_panes_index )
-                        list_build.append( EXE_TMUX + " send-keys \"" + clean_run + "\" C-m" )
+                        list_build.append( "select-pane -t " + list_panes_index )
+                        list_build.append( "send-keys \"" + clean_run + "\" C-m" )
             if not focus_actual_tmux_pane_index or list_panes_foc:
                 focus_actual_tmux_pane_index = list_panes_index
         if focus_actual_tmux_pane_index:
-            list_build.append( EXE_TMUX + " select-pane -t " + focus_actual_tmux_pane_index )
+            list_build.append( "select-pane -t " + focus_actual_tmux_pane_index )
 
         #
         # 5.4) Add this batch to the main execution list to be run later
         #
         list_execution.append( list_build )
 
-        #
-        # Done
-        #
-
     #
     # Set default window
     #
     if focus_window_name is not None:
-        list_build.append( EXE_TMUX + " select-window -t \"" + focus_window_name + "\"" )
+        list_build = []
+        list_build.append( "select-window -t \"" + focus_window_name + "\"" )
+        list_execution.append( list_build )
 
     #
     # Notify user that tmux execution will begin and allow for time to break (ARGS.verbose >= 1)
@@ -1889,11 +2004,35 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
         print("")
 
     #
+    # Switch back to the user's pane if this is being run in an existing session
+    #
+    switch_back = ""
+    if run_session.valid:
+        switch_back = "select-window -t " + run_session.WindowID()
+
+    #
     # Run the tmux commands
     #
-    for block in list_execution:
-        for command in block:
-            error = tmux_run(command)
+    # 2.19: Optimized to run commands with as few executable calls as possible.  This was necessary to support window
+    # addition, as one command at a time showed the user the build in process (not ideal).  If there's a way for tmux
+    # to suspend the client during the execution of commands, it should be added here.  Even with such a feature, the
+    # batching will be retained because it should be faster.
+    #
+    # Note: tmux command limitations necessitate multiple batches.  Batching requires: tracking and preserving window
+    # and pane focus, starting each batch by returning to the previous focus, and (in addition mode) switching back to
+    # the user's window at the end of each batch.
+    #
+    batch_len = 2048        # Limitation of 2048 bytes for tmux 1.8 ("command too long" if exceeded)
+    last_window = ""        # Recent "new-window" (changed to "select-window" on save)
+    last_pane = ""          # Recent "select-pane" (unmodified)
+    list_commands = [ cmd for cmdlist in list_execution for cmd in cmdlist ]
+    semicolon = " \; "
+    switch_back = semicolon + switch_back
+    batch = ""
+    def execute(batch, switch_back):
+        if batch: batch += switch_back
+        if batch:
+            error = tmux_run( ( ( cwd_execution + " ; " ) if cwd_execution else "" ) + ( EXE_TMUX + " " + batch ) )
             if error:
                 if "pane too small" in error:
                     errpkg['quiet'] = True
@@ -1901,11 +2040,46 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session ):
                 else:
                     msg = "An error occurred in tmux: " + error
                 synerr(errpkg, msg )
+    for cmd in list_commands:
+        restart = False
+        if not batch:
+            restart = True
+        else:
+            batchlet = semicolon + cmd
+            if len(batch + batchlet + switch_back) < batch_len:
+                batch += batchlet
+            else:
+                execute(batch, switch_back)
+                restart = True
+        if restart:
+            batch = ""
+            def addcmd(cmd):
+                nonlocal batch
+                batch += (semicolon if batch else "") + cmd
+            if last_window:
+                addcmd(last_window)
+                if last_pane:
+                    addcmd(last_pane)
+            addcmd(cmd)
+        if cmd.startswith("new-window"):
+            last_window = "select-window -t " + cmd.split()[2]
+            last_pane = ""
+        if cmd.startswith("select-pane"):
+            last_pane = cmd
+    execute(batch, switch_back) # Execute whatever is left
 
     #
     # Attach to the newly created session
     #
-    tmux_run( EXE_TMUX + " attach-session -t " + session_name )
+    if not run_session.valid:
+        tmux_run( EXE_TMUX + " attach-session -t " + session_name )
+
+    #
+    # Let the user know we're done with addition
+    #
+    if run_session.valid:
+        if ARGS.printonly: print("### ", end="")
+        print("Finished!")
 
 
 
@@ -1988,13 +2162,27 @@ def main():
         # Force reload of session file in order to get accurate line counts in the event of changes by user in flex
         session.Load()
 
+    #
+    # Execution of tmux commands depends on context:
+    #
+    #   Executed within tmux .... Append windows to existing session and drop back to shell with relevant information
+    #   Executed outside tmux ... Create new tmux session from scratch and handle it accordingly (classic behavior)
+    #
+    run_session = QuerySession_tmux()
+    if run_session.error:
+        print(run_session.error)
+        exit()
+    if run_session.valid:
+        # Copy the real xterm dimensions obtained from tmux, required for correct sizing
+        user_wh = run_session.user_wh
+
     # Optional kill session on disconnect
     def destroy():
         if ARGS.destroy:
             tmux_run( EXE_TMUX + " kill-session -t " + session_name, nopipe=True, force=True, real=True )
 
     # Existing session handler (skipped when printing or scaling)
-    if not ancillary:
+    if not ancillary and not run_session.valid:
         # Detect existing session
         result = tmux_run( EXE_TMUX + " has-session -t " + session_name, nopipe=False, force=True, real=True )
         if not result:
@@ -2021,9 +2209,15 @@ def main():
         print("###")
 
     # Process session: generates a new session and attaches, or prints, or scales
-    if not ancillary: print("Running new session, \"" + session_name + "\"...")
+    if not ancillary:
+        if run_session.valid:
+            print("Adding windows from the session \"" + session_name + "\" to the running session \"" + \
+                run_session.SessionName() + "\"...")
+            print("IMPORTANT: Do not change focus of the pane or window until finished!")
+        else:
+            print("Running new session, \"" + session_name + "\"...")
     try:
-        tmuxomatic( program_cli, " ".join(sys.argv), user_wh, session_name, session )
+        tmuxomatic( program_cli, " ".join(sys.argv), user_wh, session_name, session, run_session )
     except KeyboardInterrupt: # User disconnected
         destroy()
     exit(0)
