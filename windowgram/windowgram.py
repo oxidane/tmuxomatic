@@ -2912,6 +2912,11 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
 ##
 ##      Insert at windowgram edge may be used for add
 ##
+## Alternatives:
+##
+##      The `insert` command necessarily expands the windowgram.  If you want to add a pane without affecting the size
+##      of the windowgram, you should use `break` or `split`.
+##
 ## Scaling:
 ##
 ##      There are two possible scale behaviors for the scalegroup where its edges are aligned to the edge of insertion:
@@ -3122,6 +3127,11 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
 ## Analogues:
 ##
 ##      None
+##
+## Alternatives:
+##
+##      The `delete` command necessarily contracts the windowgram.  If you want to delete a pane without affecting the
+##      size of the windowgram, you should use `join` or `drag`.
 ##
 ## Implementation Sketch:
 ##
