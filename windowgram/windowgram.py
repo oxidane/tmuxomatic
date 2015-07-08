@@ -3125,14 +3125,46 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
 ##
 ## Implementation Sketch:
 ##
-##      Removes the pane and contracts the area around it accordingly.  If the user does not desire the pane loss that
-##      is the effect of this action, there are two options.  First, the user could use the `join` command, which
-##      combines multiple panes into one while preserving the surrounding windowgram.  Second, an optional pane saving
-##      measure may be implemented, which could be used to preserve panes where it's possible to do so.
+##      Removes the pane(s) and contracts the windowgram accordingly.  If the user does not desire the contraction that
+##      is the effect of this action, the user could use the `join` command, which combines multiple panes into one
+##      while preserving the surrounding windowgram.  The contraction will only truncate neighboring panes, there will
+##      never be a total loss of panes other than those the user deletes.
 ##
 ##      delete <panes>                               remove one or more panes anywhere in windowgram
 ##
 ##      Aliases: del, clip, remove, drop, rm
+##
+## Axial Contraction Bias:
+##
+##      When deleting the pane(s), it contracts only one axis.  The axis selected is the one where no pane loss occurs.
+##      If pane loss occurs on both axes, then it fails with an error that suggests the use of `join`.  There appears to
+##      be no situation where there is no pane loss on either axis.  This is demonstrated with the trivial arrangements
+##      shown below.
+##
+##              0 = deleting    X = truncated    a = unaffected
+##
+##              XXaaaa   XXaaaa    |    XXXXXX   XX/
+##              XX0000     /\      |    aa0000   aa\
+##
+##      Anything more complicated will necessarily introduce deletable neighboring panes, so long as the basic geometric
+##      rules of the windowgram are enforced (as they automatically are with flex).  Consider Example (A) below, where,
+##      when deleting "0", it's impossible to avoid total pane loss in "1234aAbB" without incurring it in "xX".
+##
+##                    (A)          |          (B)        |          (C)
+##                                 |                     |
+##              111222     \/      |                     |
+##              axxxxb   111222    |    111222    12     |    a1122b     \/
+##              a0000b   axxxxb    |    a0000b   \ab/    |    a0000b   a1122b
+##              A0000B   AXXXXB    |    A0000B   /AB\    |    A0000B   A3344B
+##              AXXXXB   333444    |    333444    34     |    A3344B     /\
+##              333444     /\      |                     |
+##
+##      Similarly, it's impossible to modify the windowgram to permit a situation where there is no total pane loss, as
+##      Examples (B) and (C) suggest.  There is either pane loss on both axes (as with a grid), or there's permissible
+##      contraction on one axis.  Nothing else.  This is all inherent in the geometry constraints of the windowgram.
+##
+##      Implementation summary: The `delete` command will identify and affect the contractible axis, or suggest to the
+##      user the alternative `join` command.
 ##
 
 # TODO
