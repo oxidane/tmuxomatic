@@ -18,7 +18,7 @@ A completely different kind of tmux session manager.
 
 ## Introduction
 
-Other tmux session managers require pages of documentation for basic use, and define windows as a complicated nesting of pane splits.  Instead, tmuxomatic is so easy that anyone could use it after just one example.  Yet tmuxomatic is more flexible and more powerful than other tmux session managers.
+Other tmux session managers require pages of documentation for basic use, and define windows using a complicated nesting of pane splits.  Instead, tmuxomatic is so easy that anyone could use it after just one example.  Yet tmuxomatic is more flexible and more powerful than other tmux session managers.
 
 At the heart of tmuxomatic is the **windowgram**, a better way of arranging tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character grouping identifies the name, position, size, and shape of a pane.  It should take only one example to demonstrate the power and flexibility of the windowgram.
 
@@ -47,35 +47,35 @@ Compare this window from `session_example`, with its screenshot from `tmuxomatic
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
 
-For additional features, see the included example sessions.  Or for a list of command line arguments, run `tmuxomatic --help`.
+For additional features, see the included example sessions.  For a list of command line arguments, run `tmuxomatic --help`.
 
 
 
 ## Flex
 
-Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a windowgram is typed up quickly.  But if you need detail, you may find yourself doing a lot of ASCII art.
+Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a windowgram can be typed up quickly.  But if you need detail, you may find yourself doing a lot of ASCII art.
 
-In tmuxomatic 2, **flex** was added to automate the construction and modification of the windowgram itself.
+In tmuxomatic 2.x, **flex** was added to automate the construction and modification of the windowgram itself.
 
 Flex is an object-oriented windowgram editor.  It is visually expressive, naturally worded, logically ordered, minimal, and powerful.  Its short command set may be combined to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who desire detailed windowgrams without the tedium of manual entry.
 
 #### Flex concepts
 
-Before proceeding with the flex demonstration, take a moment to review the following key concepts.
+Before proceeding with the flex demonstration, take a moment to review key concepts used by the commands.
 
-  * **Pane**: Single character pane identifier representing one pane in a windowgram
-  * **Group**: String of one or more panes (usually in the form of a rectangle without gaps)
-  * **Edge**: String of panes that together border one or more edges (the imaginary line between panes)
-  * **Size**: Expressed in exact characters, or contextually as a percentage or multiplier
-  * **Direction**: Cardinal directions (up, down, left, right) for movement or to specify object edge
+  * **Pane**: Single character pane identifier, represents one pane in a windowgram
+  * **Group**: String of one or more panes, usually forming a complete rectangle without gaps
+  * **Edge**: String of one or more panes that border one or more edges (imaginary line between panes)
+  * **Direction**: Expresses movement, or specifies an edge: up, down, left, right, vertical, horizontal
+  * **Size**: Either an absolute number of characters, or contextually as a percentage or a multiplier
 
-In the demonstrations below, the flex shell is represented by the `flex>` prompt.  For a detailed list of all flex commands, type `help` from the shell at any time.
+In the demonstrations that follow, the flex shell is represented in short form by the `flex>` prompt.  For a list of flex commands with example usage, type `help` from the shell at any time.
 
 #### Flex demonstration #1 -- Create a new windowgram
 
-Let's use flex to build a windowgram that would otherwise require a lot of typing.
+Let's use flex to build a windowgram that would otherwise require repetitious typing and/or careful editing.
 
-The following windowgram is what we will be creating in this demonstration.  This windowgram is intended for managing cryptocurrency nodes, specifically bitcoin, litecoin, and namecoin.  There are panes for a general use shell (`1`), a disk monitor (`z`); and for each currency: a title with keep-alive loop on top (`B`, `L`, `N`), and blockchain information on bottom (`b`, `l`, `n`).
+The following windowgram is what we'll create in this demonstration.  This windowgram is intended for managing cryptocurrency nodes, specifically bitcoin, litecoin, and namecoin.  There are panes for a general use shell (`1`), a disk monitor (`z`); and for each currency: a title with keep-alive loop on top (`B`, `L`, `N`), and blockchain information on bottom (`b`, `l`, `n`).
 
 	1111111111111111111111111zzzzzzzzzzzz
 	1111111111111111111111111zzzzzzzzzzzz
@@ -174,11 +174,11 @@ Finally we complete the envisioned layout using just one `join` command.  Each p
 
 That's it.  Our windowgram is ready to use.
 
-Either type `done` and flex will open this session file in tmux, or type `exit` and add some directions to the session file.  The directions specify run commands, home directories, and focus state.  For more information on directions, see the example session at the start of this readme.
+Either type `done` and flex will open this session file in tmux, or type `exit` and add some directions (run commands, home directories, and focus state) to the session file.  For more information on directions, see the example session at the start of this readme.
 
 #### Flex demonstration #2 -- Extend the windowgram
 
-For this demonstration, we modify the windowgram from the previous demonstration, using a different set of flex commands.  The commands in this section are described in summary form.
+For this demonstration, we modify the windowgram from the previous demonstration, using a different set of flex commands.  The commands in this demonstration are described in summary form.  For more information on these or any other flex commands, type `help <command>` at the flex prompt.
 
 > Open the windowgram that we created in the above demonstration
 
@@ -309,7 +309,7 @@ There are three ways to install tmuxomatic, in order of convenience:
 
   * **Automatically** (pip)
 
-    * An upgrade may require an empty pip cache, `rm -rf /tmp/pip-build-root/`
+    * May require an empty pip cache, ``rm -rf /tmp/pip[-_]build[-_]`whoami`/tmuxomatic``
     * `pip-python3 install tmuxomatic --upgrade`
 
   * **Manually** (python)
