@@ -927,11 +927,23 @@ class Windowgram():
         if preferred not in unused: return None, "Pane id `" + preferred + "` is in use"
         return preferred, None
 
-    def Panes_HasPane(self, pane):
+    def Panes_PanesNotUsed(self, panes):
+        panes = list(panes)
         for line in Windowgram_Convert.String_To_Lines( self.windowgram_string ):
             for ch in line:
-                if ch == pane: return True
-        return False
+                if ch in panes:
+                    panes = [ pane for pane in panes if pane != ch ]
+                    if not panes:
+                        return None
+        return "".join(panes)
+
+    def Panes_PanesNotUsed_Message(self, panes):
+        undef = self.Panes_PanesNotUsed(panes)
+        if not undef: return None
+        return "pane" + ["","s"][len(undef)!=1] + " '" + undef + "' " + ["is","are"][len(undef)!=1] + " not in use"
+
+    def Panes_HasPane(self, pane):
+        return True if self.Panes_PanesNotUsed(pane) is None else False
 
     def Panes_PaneXYXY(self, pane): # x1, y1, x2, y2
         if not self.Panes_HasPane( pane ): return 0, 0, 0, 0
@@ -1128,17 +1140,17 @@ def Windowgram_Mask_Macro_GenerateAndSplitMasks(wg, wgm0, wgm1, panes):
     wgm1x = Windowgram_Mask_Boolean(wgm1, Windowgram_Mask_Generate(wg, panes), "and")
     return wgm0x, wgm1x
 
-def Windowgram_Mask_Macro_ValidateRegularity(wgm1, wgm2, res_hint, axis_location):
+def Windowgram_Mask_Macro_ValidateRegularity(scalegroup, wgm1, wgm2, res_hint, axis_location):
     # Validates masks according to regularity rules (until irregular scalegoups are supported), returns valid or None
     # This macro is shared by: drag, insert, clone
     def Validate(wgm):
         # (1) Any MASKPANE_1 character touching the specified axis edge
         if wgm.Panes_HasPane(MASKPANE_1) and not MASKPANE_1 in wgm.Edge_PanesAlong(res_hint, axis_location):
-            return "The scalegroup of panes does not touch the specified edge"
+            return "The scalegroup '" + scalegroup + "' does not touch the specified edge"
         # (2) That the mask is a rectangular shape (for now; see above notes on irregular parallelism)
         result, suggestions = groupcore(wgm, MASKPANE_1) # GroupStatus.Invalid_Panes means MASKPANE_1 was not found
         if result == GroupStatus.Invalid_Panes or result == GroupStatus.Success: return None
-        return "The scalegroup of panes is an unsupported irregular shape, try making it rectangular"
+        return "The scalegroup '" + scalegroup + "' is an unsupported irregular shape, try making it rectangular"
     r1 = Validate(wgm1)
     r2 = Validate(wgm2)
     return r1 if r1 else (r2 if r2 else None)
@@ -1736,7 +1748,7 @@ def smudgecore(wg, edge, axis, length, direction, run=None): # wg
 ##      that may be used for both ("<edge>" or "<hint>@<edge>").  Maybe keep the double-parameter option support as a
 ##      hidden feature unless it becomes a problem for future commands.  Note that ":" cannot be used as a delimiter
 ##      since it's used to designate additional panes in the scale group for the "drag" command.  This will affect the
-##      function argument_processor_edge() and the commands that use it.
+##      function EdgeProcessing.argument_processor() and the commands that use it.
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
@@ -2018,47 +2030,54 @@ def flex_processor(wg, commands, noticesok=False): # -> error
     return None
 
 ##
-## Flex Argument Processors
+## Flex Edge Processing (includes handling of hints, edges, and scalegroups)
 ##
 
-def argument_processor_edge(hint, edge, used, unused, getsc): # -> error, res_hint, res_edge, res_scalegroup
-    # Process the edge parameter for flex commands: drag, insert, clone ... Handles swapping of hint and edge
-    ignore = "*@:" # The "@" is for when the parameters hint and edge are combined
-    # Reduce edge and resolve hint
-    swapped = ""
-    res_hint = resolve_vhtblr( hint ) if hint is not "" else ""
-    res_edge = thruvalid_panes( edge, ignore )
-    if not res_hint or not res_edge:
-        swapped_hint = resolve_vhtblr( edge ) if edge is not "" else ""
-        swapped_edge = thruvalid_panes( hint, ignore )
-        if swapped_hint and res_edge:
-            res_hint, res_edge = swapped_hint, swapped_edge
-            swapped = "swapped "
-    # From here on use res_hint, res_edge
-    hint = edge = None
-    # Error handlers
-    if res_hint is None: # A blank string for the hint is considered valid
-        return ( "The " + swapped + "hint is unrecognized" ), None, None, None
-    if not res_edge: return ( "The " + swapped + "edge contains invalid pane characters" ), None, None, None
-    areused, areunused, invalids = classify_panes( used + ignore, unused, res_edge )
-    if invalids: return ( \
-        "Panes (" + invalids + ") in " + swapped + "edge (" + res_edge + ") are invalid" ), None, None, None
-    if areunused: return ( \
-        "Panes (" + areunused + ") in " + swapped + "edge (" + res_edge + ") are not being used" ), None, None, None
-    # Separate res_edge into res_edge and res_scalegroup
-    res_scalegroup = ""
-    if ":" in res_edge:
-        if not getsc: return ( "A user provided scalegroup is not supported with this command" ), None, None, None
-        res_edge, res_scalegroup = res_edge.split(":", 1)
-        if ":" in res_scalegroup:
-            return ( "Please specify the optional scalegroup in the form: \"<edge>:<scalegroup>\"" ), None, None, None
-    # Replace character "*" with all panes
-    if "*" in res_edge:
-        res_edge = AllPanes( res_edge, used )
-    if "*" in res_scalegroup:
-        res_scalegroup = AllPanes( res_scalegroup, used )
-    # The user should use these resolved variables in place of those provided by the user
-    return None, res_hint, res_edge, res_scalegroup
+class EdgeProcessing:
+
+    @staticmethod
+    def argument_processor(hint, edge, used, unused, getsc): # -> error, res_hint, res_edge, res_scalegroups
+        # Process the edge parameter for flex commands: drag, insert, clone ... Handles swapping of hint and edge
+        ignore = "*@:" # The "@" is for when the parameters hint and edge are combined
+        # Reduce edge and resolve hint
+        swapped = ""
+        res_hint = resolve_vhtblr( hint ) if hint is not "" else ""
+        res_edge = thruvalid_panes( edge, ignore )
+        if not res_hint or not res_edge:
+            swapped_hint = resolve_vhtblr( edge ) if edge is not "" else ""
+            swapped_edge = thruvalid_panes( hint, ignore )
+            if swapped_hint and res_edge:
+                res_hint, res_edge = swapped_hint, swapped_edge
+                swapped = "swapped "
+        # From here on use res_hint, res_edge
+        hint = edge = None
+        # Error handlers
+        if res_hint is None: # A blank string for the hint is considered valid
+            return ( "The " + swapped + "hint is unrecognized" ), None, None, None
+        if not res_edge: return ( "The " + swapped + "edge contains invalid pane characters" ), None, None, None
+        areused, areunused, invalids = classify_panes( used + ignore, unused, res_edge )
+        if invalids: return ( \
+            "Panes (" + invalids + ") in " + swapped + "edge (" + res_edge + ") are invalid" ), None, None, None
+        if areunused: return ( \
+            "Panes (" + areunused + ") in " + swapped + "edge (" + res_edge + ") are not being used" ), None, None, None
+        # Separate res_edge into res_edge and res_scalegroups[]
+        res_scalegroups = []
+        if ":" in res_edge:
+            if not getsc:
+                return ( "The user provided scalegroup(s), but they are not supported with this command" ), None, None, None
+            scalegroup_list = res_edge.split(":")
+            res_edge, res_scalegroups = scalegroup_list[0], scalegroup_list[1:]
+        # Replace character "*" with all panes
+        if "*" in res_edge:
+            res_edge = AllPanes( res_edge, used )
+        res_scalegroups, res_scalegroups_in = [], res_scalegroups
+        for res_scalegroup in res_scalegroups_in:
+            if "*" in res_scalegroup:
+                res_scalegroups.append( AllPanes( res_scalegroup, used ) )
+            else:
+                res_scalegroups.append( res_scalegroup )
+        # The user should use these resolved variables in place of those provided by the user
+        return None, res_hint, res_edge, res_scalegroups
 
 ##
 ## Flex: Reset
@@ -2681,6 +2700,9 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
 ##      Pushing neighboring edges to preserve panes was considered, but this would just add to the overhead with no
 ##      present advantage.  Perhaps in a future version.
 ##
+##      Drag multiple scalegroups now accounts for approximately half of the unit testing time.  There is much room for
+##      optimization, but since use performance is generally very low, such concerns will be ignored for now.
+##
 ## Considerations:
 ##
 ##      It will be possible to have a parallel-irregular scalegroup.  This is to say it only needs to have the group
@@ -2703,14 +2725,12 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
 ##      the user.  So yes, it will be possible to support irregularity on the parallel axis in certain cases, and with
 ##      some caveats.  Note that the axis is in relation to drag motion, not edge direction, which are opposites.
 ##
-##      ==================================
-##      UPDATE 2.17: Irregular Parallelism
-##      ==================================
+## Irregular Parallelism:
 ##
 ##      This has been ruled out for now.  The complications arising from this don't seem worthwhile for what little
 ##      convenience may be had.  Take a look at this case:
 ##
-##           ..XXYYYZZZ|       X is fully pinned                            ..XXYZ| drag right ABXYZ left 4
+##           ..XXYYYZZZ|       X is fully pinned                            ..XXYZ| drag right AB:XYZ left 4
 ##           ....YYYZZZ|       Y is partially pinned                        ....YZ|
 ##           .AAABBBZZZ|       A is pinned and Z binds panes ABXY           .AAABZ| <- Connected; left of B pinned
 ##           ..wwxxyyzz|       wxyz are easily isolated                     ..wxyz| <- Independent
@@ -2725,24 +2745,28 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
 ##
 ##      If adding this, probably accept all irregular scalegroups, and simply ignore panes that cannot be scaled.
 ##
-##      ===========================
-##      UPDATE 2.17: Multiple Edges
-##      ===========================
+##      Easily accomplished by smudging the edge of transparency (":#") to account for any loss in either direction:
+##          1) Smudge away from the drag edge (in case smaller)
+##          2) Smudge toward the drag edge (in case bigger)
+##
+## Multiple Edges (multiple scalegroup processing done, splitting of scalegroup is next):
 ##
 ##      Adding support for multiple edges has been ruled out for now.  If added, use a single point fill extraction,
 ##      where the mask is filled, and the resulting rectangle is removed from the mask, it is tested for validity (must
 ##      touch drag edge, be contiguous, and rectangular), then repeats until the mask is empty.  The independent scale
 ##      groups that result would replace the two that exist right now.  It would be nice to have but not important.
 ##
+##      Update: Probably use a faster exhaustive grouping search, first valid set of scalegroups are used.
+##
 
 @flex(
     command     = "drag",
     group       = "modifiers",
     examples    = [ "drag 12 r 2", "drag abcd up 25%", "drag 12:abcd l 50%" ],
-    description = "Drags an edge in the specified direction.  An edge is defined by the panes that border it.  " + \
-                  "sometimes specifying a hint will be necessary to resolve ambiguity.  The hint is an axis or " + \
-                  "a direction (VHTBLR).  Supports an optional scalegroup, simply add the panes to the edge " + \
-                  "parameter using colon (:) as a separator.  To prevent loss of panes, set limit to \"yes\".",
+    description = "Drags an edge in the specified direction.  The <edge> is defined by the panes that border it.  " + \
+                  "Sometimes a hint will be required to resolve ambiguity; this is an axis (VH) or a direction " + \
+                  "(TBLR).  Optional scalegroups are supported, for each add a colon (:) to the edge, followed " + \
+                  "by the panes to be scaled.  To prevent loss of panes, set limit to \"yes\".",
     aliases     = [ ["move", "drag "], ["slide", "drag "], ],
 )
 def cmd_drag_1(fpp_PRIVATE, edge, direction, size): # No support for limit without some analysis
@@ -2759,7 +2783,7 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
     # Reduce edge, resolve hint, deduce scalegroup, expand wildcards ... Supports swapping of hint and edge
-    error, res_hint, res_edge, res_scalegroup = argument_processor_edge(hint, edge, used, unused, True)
+    error, res_hint, res_edge, res_scalegroups = EdgeProcessing.argument_processor(hint, edge, used, unused, True)
     if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( error ) )
     hint = edge = None # From here only use: res_hint, res_edge
     # Resolve direction ... Axis (VH) is valid and like split, is based on TL, and is controlled with size negation
@@ -2811,35 +2835,48 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     limit = True if limit is not None and is_true(limit, "limit") else False
     # Produce mutually-exclusive side masks
     wgm0, wgm1 = Windowgram_Mask_Macro_BuildSplitMasks( wg, res_hint, axis_location )
-    # Produce valid scale masks
-    # The first mask pair must be "scalegroup + edgegroup".  Consider [ "12\n34", "right 12:34" ] -> "34" is valid.
-    # The combined should test first, then scalegroup alone.  It's always possible to define parameters that fit the
-    # user's desired effect, if it's otherwise a valid form.
-    wgm0x, wgm1x = Windowgram_Mask_Macro_GenerateAndSplitMasks( wg, wgm0, wgm1, res_scalegroup + res_edge )
-    error = Windowgram_Mask_Macro_ValidateRegularity( wgm0x, wgm1x, res_hint, axis_location )
-    if error:
+    # Add the edge to the scalegroups if it's valid
+    wgm0x, wgm1x = Windowgram_Mask_Macro_GenerateAndSplitMasks( wg, wgm0, wgm1, res_edge )
+    error = Windowgram_Mask_Macro_ValidateRegularity( res_edge, wgm0x, wgm1x, res_hint, axis_location )
+    if not error:
+        res_scalegroups.insert( 0, res_edge )
+    # Validate scalegroups and produce their masks for scaling
+    res_scalegroups_masks = []
+    for res_scalegroup in res_scalegroups:
+        # Verify the panes exist before they're needed for anything
+        undef = wg.Panes_PanesNotUsed_Message(res_scalegroup)
+        if undef: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+            "Scalegroup '" + res_scalegroup + "' error: " + undef ) )
+    for res_scalegroup in res_scalegroups: # Needs optimization
+        # Fully formed scalegroup expressions now mandatory (no longer inferred by combining edge)
         wgm0x, wgm1x = Windowgram_Mask_Macro_GenerateAndSplitMasks( wg, wgm0, wgm1, res_scalegroup )
-        error = Windowgram_Mask_Macro_ValidateRegularity( wgm0x, wgm1x, res_hint, axis_location )
-    if error:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to drag: " + error ) )
-    # Mask-extract the dynamics (areas to be scaled) from the static (the rest of the windowgram)
-    wgm0s, wgm1s = wg.CopyMasked_Out( wgm0x ), wg.CopyMasked_Out( wgm1x ) # Already supports irregular parallelism
+        error = Windowgram_Mask_Macro_ValidateRegularity( res_scalegroup, wgm0x, wgm1x, res_hint, axis_location )
+        if error:
+            return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to drag: " + error ) )
+        # Mask-extract the scalegroup (areas to be scaled) from the static (the rest of the windowgram)
+        wgm0s, wgm1s = wg.CopyMasked_Out( wgm0x ), wg.CopyMasked_Out( wgm1x ) # Already supports irregular parallelism
+        # Add to list
+        res_scalegroups_masks.append( [ wgm0s, wgm0x, wgm1s, wgm1x ] )
     # Drag logic is isolated so it may be reprocessed as necessary
-    def drag(count, edgeruns, wg, wgm0s, wgm0x, wgm1s, wgm1x):
-        # Scale the dynamics
-        def modifier(which, val, size, inv):
-            return ( val + ( -size if ( ( inv == "-" ) ^ ( which is not 0 ) ) else size ) ) if val else 0
-        sw0, sh0 = wgm0s.Analyze_WidthHeight()
-        sw1, sh1 = wgm1s.Analyze_WidthHeight()
-        if res_direction == "h" and sw0: sw0 = modifier(0, sw0, count, inverse)
-        if res_direction == "h" and sw1: sw1 = modifier(1, sw1, count, inverse)
-        if res_direction == "v" and sh0: sh0 = modifier(0, sh0, count, inverse)
-        if res_direction == "v" and sh1: sh1 = modifier(1, sh1, count, inverse)
-        if wgm0s.Panes_Exist(): wgm0s = Windowgram( scalecore( wgm0s.Export_String(), sw0, sh0 ) )
-        if wgm1s.Panes_Exist(): wgm1s = Windowgram( scalecore( wgm1s.Export_String(), sw1, sh1 ) )
-        # Smudge the edge across the masks (trivial, default behavior)
-        if wgm0x.Panes_Exist(): wgm0x = smudgecore( wgm0x, axis_location, res_hint, count, inverse )
-        if wgm1x.Panes_Exist(): wgm1x = smudgecore( wgm1x, axis_location, res_hint, count, inverse )
+    def drag(count, edgeruns, wg, res_scalegroups_masks):
+        res_scalegroups_masks_modified = []
+        for wgm0s, wgm0x, wgm1s, wgm1x in res_scalegroups_masks:
+            # Scale this scalegroup
+            def modifier(which, val, size, inv):
+                return ( val + ( -size if ( ( inv == "-" ) ^ ( which is not 0 ) ) else size ) ) if val else 0
+            sw0, sh0 = wgm0s.Analyze_WidthHeight()
+            sw1, sh1 = wgm1s.Analyze_WidthHeight()
+            if res_direction == "h" and sw0: sw0 = modifier(0, sw0, count, inverse)
+            if res_direction == "h" and sw1: sw1 = modifier(1, sw1, count, inverse)
+            if res_direction == "v" and sh0: sh0 = modifier(0, sh0, count, inverse)
+            if res_direction == "v" and sh1: sh1 = modifier(1, sh1, count, inverse)
+            if wgm0s.Panes_Exist(): wgm0s = Windowgram( scalecore( wgm0s.Export_String(), sw0, sh0 ) )
+            if wgm1s.Panes_Exist(): wgm1s = Windowgram( scalecore( wgm1s.Export_String(), sw1, sh1 ) )
+            # Smudge the edge across the masks (trivial, default behavior)
+            if wgm0x.Panes_Exist(): wgm0x = smudgecore( wgm0x, axis_location, res_hint, count, inverse )
+            if wgm1x.Panes_Exist(): wgm1x = smudgecore( wgm1x, axis_location, res_hint, count, inverse )
+            # Append to modified list
+            res_scalegroups_masks_modified.append( [ wgm0s, wgm0x, wgm1s, wgm1x ] )
         # Smudge the edge across the static (simple, but exhaustive stepping process)
         # Basic behavior: with the edge, after each increment of the drag, modify the edge and proceed
         #       (1) Any-Edge-Outward NOT on outer edge      Modifies edgerun until outer edge is reached
@@ -2856,9 +2893,10 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
             windowgram_parsed = wg.Export_Parsed() # Required to rebuild edge
             edgeruns = edgecore_buildoptimal( windowgram_parsed, res_hint, "", edgeruns )
             count -= abs(move)
-        # Paste the dynamics over the static
-        wg.CopyMasked_In( wgm0x, wgm0s )
-        wg.CopyMasked_In( wgm1x, wgm1s )
+        # Paste the each scalegroup over the static
+        for wgm0s, wgm0x, wgm1s, wgm1x in res_scalegroups_masks_modified:
+            wg.CopyMasked_In( wgm0x, wgm0s )
+            wg.CopyMasked_In( wgm1x, wgm1s )
         # Return result for analysis
         return wg
     # Perform drag.  Result must be valid according to: windowgram must not be zero, no loss of panes if user selects.
@@ -2878,10 +2916,10 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     chars_max = chars + 1
     while True:
         if chars == 0:
-            error = "Drag without losing panes is not possible with the given parameters"
+            error = "Drag without losing panes is not possible using the given parameters"
             wgout = wg.Copy()
             break
-        wgout = drag( chars, copy.deepcopy(optimal), wg.Copy(), wgm0s.Copy(), wgm0x.Copy(), wgm1s.Copy(), wgm1x.Copy() )
+        wgout = drag( chars, copy.deepcopy(optimal), wg.Copy(), res_scalegroups_masks )
         wgw, wgh = wgout.Analyze_WidthHeight()
         if not wgw or not wgh or (limit and PaneList_DiffLost( wg, wgout )):
             chars_max = chars
@@ -2964,10 +3002,10 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     command     = "insert",
     group       = "modifiers",
     examples    = [ "insert XZ 10" ],
-    description = "Inserts a pane into an unambiguous <edge>, or with a <hint> where the <edge> is ambiguous.  " + \
-                  "Insert is similar to the add command, but with greater flexibility.  Supports an optional " + \
-                  "scalegroup, by adding panes after a colon (:) on the <edge> parameter.  The [spread] " + \
-                  "parameter defaults to 50%, and is top/left oriented.",
+    description = "Inserts a pane into an edge and expand the windowgram accordingly.  The <edge> is defined by " + \
+                  "the panes that border it; sometimes a hint will be required to resolve ambiguity.  Optional " + \
+                  "scalegroups are supported, for each add a colon (:) to the edge, followed by the panes " + \
+                  "to be scaled.  The [spread] is top/left and defaults to 50%.",
     aliases     = [  ],
 )
 def cmd_insert(fpp_PRIVATE, edge, size):
@@ -2984,7 +3022,7 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
     # Reduce edge, resolve hint, deduce scalegroup, expand wildcards ... Supports swapping of hint and edge
-    error, res_hint, res_edge, res_scalegroup = argument_processor_edge(hint, edge, used, unused, True)
+    error, res_hint, res_edge, res_scalegroups = EdgeProcessing.argument_processor(hint, edge, used, unused, True)
     if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( error ) )
     hint = edge = None
     # Get edge from res_hint + res_edge; this yields the official edge axis, required to resolve direction and size
@@ -3068,12 +3106,18 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     if wgout.Panes_HasPane(MASKPANE_X): # The entire output windowgram should have been overwritten or an error occurred
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Pass 1 error: Windowgram was not fully replaced" ) )
     # Pass 2:
-    res_scalegroup, _ = PaneList_MovePanes( res_scalegroup, "", res_edgepanes ) # Panes touching insertion don't scale
-    if res_scalegroup:
+    for res_scalegroup in res_scalegroups:
+        # Verify the panes exist before they're needed for anything
+        undef = wg.Panes_PanesNotUsed_Message(res_scalegroup)
+        if undef: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
+            "Scalegroup '" + res_scalegroup + "' error: " + undef ) )
+        # Panes touching insertion don't scale
+        res_scalegroup, _ = PaneList_MovePanes( res_scalegroup, "", res_edgepanes )
         # Build two scalegroup masks, for input and output, then verify the scalegroup is valid
         wgms_i = Windowgram_Mask_Generate(wg, res_scalegroup)
         wgms_o = Windowgram_Mask_Generate(wgout, res_scalegroup)
-        error = Windowgram_Mask_Macro_ValidateRegularity( wgms_i, wgms_o, "v", axis_location ) # Transposed hint is "v"
+        error = Windowgram_Mask_Macro_ValidateRegularity(
+            res_scalegroup, wgms_i, wgms_o, "v", axis_location ) # Transposed hint is "v"
         if error: return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Unable to insert: " + error ) )
         # Extract the scalegroup from the source windowgram into its own cropped windowgram
         wgcrop = wg.CopyMasked_Out(wgms_i)

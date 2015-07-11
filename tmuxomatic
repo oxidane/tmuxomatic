@@ -1266,6 +1266,7 @@ def flex_shell(session, serial=0):
     ##
     ## Unit testing required before entering flex
     ##
+    print("Please wait a moment for flex to start...")
     error = Flex_UnitTests()
     if error:
         print("\nFlex Unit Test Failure:\n" + error)
