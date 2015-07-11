@@ -754,6 +754,15 @@ class WindowgramGroup_Convert():
 ##
 ## Error handling is done by polling GetErrorPair() after calling an error-generating method
 ##
+## Optimization Notes:
+##
+##      Tried a simple windowgram object cache for this class (to avoid repetitious conversions) as a quick attempt to
+##      optimize class usage.  It reduced overall unit testing time to about half.  However, because objects like lists
+##      are copied as references, deep copies were necessary when moving objects in and out of the cache.  The resulting
+##      cache was significantly slower, so it was removed, but the code has been saved.  Additions may make the cache
+##      viable, including hash for comparison, and converting windowgram objects to classes that automatically detach
+##      from the cache upon modification; both require a significant amount work.
+##
 
 class Windowgram():
 
@@ -811,17 +820,17 @@ class Windowgram():
         self.windowgram_string = Windowgram_Convert.PurifyString( windowgram_raw ) # Strip comments and whitespace
         self.Changed()
     def Import_String(self, windowgram_string):
-        return self.Import_Raw( windowgram_string )
+        self.Import_Raw( windowgram_string )
     def Import_Lines(self, windowgram_lines):
-        return self.Import_Raw( Windowgram_Convert.Lines_To_String(windowgram_lines) )
+        self.Import_Raw( Windowgram_Convert.Lines_To_String(windowgram_lines) )
     def Import_Chars(self, windowgram_chars):
-        return self.Import_Raw( Windowgram_Convert.Chars_To_String(windowgram_chars) )
+        self.Import_Raw( Windowgram_Convert.Chars_To_String(windowgram_chars) )
     def Import_Parsed(self, windowgram_parsed):
-        return self.Import_Raw( Windowgram_Convert.Parsed_To_String(windowgram_parsed) )
+        self.Import_Raw( Windowgram_Convert.Parsed_To_String(windowgram_parsed) )
     def Import_Mosaic(self, windowgram_mosaic):
-        return self.Import_Raw( Windowgram_Convert.Mosaic_To_String(windowgram_mosaic) )
+        self.Import_Raw( Windowgram_Convert.Mosaic_To_String(windowgram_mosaic) )
     def Import_Wg(self, wg):
-        return self.Import_Raw( wg.Export_String() )
+        self.Import_Raw( wg.Export_String() )
 
     ##
     ## Exports ... The windowgram is only converted upon request
@@ -830,9 +839,11 @@ class Windowgram():
     def Export_String(self):
         return self.windowgram_string
     def Export_Lines(self):
-        return Windowgram_Convert.String_To_Lines( self.windowgram_string )
+        windowgram_lines = Windowgram_Convert.String_To_Lines( self.windowgram_string )
+        return windowgram_lines
     def Export_Chars(self):
-        return Windowgram_Convert.String_To_Chars( self.windowgram_string )
+        windowgram_chars = Windowgram_Convert.String_To_Chars( self.windowgram_string )
+        return windowgram_chars
     def Export_Parsed(self): # Generates error
         windowgram_parsed, error_string, error_line = \
             Windowgram_Convert.String_To_Parsed( self.windowgram_string, self.extend )
@@ -855,7 +866,7 @@ class Windowgram():
     def Analyze_WidthHeight_Static(windowgram_lines):
         return [ (max([ len(line) for line in windowgram_lines ]) if windowgram_lines else 0), len( windowgram_lines ) ]
     def Analyze_WidthHeight(self):
-        windowgram_lines = Windowgram_Convert.String_To_Lines( self.windowgram_string )
+        windowgram_lines = self.Export_Lines()
         return Windowgram.Analyze_WidthHeight_Static( windowgram_lines )
     def Analyze_IsBlank(self):
         return True if not max(self.Analyze_WidthHeight()) else False
@@ -866,8 +877,9 @@ class Windowgram():
         analysis_type = ""
         while True:
             # Detect layered
-            windowgram_parsed, error, _ = Windowgram_Convert.String_To_Parsed( self.windowgram_string )
-            if error:
+            self.error_string = None
+            windowgram_parsed = self.Export_Parsed()
+            if self.error_string:
                 analysis_type = "ERROR"
                 break
             list_panes, windowgram_parsed = SortPanes( windowgram_parsed )
@@ -912,7 +924,7 @@ class Windowgram():
 
     def Panes_GetUsedUnused(self): # used, unused
         # Mutually exclusive list of pane ids for given windowgram
-        windowgram_lines = Windowgram_Convert.String_To_Lines( self.windowgram_string )
+        windowgram_lines = self.Export_Lines()
         used = "".join( sorted( list(set(list("".join(windowgram_lines)))), 
             key=lambda x: ValidPanes(self.extend).find(x) ) )
         unused = "".join( [ paneid for paneid in ValidPanes(self.extend) if paneid not in used ] )
@@ -929,7 +941,7 @@ class Windowgram():
 
     def Panes_PanesNotUsed(self, panes):
         panes = list(panes)
-        for line in Windowgram_Convert.String_To_Lines( self.windowgram_string ):
+        for line in self.Export_Lines():
             for ch in line:
                 if ch in panes:
                     panes = [ pane for pane in panes if pane != ch ]
@@ -947,7 +959,7 @@ class Windowgram():
 
     def Panes_PaneXYXY(self, pane): # x1, y1, x2, y2
         if not self.Panes_HasPane( pane ): return 0, 0, 0, 0
-        windowgram_lines = Windowgram_Convert.String_To_Lines( self.windowgram_string )
+        windowgram_lines = self.Export_Lines()
         x2 = y2 = -1
         x1 = len(windowgram_lines[0])
         y1 = len(windowgram_lines)
@@ -968,13 +980,13 @@ class Windowgram():
     def Panes_Renamer(self, panes, pane):
         # Supports multiple panes renaming, use only when you know the results will be valid
         new_lines = []
-        for line in Windowgram_Convert.String_To_Lines( self.windowgram_string ):
+        for line in self.Export_Lines():
             new_lines.append( "".join( [ (ch if ch not in panes else pane) for ch in line ] ) )
         self.Import_Lines( new_lines )
 
     def Panes_FromMask(self, mask_string):
         # Returns unique panes covered by specified mask
-        lines_w = Windowgram_Convert.String_To_Lines( self.windowgram_string )
+        lines_w = self.Export_Lines()
         lines_m = Windowgram_Convert.String_To_Lines( mask_string )
         panes = "".join( set( \
             [ ch_w for ch_w, ch_m in zip( "".join(lines_w), "".join(lines_m) ) if ch_m == MASKPANE_1 ] ) )
@@ -982,7 +994,7 @@ class Windowgram():
 
     def Panes_Exist(self):
         # True if any panes exist, including transparency
-        return True if Windowgram_Convert.String_To_Lines( self.windowgram_string ) != [] else False
+        return True if self.Export_Lines() != [] else False
 
     ##
     ## Edge (full) ... Edge format is the position of a full windowgram edge: xy
@@ -990,7 +1002,7 @@ class Windowgram():
 
     def Edge_PanesAlong(self, axis, fulledge):
         # Returns a unique unsorted set of panes that touch the fulledge on either side
-        windowgram_chars = Windowgram_Convert.String_To_Chars( self.windowgram_string )
+        windowgram_chars = self.Export_Chars()
         if axis == "v": windowgram_chars = Windowgram_Convert.Transpose_Chars( windowgram_chars )
         return "".join( set( (windowgram_chars[fulledge-1] if fulledge > 0 else []) +
                              (windowgram_chars[fulledge] if fulledge < len(windowgram_chars) else []) ) )
@@ -1010,7 +1022,7 @@ class Windowgram():
 
     def Edge_Extract(self, axis, fulledge, direction):
         # Returns a string of characters that border the one side of the fulledge that is opposite the direction
-        windowgram_lines = Windowgram_Convert.String_To_Lines( self.windowgram_string )
+        windowgram_lines = self.Export_Lines()
         return Windowgram.Edge_Extract_Static( windowgram_lines, axis, fulledge, direction )
 
     def Edge_ClipOuterTransparents(self):
@@ -1035,7 +1047,7 @@ class Windowgram():
 
     def Edge_PanesAlongSub(self, axis, edge):
         # Returns a unique unsorted set of panes that touch the edge on either side
-        windowgram_chars = Windowgram_Convert.String_To_Chars( self.windowgram_string )
+        windowgram_chars = self.Export_Chars()
         w = len(windowgram_chars[0])
         h = len(windowgram_chars)
         panes = []
@@ -1111,8 +1123,8 @@ def Windowgram_Mask_Boolean(wg_mask1, wg_mask2, op):
     wgc3 = []
     for iy in range(len(wgc1)):
         for ix in range(len(wgc1[iy])):
-            while len(wgc3) <= iy+1: wgc3.append([])
-            while len(wgc3[iy]) <= ix+1: wgc3[iy].append("")
+            while len(wgc3) <= iy: wgc3.append([])
+            while len(wgc3[iy]) <= ix: wgc3[iy].append("")
             if op == "and":
                 wgc3[iy][ix] = MASKPANE_1 if (MASKPANE_1 == wgc1[iy][ix] == wgc2[iy][ix]) else MASKPANE_0
             else: # Unsupported boolean operation
@@ -2021,7 +2033,7 @@ def flex_processor(wg, commands, noticesok=False): # -> error
                             # Error handler
                             if flexsense['notices'] and not noticesok:
                                 output = "There were warnings or errors when processing: " + commands + "\n"
-                                output = output + "\n".join([ "* "+warn.GetMsg() for warn in flexsense['notices'] ])+"\n"
+                                output = output+"\n".join([ "* "+warn.GetMsg() for warn in flexsense['notices'] ])+"\n"
                                 return output
                             # Processed
                             processed = True
@@ -2064,7 +2076,7 @@ class EdgeProcessing:
         res_scalegroups = []
         if ":" in res_edge:
             if not getsc:
-                return ( "The user provided scalegroup(s), but they are not supported with this command" ), None, None, None
+                return ( "The user provided scalegroup(s), but they are unsupported by this command" ), None, None, None
             scalegroup_list = res_edge.split(":")
             res_edge, res_scalegroups = scalegroup_list[0], scalegroup_list[1:]
         # Replace character "*" with all panes
@@ -2841,12 +2853,12 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     if not error:
         res_scalegroups.insert( 0, res_edge )
     # Validate scalegroups and produce their masks for scaling
-    res_scalegroups_masks = []
     for res_scalegroup in res_scalegroups:
         # Verify the panes exist before they're needed for anything
         undef = wg.Panes_PanesNotUsed_Message(res_scalegroup)
         if undef: return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
             "Scalegroup '" + res_scalegroup + "' error: " + undef ) )
+    res_scalegroups_masks = []
     for res_scalegroup in res_scalegroups: # Needs optimization
         # Fully formed scalegroup expressions now mandatory (no longer inferred by combining edge)
         wgm0x, wgm1x = Windowgram_Mask_Macro_GenerateAndSplitMasks( wg, wgm0, wgm1, res_scalegroup )

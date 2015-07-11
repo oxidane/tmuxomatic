@@ -1419,96 +1419,41 @@ class Test_FlexModifier_Drag(SenseTestCase):
 
     def test_Drag_Scalegroups(self): # Created in flex using "new unittest Drag_Scalegroups"
         self.assertFlexSequence( [
-            "reset ; scale 50x20 ; break 1 5x5 a ; drag ab:klmno:uvwxy right 5",
-            "reset ; scale 50x20 ; break 1 5x5 a ; drag ab:klmno:uvwxy:abcde right 5",
-            "reset ; scale 50x20 ; break 1 5x5 a ; drag bc:lmno:pqrs left 5",
-            "reset ; scale 50x20 ; break 1 5x5 a ; drag lq:afkp:joty:ins up 2",
-            "reset ; scale 50x20 ; break 1 5x5 a ; drag mr:deijnost:fgklpquv up 3",
-            "reset ; scale 50x20 ; break 1 5x5 a ; drag jo:afkpu:hmrw:din down 3",
+            "reset ; scale 16x12 ; break 1 4x4 a ; drag ab:efgh:mnop right 3",
+            "reset ; scale 16x12 ; break 1 4x4 a ; drag ab:ijkl:mnop:abcd left 3",
+            "reset ; scale 16x12 ; break 1 4x4 a ; drag fj:aei:gko:hl up 2",
+            "reset ; scale 16x12 ; break 1 4x4 a ; drag gk:abefij:hlp down 2",
         ], """
-            aaaaaaaaaaaaaaabbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaaaaaaabbbbbbbbbcccccccccddddddddeeeeeeeee
-            aaaaaaaaaaaaaaabbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaaaaaaabbbbbbbbbcccccccccddddddddeeeeeeeee
-            aaaaaaaaaaaaaaabbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaaaaaaabbbbbbbbbcccccccccddddddddeeeeeeeee
-            aaaaaaaaaaaaaaabbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaaaaaaabbbbbbbbbcccccccccddddddddeeeeeeeee
-            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
-            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
-            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
-            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
-            kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo
-            kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo
-            kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo
-            kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo
-            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
-            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
-            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
-            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
-            uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy
-            uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy
-            uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy
-            uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy
-
-            aaaaaaaaaabbbbbcccccccccccccccddddddddddeeeeeeeeee aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-            aaaaaaaaaabbbbbcccccccccccccccddddddddddeeeeeeeeee aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-            aaaaaaaaaabbbbbcccccccccccccccddddddddddeeeeeeeeee aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-            aaaaaaaaaabbbbbcccccccccccccccddddddddddeeeeeeeeee ffffffffffbbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
-            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
-            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
-            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj kkkkkkkkkkgggggggggghhhhhhhhhhnnnnnnnnnnoooooooooo
-            kkkkkkkkkklllllmmmmmmmmmmmmnnnnnnnnnnnoooooooooooo kkkkkkkkkkllllllllllmmmmmmmmmmnnnnnnnnnnoooooooooo
-            kkkkkkkkkklllllmmmmmmmmmmmmnnnnnnnnnnnoooooooooooo kkkkkkkkkkllllllllllmmmmmmmmmmnnnnnnnnnnoooooooooo
-            kkkkkkkkkklllllmmmmmmmmmmmmnnnnnnnnnnnoooooooooooo ppppppppppqqqqqqqqqqmmmmmmmmmmsssssssssstttttttttt
-            kkkkkkkkkklllllmmmmmmmmmmmmnnnnnnnnnnnoooooooooooo ppppppppppqqqqqqqqqqmmmmmmmmmmsssssssssstttttttttt
-            ppppppppqqqqqqqrrrrrrrrrrrrrsssssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
-            ppppppppqqqqqqqrrrrrrrrrrrrrsssssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
-            ppppppppqqqqqqqrrrrrrrrrrrrrsssssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
-            ppppppppqqqqqqqrrrrrrrrrrrrrsssssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrssssssssssyyyyyyyyyy
-            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
-            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
-            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
-            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
-
-            aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-            aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-            aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-            aaaaaaaaaabbbbbbbbbbcccccccccciiiiiiiiiijjjjjjjjjj aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj aaaaaaaaaagggggggggghhhhhhhhhhddddddddddjjjjjjjjjj
-            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj aaaaaaaaaagggggggggghhhhhhhhhhddddddddddjjjjjjjjjj
-            ffffffffffgggggggggghhhhhhhhhhnnnnnnnnnnoooooooooo ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
-            kkkkkkkkkkllllllllllhhhhhhhhhhnnnnnnnnnnoooooooooo ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
-            kkkkkkkkkkllllllllllmmmmmmmmmmnnnnnnnnnnoooooooooo ffffffffffllllllllllhhhhhhhhhhiiiiiiiiiijjjjjjjjjj
-            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ffffffffffllllllllllhhhhhhhhhhiiiiiiiiiijjjjjjjjjj
-            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ffffffffffllllllllllhhhhhhhhhhiiiiiiiiiijjjjjjjjjj
-            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt kkkkkkkkkkllllllllllmmmmmmmmmmnnnnnnnnnnoooooooooo
-            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt kkkkkkkkkkqqqqqqqqqqmmmmmmmmmmsssssssssstttttttttt
-            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt kkkkkkkkkkqqqqqqqqqqmmmmmmmmmmsssssssssstttttttttt
-            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
-            uuuuuuuuuuvvvvvvvvvvrrrrrrrrrrsssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
-            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy ppppppppppvvvvvvvvvvrrrrrrrrrrxxxxxxxxxxyyyyyyyyyy
-            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
-            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
-            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
+            aaaaaaabccccdddd abbbbbcccccddddd aaaabbbbccccdddd aaaabbbbccccdddd
+            aaaaaaabccccdddd abbbbbcccccddddd aaaabbbbccccdddd aaaabbbbccccdddd
+            aaaaaaabccccdddd abbbbbcccccddddd eeeebbbbccccdddd aaaabbbbccccdddd
+            eeeeeeefffggghhh eeeeffffgggghhhh eeeeffffgggghhhh aaaabbbbgggghhhh
+            eeeeeeefffggghhh eeeeffffgggghhhh iiiijjjjkkkkllll eeeeffffgggghhhh
+            eeeeeeefffggghhh eeeeffffgggghhhh iiiijjjjkkkkllll eeeeffffgggghhhh
+            iiiijjjjkkkkllll ijjjjjkkkkklllll iiiijjjjkkkkllll eeeeffffgggghhhh
+            iiiijjjjkkkkllll ijjjjjkkkkklllll iiiijjjjkkkkllll eeeeffffgggghhhh
+            iiiijjjjkkkkllll ijjjjjkkkkklllll iiiijjjjoooollll iiiijjjjkkkkllll
+            mmmmmmmnnnoooppp mnnnnnoooooppppp mmmmnnnnoooopppp mmmmnnnnoooollll
+            mmmmmmmnnnoooppp mnnnnnoooooppppp mmmmnnnnoooopppp mmmmnnnnoooopppp
+            mmmmmmmnnnoooppp mnnnnnoooooppppp mmmmnnnnoooopppp mmmmnnnnoooopppp
         """ )
 
     def test_Drag_Scalegroups_Empty(self): # Created in flex using "new unittest Drag_Scalegroups_Empty"
         self.assertFlexSequence( [
-            "reset ; scale 24x10 ; break 1 3x3 m ; drag pq:mno: right 2",
-            "reset ; scale 24x10 ; break 1 3x3 m ; drag pq:: left 2",
-            "reset ; scale 24x10 ; break 1 3x3 m ; drag ru: down 2",
-            "reset ; scale 24x10 ; break 1 3x3 m ; drag mp::oru up 2",
+            "reset ; scale 15x9 ; break 1 3x3 m ; drag pq:mno: right 2",
+            "reset ; scale 15x9 ; break 1 3x3 m ; drag pq:: left 2",
+            "reset ; scale 15x9 ; break 1 3x3 m ; drag ru: down 2",
+            "reset ; scale 15x9 ; break 1 3x3 m ; drag mp::oru up 2",
         ], """
-            mmmmmmmmmmnnnnnnnooooooo mmmmmmmmnnnnnnnnoooooooo mmmmmmmmnnnnnnnnoooooooo mmmmmmmmnnnnnnnnoooooooo
-            mmmmmmmmmmnnnnnnnooooooo mmmmmmmmnnnnnnnnoooooooo mmmmmmmmnnnnnnnnoooooooo mmmmmmmmnnnnnnnnoooooooo
-            mmmmmmmmmmnnnnnnnooooooo mmmmmmmmnnnnnnnnoooooooo mmmmmmmmnnnnnnnnoooooooo ppppppppnnnnnnnnrrrrrrrr
-            mmmmmmmmmmnnnnnnnooooooo mmmmmmmmnnnnnnnnoooooooo mmmmmmmmnnnnnnnnoooooooo ppppppppnnnnnnnnrrrrrrrr
-            ppppppppppqqqqqqrrrrrrrr ppppppqqqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr
-            ppppppppppqqqqqqrrrrrrrr ppppppqqqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr
-            ppppppppppqqqqqqrrrrrrrr ppppppqqqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr
-            ppppppppppqqqqqqrrrrrrrr ppppppqqqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr ppppppppqqqqqqqquuuuuuuu
-            ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu ssssssssttttttttrrrrrrrr ssssssssttttttttuuuuuuuu
-            ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu ssssssssttttttttrrrrrrrr ssssssssttttttttuuuuuuuu
-            ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu
-            ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu
+            mmmmmmmnnnnoooo mmmmmnnnnnooooo mmmmmnnnnnooooo mmmmmnnnnnooooo
+            mmmmmmmnnnnoooo mmmmmnnnnnooooo mmmmmnnnnnooooo pppppnnnnnrrrrr
+            mmmmmmmnnnnoooo mmmmmnnnnnooooo mmmmmnnnnnooooo pppppnnnnnrrrrr
+            pppppppqqqrrrrr pppqqqqqqqrrrrr pppppqqqqqrrrrr pppppqqqqqrrrrr
+            pppppppqqqrrrrr pppqqqqqqqrrrrr pppppqqqqqrrrrr pppppqqqqqrrrrr
+            pppppppqqqrrrrr pppqqqqqqqrrrrr pppppqqqqqrrrrr pppppqqqqquuuuu
+            ssssstttttuuuuu ssssstttttuuuuu ssssstttttrrrrr ssssstttttuuuuu
+            ssssstttttuuuuu ssssstttttuuuuu ssssstttttrrrrr ssssstttttuuuuu
+            ssssstttttuuuuu ssssstttttuuuuu ssssstttttuuuuu ssssstttttuuuuu
         """ )
 
     def test_Drag_Scalegroups_Errors(self): # Created in flex using "new unittest_ignore Drag_Scalegroups_Errors"

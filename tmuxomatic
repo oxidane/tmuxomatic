@@ -209,6 +209,8 @@ VERSION = "2.19" # x.y: x = Major feature, y = Minor feature or bug fix
 ##
 ##      Maybe unit testing for windowgram parser, and flex commands.
 ##
+##      Move unit testing online, for a faster flex startup.
+##
 ## Major:
 ##
 ##      Session Binding: A mode that keeps the session file and its running session synchronized.  Some things won't be
