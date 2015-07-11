@@ -130,7 +130,8 @@ class SenseTestCase(unittest.TestCase):
             # Sort by line numbers
             methods = sorted(methods, key=lambda tup: tup[1])
             # Execute tests in the order they appear
-            for method in methods: method[0]()
+            for method in methods:
+                method[0]()
         except AssertionError as e:
             raise e # Forward
         except Exception as e:
@@ -1312,8 +1313,8 @@ class Test_FlexModifier_Drag(SenseTestCase):
             "drag horizontal XYxy down 2",
             "drag top XY:xy up 1 ; drag left Z:xyzXY right 2",
             "drag right wW:xyXY left 2",
-            "drag vertical ZY:xXyz left 2",
-            "drag vertical wxWX:yY right 2",
+            "drag vertical ZY:ZYxXyz left 2",
+            "drag vertical wxWX:wxWXyY right 2",
         ], """
             wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxyyyzzz wwwxxxxyyyyz wxxxxxyyyyyz wxxxxyyyyzzz wwwxxxyyyzzz
             wwwxxxyyyzzz wwwxxxyyyzzz wwwXXXYYYzzz wwwxxxyyyzzz wwwxxxxyyyyz wxxxxxyyyyyz wxxxxyyyyzzz wwwxxxyyyzzz
@@ -1416,10 +1417,120 @@ class Test_FlexModifier_Drag(SenseTestCase):
                                                          MMMNNNOOOPPP MMMNNNGGGPPP
         """, True ) # Ignore notices
 
+    def test_Drag_Scalegroups(self): # Created in flex using "new unittest Drag_Scalegroups"
+        self.assertFlexSequence( [
+            "reset ; scale 50x20 ; break 1 5x5 a ; drag ab:klmno:uvwxy right 5",
+            "reset ; scale 50x20 ; break 1 5x5 a ; drag ab:klmno:uvwxy:abcde right 5",
+            "reset ; scale 50x20 ; break 1 5x5 a ; drag bc:lmno:pqrs left 5",
+            "reset ; scale 50x20 ; break 1 5x5 a ; drag lq:afkp:joty:ins up 2",
+            "reset ; scale 50x20 ; break 1 5x5 a ; drag mr:deijnost:fgklpquv up 3",
+            "reset ; scale 50x20 ; break 1 5x5 a ; drag jo:afkpu:hmrw:din down 3",
+        ], """
+            aaaaaaaaaaaaaaabbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaaaaaaabbbbbbbbbcccccccccddddddddeeeeeeeee
+            aaaaaaaaaaaaaaabbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaaaaaaabbbbbbbbbcccccccccddddddddeeeeeeeee
+            aaaaaaaaaaaaaaabbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaaaaaaabbbbbbbbbcccccccccddddddddeeeeeeeee
+            aaaaaaaaaaaaaaabbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaaaaaaabbbbbbbbbcccccccccddddddddeeeeeeeee
+            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
+            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
+            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
+            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
+            kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo
+            kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo
+            kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo
+            kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo kkkkkkkkkkkkkkklllllllllmmmmmmmmmnnnnnnnnooooooooo
+            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
+            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
+            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
+            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
+            uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy
+            uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy
+            uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy
+            uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy uuuuuuuuuuuuuuuvvvvvvvvvwwwwwwwwwxxxxxxxxyyyyyyyyy
+
+            aaaaaaaaaabbbbbcccccccccccccccddddddddddeeeeeeeeee aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
+            aaaaaaaaaabbbbbcccccccccccccccddddddddddeeeeeeeeee aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
+            aaaaaaaaaabbbbbcccccccccccccccddddddddddeeeeeeeeee aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
+            aaaaaaaaaabbbbbcccccccccccccccddddddddddeeeeeeeeee ffffffffffbbbbbbbbbbccccccccccddddddddddeeeeeeeeee
+            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
+            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
+            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
+            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj kkkkkkkkkkgggggggggghhhhhhhhhhnnnnnnnnnnoooooooooo
+            kkkkkkkkkklllllmmmmmmmmmmmmnnnnnnnnnnnoooooooooooo kkkkkkkkkkllllllllllmmmmmmmmmmnnnnnnnnnnoooooooooo
+            kkkkkkkkkklllllmmmmmmmmmmmmnnnnnnnnnnnoooooooooooo kkkkkkkkkkllllllllllmmmmmmmmmmnnnnnnnnnnoooooooooo
+            kkkkkkkkkklllllmmmmmmmmmmmmnnnnnnnnnnnoooooooooooo ppppppppppqqqqqqqqqqmmmmmmmmmmsssssssssstttttttttt
+            kkkkkkkkkklllllmmmmmmmmmmmmnnnnnnnnnnnoooooooooooo ppppppppppqqqqqqqqqqmmmmmmmmmmsssssssssstttttttttt
+            ppppppppqqqqqqqrrrrrrrrrrrrrsssssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
+            ppppppppqqqqqqqrrrrrrrrrrrrrsssssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
+            ppppppppqqqqqqqrrrrrrrrrrrrrsssssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
+            ppppppppqqqqqqqrrrrrrrrrrrrrsssssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrssssssssssyyyyyyyyyy
+            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
+            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
+            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
+            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
+
+            aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
+            aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
+            aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
+            aaaaaaaaaabbbbbbbbbbcccccccccciiiiiiiiiijjjjjjjjjj aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
+            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj aaaaaaaaaagggggggggghhhhhhhhhhddddddddddjjjjjjjjjj
+            ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj aaaaaaaaaagggggggggghhhhhhhhhhddddddddddjjjjjjjjjj
+            ffffffffffgggggggggghhhhhhhhhhnnnnnnnnnnoooooooooo ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
+            kkkkkkkkkkllllllllllhhhhhhhhhhnnnnnnnnnnoooooooooo ffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjj
+            kkkkkkkkkkllllllllllmmmmmmmmmmnnnnnnnnnnoooooooooo ffffffffffllllllllllhhhhhhhhhhiiiiiiiiiijjjjjjjjjj
+            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ffffffffffllllllllllhhhhhhhhhhiiiiiiiiiijjjjjjjjjj
+            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ffffffffffllllllllllhhhhhhhhhhiiiiiiiiiijjjjjjjjjj
+            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt kkkkkkkkkkllllllllllmmmmmmmmmmnnnnnnnnnnoooooooooo
+            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt kkkkkkkkkkqqqqqqqqqqmmmmmmmmmmsssssssssstttttttttt
+            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt kkkkkkkkkkqqqqqqqqqqmmmmmmmmmmsssssssssstttttttttt
+            ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
+            uuuuuuuuuuvvvvvvvvvvrrrrrrrrrrsssssssssstttttttttt ppppppppppqqqqqqqqqqrrrrrrrrrrsssssssssstttttttttt
+            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy ppppppppppvvvvvvvvvvrrrrrrrrrrxxxxxxxxxxyyyyyyyyyy
+            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
+            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
+            uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy uuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyy
+        """ )
+
+    def test_Drag_Scalegroups_Empty(self): # Created in flex using "new unittest Drag_Scalegroups_Empty"
+        self.assertFlexSequence( [
+            "reset ; scale 24x10 ; break 1 3x3 m ; drag pq:mno: right 2",
+            "reset ; scale 24x10 ; break 1 3x3 m ; drag pq:: left 2",
+            "reset ; scale 24x10 ; break 1 3x3 m ; drag ru: down 2",
+            "reset ; scale 24x10 ; break 1 3x3 m ; drag mp::oru up 2",
+        ], """
+            mmmmmmmmmmnnnnnnnooooooo mmmmmmmmnnnnnnnnoooooooo mmmmmmmmnnnnnnnnoooooooo mmmmmmmmnnnnnnnnoooooooo
+            mmmmmmmmmmnnnnnnnooooooo mmmmmmmmnnnnnnnnoooooooo mmmmmmmmnnnnnnnnoooooooo mmmmmmmmnnnnnnnnoooooooo
+            mmmmmmmmmmnnnnnnnooooooo mmmmmmmmnnnnnnnnoooooooo mmmmmmmmnnnnnnnnoooooooo ppppppppnnnnnnnnrrrrrrrr
+            mmmmmmmmmmnnnnnnnooooooo mmmmmmmmnnnnnnnnoooooooo mmmmmmmmnnnnnnnnoooooooo ppppppppnnnnnnnnrrrrrrrr
+            ppppppppppqqqqqqrrrrrrrr ppppppqqqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr
+            ppppppppppqqqqqqrrrrrrrr ppppppqqqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr
+            ppppppppppqqqqqqrrrrrrrr ppppppqqqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr
+            ppppppppppqqqqqqrrrrrrrr ppppppqqqqqqqqqqrrrrrrrr ppppppppqqqqqqqqrrrrrrrr ppppppppqqqqqqqquuuuuuuu
+            ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu ssssssssttttttttrrrrrrrr ssssssssttttttttuuuuuuuu
+            ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu ssssssssttttttttrrrrrrrr ssssssssttttttttuuuuuuuu
+            ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu
+            ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu ssssssssttttttttuuuuuuuu
+        """ )
+
+    def test_Drag_Scalegroups_Errors(self): # Created in flex using "new unittest_ignore Drag_Scalegroups_Errors"
+        self.assertFlexSequence( [
+            "reset ; scale 15x6 ; break 1 5x2 V ; drag WX:01234z right 1",
+            "reset ; scale 15x6 ; break 1 5x2 V ; drag WX:z right 1",
+        ], """
+            VVVWWWXXXYYYZZZ VVVWWWXXXYYYZZZ
+            VVVWWWXXXYYYZZZ VVVWWWXXXYYYZZZ
+            VVVWWWXXXYYYZZZ VVVWWWXXXYYYZZZ
+            000111222333444 000111222333444
+            000111222333444 000111222333444
+            000111222333444 000111222333444
+        """, True ) # Ignore notices
+
+# This still needs to be implemented: Automatic splitting of scalegroups when they are combined
+# At the moment this will work as "drag b D:DdGg:FfIi", but that's already been tested in the above
+
 #    def test_Drag_MultipleEdges(self): # Created in flex using "new unittest Drag_MultipleEdges"
 #        self.assertFlexSequence( [
 #            "scale 15x8 ; break 1 3x4 defDEFGHIghi",
-#            "drag b D:dGgFfIi down 2",
+#            "drag b D:DdGgFfIi down 2",
 #        ], """
 #            dddddeeeeefffff dddddeeeeefffff
 #            dddddeeeeefffff dddddeeeeefffff
@@ -1588,7 +1699,7 @@ class Test_FlexModifier_Insert(SenseTestCase):
     def test_Insert_LockTest_Mixed(self): # Created in flex using "new unittest Insert_LockTest_Mixed"
         self.assertFlexSequence( [
             "reset ; break 1 6x4 a ; scale 5x:3x",
-            "drag ag:ms up 2 ; drag ou:ci down 2 ; drag xw:v left 2 ; drag jk:l right 2",
+            "drag ag:agms up 2 ; drag ou:ouci down 2 ; drag xw:xwv left 2 ; drag jk:jkl right 2",
             "insert ni 1",
             "insert ij 1",
             "insert wp 1",
@@ -1914,6 +2025,27 @@ class Test_FlexModifier_Insert(SenseTestCase):
         ], """
             1234 1111222233334444
             5678 5670000000000008
+        """ )
+
+    def test_Insert_Scalegroups(self): # Created in flex using "new unittest Insert_Scalegroups"
+        self.assertFlexSequence( [
+            "reset ; break 1 3x3 1 ; scale 5x 3x ; insert 23:456:789 6",
+            "reset ; break 1 3x3 1 ; scale 5x 3x ; insert 78:123:456 6",
+            "reset ; break 1 3x3 1 ; scale 5x 3x ; insert top 1:258:369 3",
+            "reset ; break 1 3x3 1 ; scale 5x 3x ; insert bottom 9:147:258 3",
+        ], """
+            111112222200000033333 111111122222223333333 000002222233333 111112222233333
+            111112222200000033333 111111122222223333333 000002222233333 111112222233333
+            111112222200000033333 111111122222223333333 000002222233333 111112222233333
+            444444455555556666666 444444455555556666666 111112222233333 111112222266666
+            444444455555556666666 444444455555556666666 111115555566666 444445555566666
+            444444455555556666666 444444455555556666666 111115555566666 444445555566666
+            777777788888889999999 777770000008888899999 444445555566666 444445555599999
+            777777788888889999999 777770000008888899999 444445555566666 444445555599999
+            777777788888889999999 777770000008888899999 444448888899999 777778888899999
+                                                        777778888899999 777778888800000
+                                                        777778888899999 777778888800000
+                                                        777778888899999 777778888800000
         """ )
 
 
