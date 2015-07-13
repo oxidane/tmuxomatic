@@ -1972,6 +1972,64 @@ class Test_FlexModifier_Insert(SenseTestCase):
             5678 5670000000000008
         """ )
 
+    def test_Insert_Various_5(self): # Created in flex using "new unittest Insert_Various_5"
+        self.assertFlexSequence( [
+            "reset ; break 1 9x2 ; join 0.a 123.b 4.X 567.y 8.z 9a.0 bcdef.1 gh.x ; insert X1 2",
+            "reset ; break 1 4x2 ; scale 3xx1x ; drag 56 left 1 ; drag 67 right 1 ; insert horizontal 16 2 x",
+        ], """
+            abbbXyyyz 000111222333
+            abbb2yyyz 00055x222333
+            abbb2yyyz 44455x222333
+            0011111xx 444556666677
+        """ )
+
+    def test_Insert_ThoroughEdgeV1V2(self): # Created in flex using "new unittest Insert_ThoroughEdgeV1V2"
+        self.assertFlexSequence( [
+            "reset ; break 1 2x1 ; join 0.L 1.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x3 ; join 024.L 3.R 1 5.2 ; insert vertical LR 2 z",
+            "reset ; break 1 2x3 ; join 02.L 3.R 1 4.2 5.3 ; insert vertical LR 2 z",
+            "reset ; break 1 2x3 ; join 0.1 24.L 3.R 5.2 1.3 ; insert vertical LR 2 x",
+            "reset ; break 1 2x3 ; join 2.L 3.R 0 1 4.3 5.4 ; insert vertical LR 2 z",
+            "reset ; break 1 2x3 ; join 2.L 35.R 0.1 1.2 4.3 ; insert vertical LR 2 z",
+            "reset ; break 1 2x3 ; join 2.L 13.R 0.1 4.2 5.3 ; insert vertical LR 2 z",
+            "reset ; break 1 2x3 ; join 2.L 135.R 0.1 4.2 ; insert vertical LR 2 z",
+            "reset ; break 1 2x3 ; join 02.L 35.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x3 ; join 02.L 135.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x3 ; join 02.L 13.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x3 ; join 24.L 35.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x3 ; join 24.L 135.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x3 ; join 24.L 13.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x3 ; join 024.L 135.R ; insert vertical LR 2 z",
+        ], """
+            LzzR L111 L111 1133 0011 1122 111R 111R L111 LzzR LzzR 0011 000R 000R LzzR
+                 LzzR LzzR LxxR LzzR LzzR LzzR LzzR LzzR LzzR LzzR LzzR LzzR LzzR LzzR
+                 L222 2233 L222 3344 333R 2233 222R 444R 444R 4455 LzzR LzzR L555 LzzR
+        """ )
+
+    def test_Insert_ThoroughEdgeV3(self): # Created in flex using "new unittest Insert_ThoroughEdgeV3"
+        self.assertFlexSequence( [
+            "reset ; break 1 2x5 1 ; join 357.L 6.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x5 1 ; join 35.L 6.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x5 1 ; join 57.L 6.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x5 1 ; join 5.L 6.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x5 1 ; join 5.L 68.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x5 1 ; join 5.L 46.R ; insert vertical LR 2 x",
+            "reset ; break 1 2x5 1 ; join 5.L 468.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x5 1 ; join 35.L 68.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x5 1 ; join 35.L 468.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x5 1 ; join 35.L 46.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x5 1 ; join 57.L 68.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x5 1 ; join 57.L 468.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x5 1 ; join 57.L 46.R ; insert vertical LR 2 z",
+            "reset ; break 1 2x5 1 ; join 357.L 468.R ; insert vertical LR 2 z",
+        ], """
+            1122 1122 1122 1122 1122 1122 1122 1122 1122 1122 1122 1122 1122 1122
+            L444 L444 3344 3344 3344 333R 333R L444 LzzR LzzR 3344 333R 333R LzzR
+            LzzR LzzR LzzR LzzR LzzR LxxR LzzR LzzR LzzR LzzR LzzR LzzR LzzR LzzR
+            L888 7788 L888 7788 777R 7788 777R 777R 777R 7788 LzzR LzzR L888 LzzR
+            99aa 99aa 99aa 99aa 99aa 99aa 99aa 99aa 99aa 99aa 99aa 99aa 99aa 99aa
+        """ )
+
     def test_Insert_Scalegroups(self): # Created in flex using "new unittest Insert_Scalegroups"
         self.assertFlexSequence( [
             "reset ; break 1 3x3 1 ; scale 5x 3x ; insert 23:456:789 6",
