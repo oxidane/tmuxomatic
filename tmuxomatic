@@ -1865,7 +1865,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
         # 5.1) Refine list_panes so all expected variables are present for cleaner reference
         #
         for pane in list_panes:
-            if not 'dir' in pane: pane['dir'] = ""
+            if not 'dir' in pane: pane['dir'] = default_directory
             if not 'run' in pane: pane['run'] = [ "" ]
             if not 'foc' in pane: pane['foc'] = False
 
