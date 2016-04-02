@@ -21,7 +21,7 @@ version = extract("VERSION")
 homepage = extract("HOMEPAGE")
 hashtags = "#tmux"
 description = extract("DESCRIPTION") + " ... " + hashtags
-long_description = fullfile("README.rst")
+long_description = fullfile("README.md")
 
 KEYWORDS = "tmux, session manager, screen, shell, command line, iterm, xterm, split, windowgram"
 keywords = [ key.strip() for key in KEYWORDS.split(",") ] # "1, 2, 3" -> ["1", "2", "3"]
