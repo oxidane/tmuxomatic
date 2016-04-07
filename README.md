@@ -355,7 +355,7 @@ By downloading, copying, installing or using the software you agree to the licen
 
 #### Copyright
 
-Copyright 2013-2015, Oxidane.  All rights reserved.
+Copyright 2013-2016, Oxidane.  All rights reserved.
 
 #### License
 

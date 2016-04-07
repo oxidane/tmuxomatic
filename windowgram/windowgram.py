@@ -3,7 +3,7 @@
 
 """
 
-Copyright 2013-2015, Oxidane
+Copyright 2013-2016, Oxidane
 All rights reserved
 
 This source has NOT yet been licensed for redistribution, modification, or inclusion in other projects.
