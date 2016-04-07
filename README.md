@@ -301,7 +301,7 @@ For this demonstration, we modify the windowgram from the previous demonstration
 This application requires the following:
 
   * [Python 3](http://www.python.org/getit/) +
-  * [tmux 1.8](http://tmux.sourceforge.net/) +
+  * [tmux 1.8](http://tmux.github.io/) +
 
 #### Installation Guide
 
