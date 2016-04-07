@@ -535,6 +535,19 @@ def command_matches(command, primary):
     if primary in ALIASES and command in ALIASES[primary].split(" "): return True
     return False
 
+def qsplit(string, maxsplit=None):
+    # Just like string.split() but respects quoted strings
+    #   "1 \"t w o\" 3"   ->   [ '1', '"t w o"', '3' ]
+    result = re.findall(r"[^\"]+|\"[^\"]*\"", string) # Based on: https://stackoverflow.com/a/366532
+    if maxsplit is not None: result = result[:maxsplit]
+    result, result_scan = [], result
+    for e1 in result_scan:
+        if e1.startswith("\""):
+            result.append(e1)
+        else:
+            result = result + [ e2 for e2 in e1.split(" ") if e2 ]
+    return result
+
 
 
 ##----------------------------------------------------------------------------------------------------------------------
@@ -1630,7 +1643,11 @@ class QuerySession_tmux(object):
                 data = line.split(":", 1)
                 if len(data) > 1:
                     window_id = data[0].strip()
-                    window_name = data[1].strip().split(" ", 1)[0].strip()
+                    window_name = None
+                    match = re.search(r"\(([0-9]+) panes\)", data[1].strip())
+                    if match:
+                        span = match.span()
+                        window_name = data[1].strip()[:span[0]].strip()
                     if window_id and window_name:
                         has_flag = sum([ 1 if window_name.endswith(ch) else 0 for ch in list("*-#!+~") ])
                         if has_flag: window_name = window_name[:-1] # Strip tmux status line flags
@@ -2033,8 +2050,8 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
     switch_back = semicolon + switch_back
     batch = ""
     def execute(batch, switch_back):
-        if batch: batch += switch_back
         if batch:
+            batch += switch_back
             error = tmux_run( ( ( cwd_execution + " ; " ) if cwd_execution else "" ) + ( EXE_TMUX + " " + batch ) )
             if error:
                 if "pane too small" in error:
@@ -2042,8 +2059,14 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
                     msg = "Window splitting error (pane too small), make your window larger and try again"
                 else:
                     msg = "An error occurred in tmux: " + error
-                synerr(errpkg, msg )
+                synerr(errpkg, msg)
     for cmd in list_commands:
+        # Make sure command fits if it's the only command in this tmux batch .... V command goes here
+        req = len(last_window) + len(semicolon) + len(last_pane) + len(semicolon) + len(switch_back)
+        if len(cmd) > batch_len - req:
+            synerr(errpkg,
+                "The command length ({}) exceeds maximum length available ({}) in a tmux message ({}): {}".format(
+                    len(cmd), batch_len - req, batch_len, cmd))
         restart = False
         if not batch:
             restart = True
@@ -2065,7 +2088,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
                     addcmd(last_pane)
             addcmd(cmd)
         if cmd.startswith("new-window"):
-            last_window = "select-window -t " + cmd.split()[2]
+            last_window = "select-window -t " + qsplit(cmd)[2] # Supports window names with spaces
             last_pane = ""
         if cmd.startswith("select-pane"):
             last_pane = cmd
