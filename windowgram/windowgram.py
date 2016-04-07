@@ -925,7 +925,7 @@ class Windowgram():
     def Panes_GetUsedUnused(self): # used, unused
         # Mutually exclusive list of pane ids for given windowgram
         windowgram_lines = self.Export_Lines()
-        used = "".join( sorted( list(set(list("".join(windowgram_lines)))), 
+        used = "".join( sorted( list(set(list("".join(windowgram_lines)))),
             key=lambda x: ValidPanes(self.extend).find(x) ) )
         unused = "".join( [ paneid for paneid in ValidPanes(self.extend) if paneid not in used ] )
         return used, unused
