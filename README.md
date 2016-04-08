@@ -7,7 +7,7 @@
 A completely different kind of tmux session manager.
 
 1. [Introduction](https://github.com/oxidane/tmuxomatic#introduction)
-2. [Learn by example](https://github.com/oxidane/tmuxomatic#learn-by-example)
+2. [One example](https://github.com/oxidane/tmuxomatic#one-example)
 3. [Flex](https://github.com/oxidane/tmuxomatic#flex) ... ( i. [Concepts](https://github.com/oxidane/tmuxomatic#flex-concepts), ii. [Demo #1](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram), iii. [Demo #2](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-the-windowgram) )
 4. [Installation](https://github.com/oxidane/tmuxomatic#installation) ... ( i. [Requirements](https://github.com/oxidane/tmuxomatic#installation-requirements), ii. [Guide](https://github.com/oxidane/tmuxomatic#installation-guide), iii. [Optional packages](https://github.com/oxidane/tmuxomatic#optional-packages) )
 5. [Notes on tmux](https://github.com/oxidane/tmuxomatic#notes-on-tmux)
@@ -20,11 +20,11 @@ A completely different kind of tmux session manager.
 
 Other tmux session managers require pages of documentation for basic use, and define windows using a complicated nesting of pane splits.  Instead, tmuxomatic is so easy that anyone could use it after just one example.  Yet tmuxomatic is more flexible and more powerful than other tmux session managers.
 
-At the heart of tmuxomatic is the **windowgram**, a better way of arranging tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character grouping identifies the name, position, size, and shape of a pane.  It should take only one example to demonstrate the power and flexibility of the windowgram.
+At the heart of tmuxomatic is the **windowgram**, a better way of arranging tmux windows.  The windowgram is a rectangle comprised of alphanumeric characters (0-9, a-z, A-Z).  Each character grouping identifies the name, position, size, and shape of a pane.  It should take only **one example** to demonstrate the power and flexibility of the windowgram.
 
 
 
-## Learn by example
+## One example
 
 Compare this window from `session_example`, with its screenshot from `tmuxomatic session_example`:
 
@@ -47,7 +47,9 @@ Compare this window from `session_example`, with its screenshot from `tmuxomatic
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
 
-For additional features, see the included example sessions.  For a list of command line arguments, run `tmuxomatic --help`.
+For additional features, see the included example sessions.
+
+For a list of command line arguments, run `tmuxomatic --help`.
 
 
 
@@ -55,7 +57,7 @@ For additional features, see the included example sessions.  For a list of comma
 
 Windowgrams are a neat way of arranging workspaces.  For simpler layouts, a windowgram can be typed up quickly.  But if you need detail, you may find yourself doing a lot of ASCII art.
 
-In tmuxomatic 2.x, **flex** was added to automate the construction and modification of the windowgram itself.
+In tmuxomatic 2, a new feature named Flex has been added to automate the construction and modification of the windowgram itself.
 
 Flex is an object-oriented windowgram editor.  It is visually expressive, naturally worded, logically ordered, minimal, and powerful.  Its short command set may be combined to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who desire detailed windowgrams without the tedium of manual entry.
 
@@ -265,7 +267,7 @@ For this demonstration, we modify the windowgram from the previous demonstration
 
 **Insert**:
 
-> Insert a pane to the `left` of pane `s` (while scaling group `BDLbdl`) exactly `6` characters wide
+> Insert a pane to the `left` of pane `s` (while scaling group `BDLbdl`) and make it `6` characters wide
 
 	flex> insert left s:BDLbdl 6
 
@@ -327,7 +329,7 @@ There are three ways to install tmuxomatic, in order of convenience:
     * `pandoc -f markdown -t rst README.md -o README.rst`
     * `python3 setup.py install`
 
-Verify that the version reported by `tmuxomatic -V` matches the latest release.  [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
+Verify that the version reported by `tmuxomatic -V` matches or exceeds the latest release.  [![](http://img.shields.io/pypi/v/tmuxomatic.svg?style=flat)](https://pypi.python.org/pypi/tmuxomatic)
 
 #### Optional Packages
 
@@ -362,4 +364,6 @@ Copyright 2013-2016, Oxidane.  All rights reserved.
 The `windowgram` module is presently not licensed for use outside the tmuxomatic project.  For more information, including future plans for an open source license, please see the file `windowgram.py`.
 
 The `tmuxomatic` source is distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution.  See the license for details.
+
+
 
