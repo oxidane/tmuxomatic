@@ -10,7 +10,7 @@ A completely different kind of tmux session manager.
 2. [One example](https://github.com/oxidane/tmuxomatic#one-example)
 3. [Flex](https://github.com/oxidane/tmuxomatic#flex) ... ( i. [Concepts](https://github.com/oxidane/tmuxomatic#flex-concepts), ii. [Demo #1](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram), iii. [Demo #2](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-the-windowgram) )
 4. [Installation](https://github.com/oxidane/tmuxomatic#installation) ... ( i. [Requirements](https://github.com/oxidane/tmuxomatic#installation-requirements), ii. [Guide](https://github.com/oxidane/tmuxomatic#installation-guide), iii. [Optional packages](https://github.com/oxidane/tmuxomatic#optional-packages) )
-5. [Notes on tmux](https://github.com/oxidane/tmuxomatic#notes-on-tmux)
+5. [Using tmux](https://github.com/oxidane/tmuxomatic#using-tmux)
 6. [Contributor agreement](https://github.com/oxidane/tmuxomatic#contributor-agreement)
 7. [Legal](https://github.com/oxidane/tmuxomatic#legal) ... ( i. [Copyright](https://github.com/oxidane/tmuxomatic#copyright), ii. [License](https://github.com/oxidane/tmuxomatic#license) )
 
@@ -26,7 +26,7 @@ At the heart of tmuxomatic is the **windowgram**, a better way of arranging tmux
 
 ## One example
 
-Compare this window from `session_example`, with its screenshot from `tmuxomatic session_example`:
+Take the following window definition from the file `session_example`:
 
 	window example_one        # A new window begins like this, spaces in names allowed
 
@@ -43,11 +43,13 @@ Compare this window from `session_example`, with its screenshot from `tmuxomatic
 	Q run figlet "Q"
 	A foc
 
+And compare it to the resulting screenshot after running `tmuxomatic session_example`:
+
 ![](https://raw.githubusercontent.com/oxidane/tmuxomatic/master/screenshots/screenshot_example.png)
 
-With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no extra file format rules to remember, and typically no command line arguments will be necessary.
+With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no other file format rules to remember, and typically no command line arguments will be necessary.
 
-For additional features, see the included example sessions.
+Additional examples may be found in the included session files.  Other features are listed elsewhere in the documentation and in the source code.
 
 For a list of command line arguments, run `tmuxomatic --help`.
 
@@ -339,7 +341,7 @@ The following packages are optional; install if you want the additional features
 
 
 
-## Notes on tmux
+## Using tmux
 
 To use tmuxomatic, you don't have to know everything about [how to use tmux](http://net.tutsplus.com/tutorials/tools-and-tips/intro-to-tmux/), but the knowledge is useful for [customizing the tmux status bar](http://me.veekun.com/blog/2012/03/21/tmux-is-sweet-as-heck/), or [changing the default key bindings](https://wiki.archlinux.org/index.php/tmux#Key_bindings).  These are tmux user preferences, and typically placed in a personal `.tmux.conf` file.
 
