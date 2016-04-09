@@ -209,7 +209,7 @@ VERSION = "2.19" # x.y: x = Major feature, y = Minor feature or bug fix
 ##
 ##      Maybe unit testing for windowgram parser, and flex commands.
 ##
-##      Move unit testing online, for a faster flex startup.
+##      Run unit testing online.
 ##
 ## Major:
 ##
@@ -1279,14 +1279,6 @@ def cmd_exit(fpp_PRIVATE):
 
 def flex_shell(session, serial=0):
     ##
-    ## Unit testing required before entering flex
-    ##
-    print("Please wait a moment for flex to start...")
-    error = Flex_UnitTests()
-    if error:
-        print("\nFlex Unit Test Failure:\n" + error)
-        exit()
-    ##
     ## Poll dimensions
     ##
     user_wh = [ 0, 0 ]
@@ -2182,6 +2174,16 @@ def main():
     new_name = session.RenameIfSpecified()
     if new_name is not None: session_name = new_name
 
+    #
+    # Unit testing required before entering flex
+    #
+    if ARGS.tests:
+        print("Running unit tests, please wait...")
+        error = Flex_UnitTests()
+        if error:
+            print("\nUnit Test Failure:\n" + error)
+            exit()
+
     # Flex shell entry
     if ARGS.flex:
         session = flex_shell( session, serial )
@@ -2292,6 +2294,9 @@ if __name__ == "__main__":
         "Print only the tmux commands, then exit" )
     PARSER.add_argument( "-x", "--noexecute", action="store_true", help=\
         "Do everything except issue commands to tmux" )
+    PARSER.add_argument( "-t", "--tests", action="store_true", help=\
+        "Perform all unit tests.  Execution will proceed as normal " + \
+        "unless unit tests fail.")
     PARSER.add_argument( "-r", "--recreate", action="store_true", help=\
         "If the session exists, it will be destroyed then recreated.  " + \
         "Normally, if it exists, tmuxomatic will reattach to it.")
