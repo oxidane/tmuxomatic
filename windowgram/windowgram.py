@@ -1738,9 +1738,17 @@ def smudgecore(wg, edge, axis, length, direction, run=None): # wg
 ##
 ##      breakout <pane> [shapes]                    break with axial concatenated shapes, "2x2; x 2x2 3x1; y 1 3x3 1"
 ##      cycle <panegroup1> <panegroup2> ...         cycle if all bounding boxes share full edge, or are of equal size
-##      move <panes1> <panes2>                      swap if both panes are defined otherwise rename (probably redundant)
+##      swapname <panes1> <panes2>                  swap if both panes are defined otherwise rename (redundant?)
 ##      blockswap <panes1> <panes2>                 swaps one block of panes for another, e.g. `BLDbld` with `1` in demo
 ##      subscale <group> <xy>                       exactly like scale but on a group of panes within the windowgram
+##      truncate <edge>                             truncate windowgram at specified edge (loses panes)
+##      move <group> <edge>                         same as clone but delete then insert
+##      jump <group1> <group2>                      same as clone but delete then replace existing pane/group
+##
+## Required for another project:
+##
+##      blank <panes>                               transparency support: convert specified panes "."
+##      fill                                        transparency support: convert "." into neighboring panes
 ##
 ## Other features:
 ##
@@ -2779,7 +2787,7 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
                   "A <hint> may be necessary to resolve ambiguity; this is either an axis (VH) or a direction " + \
                   "(TBLR).  Optional scalegroups are supported, add a colon (:) to the <edge> followed by the " + \
                   "panes to be scaled.  To prevent loss of panes, set [limit] to \"yes\".",
-    aliases     = [ ["move", "drag "], ["slide", "drag "], ],
+    aliases     = [ ["slide", "drag "], ],
 )
 def cmd_drag_1(fpp_PRIVATE, edge, direction, size): # No support for limit without some analysis
     return cmd_drag_2(fpp_PRIVATE, "", edge, direction, size)
