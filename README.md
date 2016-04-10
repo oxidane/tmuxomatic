@@ -8,7 +8,7 @@ A completely different kind of tmux session manager.
 
 1. [Introduction](https://github.com/oxidane/tmuxomatic#introduction)
 2. [One Example](https://github.com/oxidane/tmuxomatic#one-example)
-3. [Flex](https://github.com/oxidane/tmuxomatic#flex) ... ( i. [Concepts](https://github.com/oxidane/tmuxomatic#flex-concepts), ii. [Demo #1](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram), iii. [Demo #2](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-the-windowgram) )
+3. [Flex](https://github.com/oxidane/tmuxomatic#flex) ... ( i. [Concepts](https://github.com/oxidane/tmuxomatic#flex-concepts), ii. [Demo #1](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-new-windowgram), iii. [Demo #2](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-previous-windowgram) )
 4. [Installation](https://github.com/oxidane/tmuxomatic#installation) ... ( i. [Requirements](https://github.com/oxidane/tmuxomatic#installation-requirements), ii. [Guide](https://github.com/oxidane/tmuxomatic#installation-guide), iii. [Optional Packages](https://github.com/oxidane/tmuxomatic#optional-packages) )
 5. [Using tmux](https://github.com/oxidane/tmuxomatic#using-tmux)
 6. [Contributor Agreement](https://github.com/oxidane/tmuxomatic#contributor-agreement)
