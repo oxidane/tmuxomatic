@@ -68,6 +68,7 @@ VERSION = "2.19.dev" # x.y: x = Major feature, y = Minor feature or bug fix
 ##  2.19    TBD         TBD
 ##                      Implemented #10: Adds windows to current session if run within tmux
 ##                      Optimized window creation by combining tmux commands into fewer executable calls
+##                      Fixed issue #13: User defined pane-base-index
 ##
 ##  2.18    2015-07-03  New flex command: insert
 ##                      Fixed issues #11, #12: Better handling of the "window" directive
@@ -1656,6 +1657,25 @@ class QuerySession_tmux(object):
                     panes.append( elem )
         return panes
 
+    def tmux_base_index_window(self):
+        # This is not used because tmuxomatic references windows by name; function retained in case this changes
+        result = tmux_run( EXE_TMUX + " show-option -g base-index", False, False, True )
+        if "\n" in result:
+            result, _ = result.split("\n", 1)
+        label, value = result.split(" ", 1)
+        if label == "base-index":
+            return int(value)
+        return None
+
+    def tmux_base_index_pane(self):
+        result = tmux_run( EXE_TMUX + " show-window-option -g pane-base-index", False, False, True )
+        if "\n" in result:
+            result, _ = result.split("\n", 1)
+        label, value = result.split(" ", 1)
+        if label == "pane-base-index":
+            return int(value)
+        return None
+
 
 
 ##----------------------------------------------------------------------------------------------------------------------
@@ -1709,6 +1729,14 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
             errpkg['line'] = linebase + lineoffset # Exact line (shorthand)
         else:
             errpkg['line'] = linebase # Approximate line (yaml)
+
+    #
+    # Get current session base index
+    #
+    baseindex_pane = run_session.tmux_base_index_pane()
+    if baseindex_pane is None:
+        print("Unable to get pane-base-index from tmux")
+        exit(0)
 
     #
     # Parse session file
@@ -1948,7 +1976,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
                     list_build.append( "new-window -n \"" + window_name + "\"" + adddir )
             else: # Successive
                 # Perform the split on this pane
-                list_build.append( "select-pane -t " + str(list_split_paneid) )
+                list_build.append( "select-pane -t " + str(baseindex_pane + list_split_paneid) )
                 # Pane sizing
                 if ARGS.relative:
                     # Relative pane sizing (percentage)
@@ -1959,7 +1987,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
                     if list_split_orient == 'v': addaxis = " -y " + str( list_split_inst_h )
                     else: addaxis = " -x " + str( list_split_inst_w )
                     list_build.append( "split-window -" + list_split_orient + adddir )
-                    list_build.append( "resize-pane -t " + str(list_split_paneid + 1) + addaxis )
+                    list_build.append( "resize-pane -t " + str(baseindex_pane + list_split_paneid + 1) + addaxis )
 
         #
         # 5.3b) Prepare shell commands ... This is done separately after the pane size has been established
@@ -1968,7 +1996,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
             # Now that the tmux pane index correlates, cross-reference for easier lookups
             list_panes_l = ent_panes['l']           # 1234          This is for cross-referencing
             ent_panes['tmux'] = str([tup[1] for tup in list_links if tup[0] == list_panes_l][0])
-        focus_actual_tmux_pane_index = "0" # Default pane_index
+        focus_actual_tmux_pane_index = str(baseindex_pane) # Default pane_index
         for ent_panes in list_panes:
             #
             # Readability
@@ -1976,7 +2004,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
             list_panes_l = ent_panes['l']           # 1234          This is for cross-referencing
             list_panes_run = ent_panes['run']       # ["cd", "ls"]  Commands to run on pane
             list_panes_foc = ent_panes['foc']       # True          Determines if pane is in focus
-            list_panes_index = ent_panes['tmux']
+            list_panes_index = str( baseindex_pane + int(ent_panes['tmux']) )
             #
             # Run
             #
@@ -2196,10 +2224,12 @@ def main():
     #   Executed within tmux .... Append windows to existing session and drop back to shell with relevant information
     #   Executed outside tmux ... Create new tmux session from scratch and handle it accordingly (classic behavior)
     #
+
+    # Set up query session object
     run_session = QuerySession_tmux()
     if run_session.error:
-        print(run_session.error)
-        exit()
+        print("Query session object error: " + run_session.error)
+        exit(0)
     if run_session.valid:
         # Copy the real xterm dimensions obtained from tmux, required for correct sizing
         user_wh = run_session.user_wh
