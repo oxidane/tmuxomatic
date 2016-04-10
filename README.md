@@ -11,8 +11,7 @@ A completely different kind of tmux session manager.
 3. [Flex](https://github.com/oxidane/tmuxomatic#flex) ... ( i. [Concepts](https://github.com/oxidane/tmuxomatic#flex-concepts), ii. [Demo #1](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-new-windowgram), iii. [Demo #2](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-previous-windowgram) )
 4. [Installation](https://github.com/oxidane/tmuxomatic#installation) ... ( i. [Requirements](https://github.com/oxidane/tmuxomatic#installation-requirements), ii. [Guide](https://github.com/oxidane/tmuxomatic#installation-guide), iii. [Optional Packages](https://github.com/oxidane/tmuxomatic#optional-packages) )
 5. [Using tmux](https://github.com/oxidane/tmuxomatic#using-tmux)
-6. [Contributor Agreement](https://github.com/oxidane/tmuxomatic#contributor-agreement)
-7. [Legal](https://github.com/oxidane/tmuxomatic#legal) ... ( i. [Copyright](https://github.com/oxidane/tmuxomatic#copyright), ii. [License](https://github.com/oxidane/tmuxomatic#license) )
+6. [Legal](https://github.com/oxidane/tmuxomatic#legal) ... ( i. [Copyright](https://github.com/oxidane/tmuxomatic#copyright), ii. [License](https://github.com/oxidane/tmuxomatic#license), iii. [Contributor Agreement](https://github.com/oxidane/tmuxomatic#contributor-agreement) )
 
 
 
@@ -347,12 +346,6 @@ To use tmuxomatic, you don't have to know everything about [how to use tmux](htt
 
 
 
-## Contributor Agreement
-
-Contributions must be comprised of original source, and/or properly attributed public domain source.  By submitting, you agree that your contribution will inherit the current copyright and license, and will be subject to future changes in tmuxomatic and any officially-related projects.
-
-
-
 ## Legal
 
 By downloading, copying, installing or using the software you agree to the license.  If you do not agree to the license, do not download, copy, install, or use the software.
@@ -366,6 +359,10 @@ Copyright 2013-2016, Oxidane.  All rights reserved.
 The `windowgram` module is presently not licensed for use outside the tmuxomatic project.  For more information, including future plans for an open source license, please see the file `windowgram.py`.
 
 The `tmuxomatic` source is distributed under the [BSD 3-Clause License](http://opensource.org/licenses/BSD-3-Clause).  The copyright and license must be included with any use, modification, or redistribution.  See the license for details.
+
+#### Contributor Agreement
+
+Contributions must be comprised of original source, and/or properly attributed public domain source.  By submitting, you agree that your contribution will inherit the current copyright and license, and will be subject to future changes in tmuxomatic and any officially-related projects.
 
 
 
