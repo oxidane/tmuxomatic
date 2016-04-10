@@ -7,11 +7,11 @@
 A completely different kind of tmux session manager.
 
 1. [Introduction](https://github.com/oxidane/tmuxomatic#introduction)
-2. [One example](https://github.com/oxidane/tmuxomatic#one-example)
+2. [One Example](https://github.com/oxidane/tmuxomatic#one-example)
 3. [Flex](https://github.com/oxidane/tmuxomatic#flex) ... ( i. [Concepts](https://github.com/oxidane/tmuxomatic#flex-concepts), ii. [Demo #1](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-a-new-windowgram), iii. [Demo #2](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-the-windowgram) )
-4. [Installation](https://github.com/oxidane/tmuxomatic#installation) ... ( i. [Requirements](https://github.com/oxidane/tmuxomatic#installation-requirements), ii. [Guide](https://github.com/oxidane/tmuxomatic#installation-guide), iii. [Optional packages](https://github.com/oxidane/tmuxomatic#optional-packages) )
+4. [Installation](https://github.com/oxidane/tmuxomatic#installation) ... ( i. [Requirements](https://github.com/oxidane/tmuxomatic#installation-requirements), ii. [Guide](https://github.com/oxidane/tmuxomatic#installation-guide), iii. [Optional Packages](https://github.com/oxidane/tmuxomatic#optional-packages) )
 5. [Using tmux](https://github.com/oxidane/tmuxomatic#using-tmux)
-6. [Contributor agreement](https://github.com/oxidane/tmuxomatic#contributor-agreement)
+6. [Contributor Agreement](https://github.com/oxidane/tmuxomatic#contributor-agreement)
 7. [Legal](https://github.com/oxidane/tmuxomatic#legal) ... ( i. [Copyright](https://github.com/oxidane/tmuxomatic#copyright), ii. [License](https://github.com/oxidane/tmuxomatic#license) )
 
 
@@ -24,7 +24,7 @@ At the heart of tmuxomatic is the **windowgram**, a better way of arranging tmux
 
 
 
-## One example
+## One Example
 
 Take the following window definition from the file `session_example`:
 
@@ -63,7 +63,7 @@ In tmuxomatic 2, a new feature named Flex has been added to automate the constru
 
 Flex is an object-oriented windowgram editor.  It is visually expressive, naturally worded, logically ordered, minimal, and powerful.  Its short command set may be combined to make any conceivable windowgram -- likely more quickly and more easily than crafting by hand.  Flex is intended for power users who desire detailed windowgrams without the tedium of manual entry.
 
-#### Flex concepts
+#### Flex Concepts
 
 Before proceeding with the flex demonstration, take a moment to review key concepts used by the commands.
 
@@ -75,7 +75,7 @@ Before proceeding with the flex demonstration, take a moment to review key conce
 
 In the demonstrations that follow, the flex shell is represented in short form by the `flex>` prompt.  For a list of flex commands with example usage, type `help` from the shell at any time.
 
-#### Flex demonstration #1 -- Create a new windowgram
+#### Flex Demonstration #1 -- Create New Windowgram
 
 Let's use flex to build a windowgram that would otherwise require repetitious typing and/or careful editing.
 
@@ -180,7 +180,7 @@ That's it.  Our windowgram is ready to use.
 
 Either type `done` and flex will open this session file in tmux, or type `exit` and add some directions (run commands, home directories, and focus state) to the session file.  For more information on directions, see the example session at the start of this readme.
 
-#### Flex demonstration #2 -- Extend the windowgram
+#### Flex Demonstration #2 -- Extend Previous Windowgram
 
 For this demonstration, we modify the windowgram from the previous demonstration, using a different set of flex commands.  The commands in this demonstration are described in summary form.  For more information on these or any other flex commands, type `help <command>` at the flex prompt.
 
@@ -347,7 +347,7 @@ To use tmuxomatic, you don't have to know everything about [how to use tmux](htt
 
 
 
-## Contributor agreement
+## Contributor Agreement
 
 Contributions must be comprised of original source, and/or properly attributed public domain source.  By submitting, you agree that your contribution will inherit the current copyright and license, and will be subject to future changes in tmuxomatic and any officially-related projects.
 
