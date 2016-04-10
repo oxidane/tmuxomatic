@@ -2199,7 +2199,7 @@ def cmd_scale_2(fpp_PRIVATE, x_how, y_how): # 2 parameters
     examples    = [ "add right 50% A", "add b 3", "add l .5x" ],
     description = "Append pane to windowgram edge.  Edge is identified by name (e.g., right), or a variety of " + \
                   "abbreviations (e.g., r, rt).  The size of the pane may be defined as an exact character size, " + \
-                  "a percentage (%), or a multiplier (x).  If a pane id is not specified, lowest available will " + \
+                  "a percentage (%), or a multiplier (x).  If [newpane] is not specified, lowest available will " + \
                   "be used.",
     aliases     = [ ["append", "add "], ["app", "add "] ],
 )
@@ -2269,9 +2269,9 @@ def cmd_add(fpp_PRIVATE, edge, size, newpane=None):
     command     = "break",
     group       = "modifiers",
     examples    = [ "break 1 3x3", "break 0 3x1 x", "break z 3x2 IVXLCD" ],
-    description = "Break a pane into a grid of specified dimensions.  If the break does not produce even panes at " + \
-                  "the specified resolution, it will automatically scale up to the next best fit.  The newpanes " + \
-                  "parameter is an optional starting pane id, or pane rename sequence.",
+    description = "Break a pane into a grid of specified dimensions.  The new panes are guaranteed to be of equal " + \
+                  "size, by automatically scaling up the windowgram as necessary.  The [newpanes] parameter is an " + \
+                  "optional starting pane id, or pane rename sequence.",
     aliases     = [ ["grid", "break "], ["panes", "break "], ],
 )
 def cmd_break(fpp_PRIVATE, pane, grid, newpanes=None):
@@ -2367,9 +2367,9 @@ def cmd_break(fpp_PRIVATE, pane, grid, newpanes=None):
     command     = "join",
     group       = "modifiers",
     examples    = [ "join abcd efgh", "join abcd.x efgh.y" ],
-    description = "Join a contiguous group of panes into a single pane.  Multiple joins are supported.  The joined " + \
-                  "pane is named after the first pane specified, but can be renamed by adding dot (.) followed by " + \
-                  "the pane id.",
+    description = "Joins a contiguous group of panes into a single pane.  Multiple joins are supported.  The " + \
+                  "joined pane is named after the first pane specified in the group, but this can be renamed by " + \
+                  "adding a dot (.) followed by the new pane id.",
     aliases     = [ ["group", "join "], ["merge", "join "], ["glue", "join "], ],
 )
 def cmd_join(fpp_PRIVATE, *groups_REQUIRED):
@@ -2462,9 +2462,9 @@ def cmd_join(fpp_PRIVATE, *groups_REQUIRED):
     command     = "split",
     group       = "modifiers",
     examples    = [ "split 1 bottom 3", "split 1 vertical -3", "split 0 left 25% LR" ],
-    description = "Splits one pane on either: an axis (vert, horz), or from an edge (top, left).  For an axis, a " + \
-                  "negation of size inverses the split.  Size parameter is optional, the default is 50%.  Optional " + \
-                  "newpanes parameter will rename the panes in order of newest to oldest (2 panes maximum).",
+    description = "Splits single pane along axis (vert, horz), or from an edge (top, left).  For axis, a negation " + \
+                  "of [size] inverses the split.  If unspecified, [size] defaults to 50%.  Optional [newpanes] " + \
+                  "parameter will rename the panes from newest to oldest (2 panes maximum).",
 )
 def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
     if not fpp_PRIVATE.wg:
@@ -2554,7 +2554,7 @@ def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
     command     = "rename",
     group       = "modifiers",
     examples    = [ "rename Ff Tt", "rename F T f t" ],
-    description = "Rename from one pane or group, to another pane or group, paired as <from> <to>.  Multiple " + \
+    description = "Renames from one pane or group, to another pane or group.  Paired as <from> <to>.  Multiple " + \
                   "pairs may be specified.",
 )
 def cmd_rename(fpp_PRIVATE, panes_from, *panes_to):
@@ -2639,7 +2639,7 @@ def cmd_rename(fpp_PRIVATE, panes_from, *panes_to):
     command     = "swap",
     group       = "modifiers",
     examples    = [ "swap A B", "swap Aa Bb 1 2" ],
-    description = "Swaps one pane or group, with another pane or group, paired as <from> <to>.  Multiple " + \
+    description = "Swaps one pane or group, with another pane or group.  Paired as <from> <to>.  Multiple " + \
                   "pairs may be specified.",
 )
 def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
@@ -2776,9 +2776,9 @@ def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
     group       = "modifiers",
     examples    = [ "drag 12 r 2", "drag abcd up 25%", "drag 12:abcd l 50%" ],
     description = "Drags an edge in the specified direction.  The <edge> is defined by the panes that border it.  " + \
-                  "Sometimes a hint will be required to resolve ambiguity; this is an axis (VH) or a direction " + \
-                  "(TBLR).  Optional scalegroups are supported, for each add a colon (:) to the edge, followed " + \
-                  "by the panes to be scaled.  To prevent loss of panes, set limit to \"yes\".",
+                  "A <hint> may be necessary to resolve ambiguity; this is either an axis (VH) or a direction " + \
+                  "(TBLR).  Optional scalegroups are supported, add a colon (:) to the <edge> followed by the " + \
+                  "panes to be scaled.  To prevent loss of panes, set [limit] to \"yes\".",
     aliases     = [ ["move", "drag "], ["slide", "drag "], ],
 )
 def cmd_drag_1(fpp_PRIVATE, edge, direction, size): # No support for limit without some analysis
@@ -3014,10 +3014,10 @@ def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
     command     = "insert",
     group       = "modifiers",
     examples    = [ "insert XZ 10" ],
-    description = "Inserts a pane into an edge and expand the windowgram accordingly.  The <edge> is defined by " + \
-                  "the panes that border it; sometimes a hint will be required to resolve ambiguity.  Optional " + \
-                  "scalegroups are supported, for each add a colon (:) to the edge, followed by the panes " + \
-                  "to be scaled.  The [spread] is top/left and defaults to 50%.",
+    description = "Inserts a pane into an edge and expands the windowgram accordingly.  The <edge> is defined by " + \
+                  "the panes that border it.  A <hint> may be necessary to resolve ambiguity.  Optional " + \
+                  "scalegroups are supported, add a colon (:) to the <edge> followed by the panes to be scaled.  " + \
+                  "The [spread] is top/left and defaults to 50%.",
     aliases     = [  ],
 )
 def cmd_insert(fpp_PRIVATE, edge, size):
