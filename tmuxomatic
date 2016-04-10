@@ -1126,7 +1126,7 @@ def cmd_help_N(fpp_PRIVATE, *commands):
     insert      = True,
 )
 def cmd_list(fpp_PRIVATE):
-    fpp_PRIVATE.flexsense['output'].append( "  Available windows in this session file (use serial number or name):" )
+    fpp_PRIVATE.flexsense['output'].append( "  Available windows in this session file (use number or name):" )
     fpp_PRIVATE.flexsense['output'].append( "" )
     list_lines = [] # Printed columns, not padded
     for serial in range(1, fpp_PRIVATE.flexmenu_session.Count_Windows()+1):
@@ -1144,7 +1144,7 @@ def cmd_list(fpp_PRIVATE):
     else:
         selected = []
         if flexmenu_index[0]: selected.append( flexmenu_index[0] + 1 ) # Skip title line
-        list_title = [ "Window", "Dimensions", "Panes", "Name" ]
+        list_title = [ "Number", "Dimensions", "Panes", "Name" ]
         table( fpp_PRIVATE.flexsense['output'], ["    ", " -> "], selected, list_title, list_lines )
 
 ##
@@ -1771,7 +1771,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
         window_name = "" # Window name enclosed in double-quotes
         window_name = "".join( [ ch if ch != '\"' else '\\"' for ch in window_process ] ) # Escape double-quotes
         if not window_name:
-            synerr(errpkg, "Window serial " + str(window_serial) + " does not have a name")
+            synerr(errpkg, "Window number " + str(window_serial) + " does not have a name")
         for ix, seen_name in enumerate(window_names_seen):
             if window_name == seen_name:
                 synerr(errpkg, "Session window names must be unique.  The duplicate name, \"" + \
@@ -1802,7 +1802,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
         layout, error, linenumber = Windowgram_Convert.String_To_Parsed(windowgram)
         if error:
             SetLineNumber( window.GetLines('windowgram'), linenumber - 1 )
-            synerr(errpkg, "Windowgram parsing error for window serial " + str(window_serial) + ": " + error)
+            synerr(errpkg, "Windowgram parsing error for window number " + str(window_serial) + ": " + error)
         # For every pane, add an initialized 'l' key that's used later for linking
         for pane in layout.keys(): layout[pane]['l'] = 0
 
@@ -2172,7 +2172,7 @@ def main():
     if ARGS.flex and ":" in ARGS.filename:
         ARGS.filename, serial = ARGS.filename.split(":", 1)
         if not serial.isdigit():
-            print("You specified a flex window serial that does not make sense: " + serial)
+            print("You specified a flex window number that does not make sense: " + serial)
             exit(0)
         serial = int(serial)
 
