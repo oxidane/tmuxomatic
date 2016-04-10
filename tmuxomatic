@@ -69,6 +69,8 @@ VERSION = "2.19.dev" # x.y: x = Major feature, y = Minor feature or bug fix
 ##                      Implemented #10: Adds windows to current session if run within tmux
 ##                      Optimized window creation by combining tmux commands into fewer executable calls
 ##                      Fixed issue #13: User defined pane-base-index
+##                      Fixed issue #14: Default directory on panes with no commands
+##                      Fixed issue #15: Use correct readme when installing from github
 ##
 ##  2.18    2015-07-03  New flex command: insert
 ##                      Fixed issues #11, #12: Better handling of the "window" directive
