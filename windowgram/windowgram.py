@@ -2115,6 +2115,8 @@ class EdgeProcessing:
     aliases     = [ ["blank", "reset "], ["begin", "reset "], ["initialize", "reset "], ["clear", "reset "], ],
 )
 def cmd_reset(fpp_PRIVATE):
+    if not fpp_PRIVATE.wg:
+        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     fpp_PRIVATE.wg.Import_Wg( Windowgram( NEW_WINDOWGRAM ) )
 
 ##
