@@ -1692,7 +1692,7 @@ class QuerySession_tmux(object):
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_session ):
+def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_session ):
     """
 
     Parse session file, build commands, execute.
@@ -1741,7 +1741,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
     #
     # Get current session base index
     #
-    baseindex_pane = run_session.tmux_base_index_pane()
+    baseindex_pane = active_session.tmux_base_index_pane()
     if baseindex_pane is None:
         print("Unable to get pane-base-index from tmux")
         exit(0)
@@ -1789,9 +1789,9 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
         # If adding windows, this window name must be unique
         # No need to check windows added during this process since we're already asserting unique names
         #
-        if run_session.valid:
+        if active_session.valid:
             if ARGS.printonly: print("### ", end="")
-            if run_session.HasWindow( window_name ):
+            if active_session.HasWindow( window_name ):
                 print("Skipping existing: " + window_name)
                 continue
             else:
@@ -1965,7 +1965,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
             #
             if first_pane: # First
                 first_pane = False
-                if window_serial == 1 and not run_session.valid:
+                if window_serial == 1 and not active_session.valid:
                     # First pane of first window (if not adding windows to existing session)
                     # The shell's cwd must be set, the only other way to do this is to discard the
                     # window that is automatically created when calling "new-session".
@@ -2055,8 +2055,8 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
     # Switch back to the user's pane if this is being run in an existing session
     #
     switch_back = ""
-    if run_session.valid:
-        switch_back = "select-window -t " + run_session.WindowID()
+    if active_session.valid:
+        switch_back = "select-window -t " + active_session.WindowID()
 
     #
     # Run the tmux commands
@@ -2125,13 +2125,13 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, run_sessi
     #
     # Attach to the newly created session
     #
-    if not run_session.valid:
+    if not active_session.valid:
         tmux_run( EXE_TMUX + " attach-session -t " + session_name )
 
     #
     # Let the user know we're done with addition
     #
-    if run_session.valid:
+    if active_session.valid:
         if ARGS.printonly: print("### ", end="")
         print("Finished!")
 
@@ -2239,13 +2239,13 @@ def main():
     #
 
     # Set up query session object
-    run_session = QuerySession_tmux()
-    if run_session.error:
-        print("Query session object error: " + run_session.error)
+    active_session = QuerySession_tmux()
+    if active_session.error:
+        print("Query session object error: " + active_session.error)
         exit(0)
-    if run_session.valid:
+    if active_session.valid:
         # Copy the real xterm dimensions obtained from tmux, required for correct sizing
-        user_wh = run_session.user_wh
+        user_wh = active_session.user_wh
 
     # Optional kill session on disconnect
     def destroy():
@@ -2253,7 +2253,7 @@ def main():
             tmux_run( EXE_TMUX + " kill-session -t " + session_name, nopipe=True, force=True, real=True )
 
     # Existing session handler (skipped when printing or scaling)
-    if not ancillary and not run_session.valid:
+    if not ancillary and not active_session.valid:
         # Detect existing session
         result = tmux_run( EXE_TMUX + " has-session -t " + session_name, nopipe=False, force=True, real=True )
         if not result:
@@ -2281,14 +2281,14 @@ def main():
 
     # Process session: generates a new session and attaches, or prints, or scales
     if not ancillary:
-        if run_session.valid:
+        if active_session.valid:
             print("Adding windows from the session \"" + session_name + "\" to the running session \"" + \
-                run_session.SessionName() + "\"...")
+                active_session.SessionName() + "\"...")
             print("IMPORTANT: Do not change focus of the pane or window until finished!")
         else:
             print("Running new session, \"" + session_name + "\"...")
     try:
-        tmuxomatic( program_cli, " ".join(sys.argv), user_wh, session_name, session, run_session )
+        tmuxomatic( program_cli, " ".join(sys.argv), user_wh, session_name, session, active_session )
     except KeyboardInterrupt: # User disconnected
         destroy()
     exit(0)
