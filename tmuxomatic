@@ -2226,6 +2226,11 @@ def main():
         # Force reload of session file in order to get accurate line counts in the event of changes by user in flex
         session.Load()
 
+    # No defined windows check
+    if not len(session.windows):
+        print("This session has no defined windows")
+        exit()
+
     #
     # Execution of tmux commands depends on context:
     #
