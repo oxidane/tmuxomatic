@@ -1614,12 +1614,13 @@ class QuerySession_tmux(object):
                 self.error = "Could not get the width and/or height of the xterm!"
                 self.valid = False
 
-    # All tmux commands must be run using tmux_run( cmd, False, False, True ) in case printonly is being used
+    # Most must be run using tmux_run( cmd, nonpipe=False, force=False, real=True ) in case printonly is being used
+    # Some should be forced even when printonly is being used, like pane-base-index to know how to number panes
 
     def tmux_get_client_wh(self): # -> error, (w, h)
         # Gets the actual xterm width height from within a tmux pane, required for proper sizing when adding windows
-        result_w = tmux_run( EXE_TMUX + " display -p \"#{client_width}\"", False, False, True )
-        result_h = tmux_run( EXE_TMUX + " display -p \"#{client_height}\"", False, False, True )
+        result_w = tmux_run( EXE_TMUX + " display -p \"#{client_width}\"", nopipe=False, force=False, real=True )
+        result_h = tmux_run( EXE_TMUX + " display -p \"#{client_height}\"", nopipe=False, force=False, real=True )
         try:
             return ( int( result_w.strip().split()[0] ), int( result_h.strip().split()[0] ) )
         except ValueError:
@@ -1627,7 +1628,7 @@ class QuerySession_tmux(object):
 
     def tmux_query_sessionnames(self): # -> [ name, name, ... ]
         sessions = []
-        result = tmux_run( EXE_TMUX + " list-sessions", False, False, True )
+        result = tmux_run( EXE_TMUX + " list-sessions", nopipe=False, force=False, real=True )
         if result:
             for line in result.split("\n"):
                 name = line.split(":", 1)[0]
@@ -1637,7 +1638,7 @@ class QuerySession_tmux(object):
 
     def tmux_query_windowidsandnames(self, session): # -> [ [window_id, window_name], [window_id, window_name], ... ]
         windows = []
-        result = tmux_run( EXE_TMUX + " list-windows -t " + session, False, False, True )
+        result = tmux_run( EXE_TMUX + " list-windows -t " + session, nopipe=False, force=False, real=True )
         for line in result.split("\n"):
             data = line.strip()
             if data:
@@ -1657,7 +1658,7 @@ class QuerySession_tmux(object):
 
     def tmux_query_paneids(self, session, window_id): # -> [ id, id, ... ]
         panes = []
-        result = tmux_run( EXE_TMUX + " list-panes -t " + session + ":" + window_id, False, False, True )
+        result = tmux_run( EXE_TMUX + " list-panes -t " + session+":"+window_id, nopipe=False, force=False, real=True )
         for line in result.split("\n"):
             data = line.split(" ")
             for elem in line.split(" "):
@@ -1667,7 +1668,7 @@ class QuerySession_tmux(object):
 
     def tmux_base_index_window(self):
         # This is not used because tmuxomatic references windows by name; function retained in case this changes
-        result = tmux_run( EXE_TMUX + " show-option -g base-index", False, False, True )
+        result = tmux_run( EXE_TMUX + " show-option -g base-index", nopipe=False, force=True, real=True )
         if "\n" in result:
             result, _ = result.split("\n", 1)
         label, value = result.split(" ", 1)
@@ -1676,7 +1677,7 @@ class QuerySession_tmux(object):
         return None
 
     def tmux_base_index_pane(self):
-        result = tmux_run( EXE_TMUX + " show-window-option -g pane-base-index", False, False, True )
+        result = tmux_run( EXE_TMUX + " show-window-option -g pane-base-index", nopipe=False, force=True, real=True )
         if "\n" in result:
             result, _ = result.split("\n", 1)
         label, value = result.split(" ", 1)
