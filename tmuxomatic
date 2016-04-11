@@ -1509,7 +1509,13 @@ def flex_shell(session, serial=0):
                             else: fpp.wg = None
                             arguments.append( fpp ) # Now applies to every command
                             if argcount: arguments += thisinput_lst[1:]
-                            cmd_dict['funcs'][ix]( *arguments ) # Run this command
+                            skip = False
+                            if group == "modifiers" and not fpp.wg: # Check wg selection prior to executing modifiers
+                                fpp.flexsense['notices'].append( FlexError(
+                                    "Please specify a window with `use` or `new`" ) )
+                                skip = True
+                            if not skip:
+                                cmd_dict['funcs'][ix]( *arguments ) # Run this command
                             if fpp.wg is not None:
                                 fpp.wg.Disable_Extended() # In case the windowgram was created with mask support
                                 flexmenu_session.Replace_Windowgram( serial, fpp.wg.Export_String() )

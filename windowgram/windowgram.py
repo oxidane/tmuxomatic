@@ -2115,8 +2115,6 @@ class EdgeProcessing:
     aliases     = [ ["blank", "reset "], ["begin", "reset "], ["initialize", "reset "], ["clear", "reset "], ],
 )
 def cmd_reset(fpp_PRIVATE):
-    if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     fpp_PRIVATE.wg.Import_Wg( Windowgram( NEW_WINDOWGRAM ) )
 
 ##
@@ -2167,8 +2165,6 @@ def cmd_scale_1(fpp_PRIVATE, xy_how): # 1 parameter
 )
 def cmd_scale_2(fpp_PRIVATE, x_how, y_how): # 2 parameters
     # Because text is inherently low resolution, fractional scaling may produce unsatisfactory results
-    if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     # Generics
     wg_before = fpp_PRIVATE.wg
     dim_before = wg_before.Analyze_WidthHeight()
@@ -2214,8 +2210,6 @@ def cmd_scale_2(fpp_PRIVATE, x_how, y_how): # 2 parameters
     aliases     = [ ["append", "add "], ["app", "add "] ],
 )
 def cmd_add(fpp_PRIVATE, edge, size, newpane=None):
-    if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg_work = fpp_PRIVATE.wg
     newpane, error = wg_work.Panes_GetNewPaneId( newpane )
     if error:
@@ -2285,8 +2279,6 @@ def cmd_add(fpp_PRIVATE, edge, size, newpane=None):
     aliases     = [ ["grid", "break "], ["panes", "break "], ],
 )
 def cmd_break(fpp_PRIVATE, pane, grid, newpanes=None):
-    if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     # In order to produce a break of even proportions, we have to scale this windowgram up to next best fit.  It
     # could go one step further and find the most optimal size, being a resolution that evenly scales the original
     # windowgram constituent panes, while simultaneously providing a grid of even sizes.  The problem is that common
@@ -2385,8 +2377,6 @@ def cmd_break(fpp_PRIVATE, pane, grid, newpanes=None):
 def cmd_join(fpp_PRIVATE, *groups_REQUIRED):
     groups = groups_REQUIRED # Readability
     argument = lambda ix: str(ix+1) + " (\"" + groups_REQUIRED[ix] + "\")" # Show the group that the user specified
-    if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
     # Repackage groups so all have the rename element
     work, groups = groups, []
@@ -2477,8 +2467,6 @@ def cmd_join(fpp_PRIVATE, *groups_REQUIRED):
                   "parameter will rename the panes from newest to oldest (2 panes maximum).",
 )
 def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
-    if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
     axis = how # This argument is handled as an axis
@@ -2568,8 +2556,6 @@ def cmd_split(fpp_PRIVATE, pane, how, size=None, newpanes=None):
                   "pairs may be specified.",
 )
 def cmd_rename(fpp_PRIVATE, panes_from, *panes_to):
-    if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     # This command could have wrapped join, but a native implementation has been made to reduce overhead somewhat
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
@@ -2653,8 +2639,6 @@ def cmd_rename(fpp_PRIVATE, panes_from, *panes_to):
                   "pairs may be specified.",
 )
 def cmd_swap(fpp_PRIVATE, panes_from, *panes_to):
-    if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     # This command could have wrapped join, but a native implementation has been made to reduce overhead somewhat
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
@@ -2800,8 +2784,6 @@ def cmd_drag_1(fpp_PRIVATE, edge, direction, size): # No support for limit witho
     examples    = [ "drag v 12 r 2", "drag t abcd up 25%", "drag l 12:abcd l 50%" ],
 )
 def cmd_drag_2(fpp_PRIVATE, hint, edge, direction, size, limit=None):
-    if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
     # Reduce edge, resolve hint, deduce scalegroup, expand wildcards ... Supports swapping of hint and edge
@@ -3039,8 +3021,6 @@ def cmd_insert(fpp_PRIVATE, edge, size):
     examples    = [ "insert right * 10", "insert vert 1245 1", "insert top X 50%", "insert right Z 5 z 75%" ],
 )
 def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
-    if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
     used, unused = wg.Panes_GetUsedUnused()
     # Reduce edge, resolve hint, deduce scalegroup, expand wildcards ... Supports swapping of hint and edge
@@ -3265,8 +3245,6 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
     description = "Reverse horizontally (left/right)",
 )
 def cmd_mirror(fpp_PRIVATE):
-    if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
     windowgram_lines = wg.Export_Lines()
     wg.Import_Lines( [ "".join( [ ch for ch in reversed(list(line)) ] ) for line in windowgram_lines ] )
@@ -3292,8 +3270,6 @@ def cmd_mirror(fpp_PRIVATE):
     description = "Reverse vertically (top/bottom)",
 )
 def cmd_flip(fpp_PRIVATE):
-    if not fpp_PRIVATE.wg:
-        return fpp_PRIVATE.flexsense['notices'].append( FlexError( "Please specify a window with `use` or `new`" ) )
     wg = fpp_PRIVATE.wg
     windowgram_lines = wg.Export_Lines()
     wg.Import_Lines( reversed(windowgram_lines) )
