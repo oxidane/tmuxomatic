@@ -1561,9 +1561,12 @@ def flex_shell(session, serial=0):
 
 ##----------------------------------------------------------------------------------------------------------------------
 ##
-## Informational queries for tmux
+## QuerySession class for tmux
 ##
-## This will break if tmux changes output format
+##      Query tmux, including static queries unrelated to context
+##      Session context sensing (running inside or outside session)
+##
+## NOTE: This will break if tmux changes output format
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
@@ -1581,9 +1584,18 @@ class QuerySession_tmux(object):
                 return True
         return False
 
+    def HadProblem(self):
+        return self.unexpected
+
+    def Inside(self):
+        return True if not self.error else False
+
+    def Outside(self):
+        return not self.Inside()
+
     def __init__(self):
-        self.valid = False
-        self.error = ""
+        self.error = "Initialization incomplete"
+        self.unexpected = False # True if an unexpected error occurred
         self.session_name = None
         self.current_window_id = None
         self.all_windows = None
@@ -1597,25 +1609,24 @@ class QuerySession_tmux(object):
                     panes = self.tmux_query_paneids(session_ent, window_id)
                     for pane in panes:
                         if pane == os.environ['TMUX_PANE']:
+                            self.error = None # Inside tmux and have identified the session, window, pane
                             self.session_name = session_ent
                             self.current_window_id = window_id
                             self.all_windows = windows
-                            self.valid = True
-                            break
-                    if self.valid: break
-                if self.valid: break
-            if not self.valid:
-                self.error = "Unable to locate the corresponding tmux session for the current shell!"
-        if self.valid:
-            # As we're in tmux, get the real xterm dimensions from tmux for the user
-            self.user_wh = self.tmux_get_client_wh()
-            if not self.user_wh or type(self.user_wh) is not tuple or len(self.user_wh) != 2 \
-            or not self.user_wh[0] or not self.user_wh[1]:
-                self.error = "Could not get the width and/or height of the xterm!"
-                self.valid = False
+                            self.user_wh = self.tmux_get_client_wh() # Get the real xterm dimensions from tmux
+                            if not self.user_wh or type(self.user_wh) is not tuple or len(self.user_wh) != 2 \
+                            or not self.user_wh[0] or not self.user_wh[1]:
+                                self.error = "Could not get the width and/or height of the xterm!"
+                                self.unexpected = True
+                            return
+            self.error = "Unable to locate the corresponding tmux session for the current shell"
+            self.unexpected = True
+        else:
+            self.error = "Not running within a tmux session"
 
-    # Most must be run using tmux_run( cmd, nonpipe=False, force=False, real=True ) in case printonly is being used
-    # Some should be forced even when printonly is being used, like pane-base-index to know how to number panes
+    ##
+    ## Methods must be run using tmux_run( cmd, nonpipe=False, force=False, real=True ) in case printonly is being used
+    ##
 
     def tmux_get_client_wh(self): # -> error, (w, h)
         # Gets the actual xterm width height from within a tmux pane, required for proper sizing when adding windows
@@ -1666,7 +1677,12 @@ class QuerySession_tmux(object):
                     panes.append( elem )
         return panes
 
-    def tmux_base_index_window(self):
+    ##
+    ## Static methods are forced over printonly as these are needed whether inside an active tmux session or not
+    ##
+
+    @staticmethod
+    def static_tmux_base_index_window():
         # This is not used because tmuxomatic references windows by name; function retained in case this changes
         result = tmux_run( EXE_TMUX + " show-option -g base-index", nopipe=False, force=True, real=True )
         if "\n" in result:
@@ -1676,7 +1692,8 @@ class QuerySession_tmux(object):
             return int(value)
         return None
 
-    def tmux_base_index_pane(self):
+    @staticmethod
+    def static_tmux_base_index_pane():
         result = tmux_run( EXE_TMUX + " show-window-option -g pane-base-index", nopipe=False, force=True, real=True )
         if "\n" in result:
             result, _ = result.split("\n", 1)
@@ -1742,7 +1759,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
     #
     # Get current session base index
     #
-    baseindex_pane = active_session.tmux_base_index_pane()
+    baseindex_pane = active_session.static_tmux_base_index_pane()
     if baseindex_pane is None:
         print("Unable to get pane-base-index from tmux")
         exit(0)
@@ -1790,7 +1807,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
         # If adding windows, this window name must be unique
         # No need to check windows added during this process since we're already asserting unique names
         #
-        if active_session.valid:
+        if active_session.Inside():
             if ARGS.printonly: print("### ", end="")
             if active_session.HasWindow( window_name ):
                 print("Skipping existing: " + window_name)
@@ -1966,7 +1983,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
             #
             if first_pane: # First
                 first_pane = False
-                if window_serial == 1 and not active_session.valid:
+                if window_serial == 1 and active_session.Outside():
                     # First pane of first window (if not adding windows to existing session)
                     # The shell's cwd must be set, the only other way to do this is to discard the
                     # window that is automatically created when calling "new-session".
@@ -2056,7 +2073,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
     # Switch back to the user's pane if this is being run in an existing session
     #
     switch_back = ""
-    if active_session.valid:
+    if active_session.Inside():
         switch_back = "select-window -t " + active_session.WindowID()
 
     #
@@ -2126,13 +2143,13 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
     #
     # Attach to the newly created session
     #
-    if not active_session.valid:
+    if active_session.Outside():
         tmux_run( EXE_TMUX + " attach-session -t " + session_name )
 
     #
     # Let the user know we're done with addition
     #
-    if active_session.valid:
+    if active_session.Inside():
         if ARGS.printonly: print("### ", end="")
         print("Finished!")
 
@@ -2241,10 +2258,10 @@ def main():
 
     # Set up query session object
     active_session = QuerySession_tmux()
-    if active_session.error:
-        print("Query session object error: " + active_session.error)
+    if active_session.HadProblem():
+        print("Query session object unexpected error: " + active_session.error)
         exit(0)
-    if active_session.valid:
+    if active_session.Inside():
         # Copy the real xterm dimensions obtained from tmux, required for correct sizing
         user_wh = active_session.user_wh
 
@@ -2254,7 +2271,7 @@ def main():
             tmux_run( EXE_TMUX + " kill-session -t " + session_name, nopipe=True, force=True, real=True )
 
     # Existing session handler (skipped when printing or scaling)
-    if not ancillary and not active_session.valid:
+    if not ancillary and active_session.Outside():
         # Detect existing session
         result = tmux_run( EXE_TMUX + " has-session -t " + session_name, nopipe=False, force=True, real=True )
         if not result:
@@ -2282,7 +2299,7 @@ def main():
 
     # Process session: generates a new session and attaches, or prints, or scales
     if not ancillary:
-        if active_session.valid:
+        if active_session.Inside():
             print("Adding windows from the session \"" + session_name + "\" to the running session \"" + \
                 active_session.SessionName() + "\"...")
             print("IMPORTANT: Do not change focus of the pane or window until finished!")
