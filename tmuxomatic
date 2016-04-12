@@ -1564,7 +1564,7 @@ def flex_shell(session, serial=0):
 ## QuerySession class for tmux
 ##
 ##      Query tmux, including static queries unrelated to context
-##      Session context sensing (running inside or outside session)
+##      Session context sensing, determine if running inside or outside session
 ##
 ## NOTE: This will break if tmux changes output format
 ##
@@ -1624,9 +1624,11 @@ class QuerySession_tmux(object):
         else:
             self.error = "Not running within a tmux session"
 
+    ##--------------------------------------------------------------------------------------------------------------
     ##
-    ## Methods must be run using tmux_run( cmd, nonpipe=False, force=False, real=True ) in case printonly is being used
+    ## Methods must use tmux_run( cmd, nonpipe=False, force=False, real=True ) in case of printonly
     ##
+    ##--------------------------------------------------------------------------------------------------------------
 
     def tmux_get_client_wh(self): # -> error, (w, h)
         # Gets the actual xterm width height from within a tmux pane, required for proper sizing when adding windows
@@ -1677,9 +1679,11 @@ class QuerySession_tmux(object):
                     panes.append( elem )
         return panes
 
+    ##--------------------------------------------------------------------------------------------------------------
     ##
     ## Static methods are forced over printonly as these are needed whether inside an active tmux session or not
     ##
+    ##--------------------------------------------------------------------------------------------------------------
 
     @staticmethod
     def static_tmux_base_index_window():
