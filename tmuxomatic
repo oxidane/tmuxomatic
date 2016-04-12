@@ -1702,6 +1702,32 @@ class QuerySession_tmux(object):
             return int(value)
         return None
 
+    ##
+    ## A placeholder session must be created when starting a tmux server, or the server will immediately exit.  After
+    ## the real session is created, the placeholder can then be destroyed.  An active server is required for many
+    ## informational queries, including the pane-base-index query that is needed to create the real session.
+    ##
+    ## This placeholder is created regardless, as a preemptive measure, in the event that any preexisting sessions may
+    ## disappear in the interim, leading to tmux server shutdown.  Such an occurrence could produce a heisenbug.
+    ##
+    ## A caveat with this technique is that tmuxomatic may crash or exit due to error, resulting in a lingering
+    ## placeholder.  The odds of this happening are low, but if it does the placeholder will have a name that's clear
+    ## to the user where it came from, and these comments explain why it's there.  Refactoring tmuxomatic to better
+    ## handle crashes and exits could include automatic removal of this placeholder.
+    ##
+
+    Placeholder = "tmuxomatic_temporary_placeholder"
+
+    @staticmethod
+    def static_serverplaceholder_create():
+        tmux_run( EXE_TMUX + " new-session -ds " + QuerySession_tmux.Placeholder + " 2>/dev/null",
+            nopipe=False, force=True, real=True )
+
+    @staticmethod
+    def static_serverplaceholder_destroy():
+        tmux_run( EXE_TMUX + " kill-session -t " + QuerySession_tmux.Placeholder,
+            nopipe=False, force=True, real=True )
+
 
 
 ##----------------------------------------------------------------------------------------------------------------------
@@ -1755,6 +1781,11 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
             errpkg['line'] = linebase + lineoffset # Exact line (shorthand)
         else:
             errpkg['line'] = linebase # Approximate line (yaml)
+
+    #
+    # Make sure tmux server is running before informational queries
+    #
+    active_session.static_serverplaceholder_create()
 
     #
     # Get current session base index
@@ -2139,6 +2170,11 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
         if cmd.startswith("select-pane"):
             last_pane = cmd
     execute(batch, switch_back) # Execute whatever is left
+
+    #
+    # Clean up placeholder before entering session
+    #
+    active_session.static_serverplaceholder_destroy()
 
     #
     # Attach to the newly created session
