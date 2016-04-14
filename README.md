@@ -25,7 +25,7 @@ At the heart of tmuxomatic is the **windowgram**, a better way of arranging tmux
 
 ## One Example
 
-Take the following window definition from the file `session_example`:
+Take the following window definition from the file `session_example` (located in `examples` folder):
 
 	window example_one        # A new window begins like this, spaces in names allowed
 
@@ -48,7 +48,7 @@ And compare it to the resulting screenshot after running `tmuxomatic session_exa
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no other file format rules to remember, and typically no command line arguments will be necessary.
 
-Additional examples may be found in the included session files.  Other features are listed elsewhere in the documentation and in the source code.
+Additional examples may be found in the `examples` folder.  Other features are listed elsewhere in the documentation and in the source code.
 
 For a list of command line arguments, run `tmuxomatic --help`.
 
