@@ -25,7 +25,7 @@ At the heart of tmuxomatic is the **windowgram**, a better way of arranging tmux
 
 ## One Example
 
-Take the following window definition from the file `session_example` (located in `examples` folder):
+Take the following window definition from the `session_demo` file (located in the `examples` folder):
 
 	window example_one        # A new window begins like this, spaces in names allowed
 
@@ -42,7 +42,7 @@ Take the following window definition from the file `session_example` (located in
 	Q run figlet "Q"
 	A foc
 
-And compare it to the resulting screenshot after running `tmuxomatic session_example`:
+And compare it to the resulting screenshot after running `tmuxomatic session_demo`:
 
 ![](https://raw.githubusercontent.com/oxidane/tmuxomatic/master/screenshots/screenshot_example.png)
 
