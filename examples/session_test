@@ -1,0 +1,49 @@
+#--------------------------------------------------------------------------------------
+#
+# Test windowgram (session_test)
+#
+# Uses filled rectangles to construct some text on screen.  See illustration below.
+#
+#   * Makes use of all 62 panes (current maximum)
+#   * Uses the group execution feature (multiple panes per run command)
+#   * Resolution 193x60 recommended (or approximately 4:3)
+#
+#--------------------------------------------------------------------------------------
+
+window test
+
+  0000000000000000000000000000000000000000000000000000000
+  1122222222222222222222222222222222222222222222222222233
+  1122222222222222222222222222222222222222222222222222233
+  1122222222222222222222222222222222222222222222222222233
+  1144444444444444444444444444444444444444444444444444433
+  1155666678888889999aaaaaabccccccdeeeeeefgggggghiiiiii33
+  1155jjjj7kkkkll9999mmnnoobppppqqdrrssttfuuvvwwhxxyyyy33
+  1155zzAA7BBBBBB9999CCCCCCbDDDDDDdrrssttfEEEEEEhFFFFFF33
+  1155GGAA7HHIIII9999JJKKKKbLLMMNNdrrssttfOOPPPPhQQQQRR33
+  1155SSAA7TTTTTT9999JJKKKKbUUUUUUdrrssttfVVVVVVhWWWWWW33
+  11XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX33
+  11YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY33
+  11YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY33
+  11YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY33
+  ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+
+2568acegilmoqrtuwxzABCDEFHJLNORSTUVWY run ln=\`echo \\\`stty size | cut -f2 -d' '\\\`*100 | bc\` ; printf '@%.0s' \$(eval 'echo {1..'\$((\$ln))'}') ; sleep 99999
+013479bdfhjknpsvyGIKMPQXZ run clear ; sleep 99999 	# Note that "sleep 1d" doesn't work on OSX
+
+# .......................................................
+# ..@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@..
+# ..@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@..
+# ..@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@..
+# .......................................................
+# ..@@@@@@.@@@@@@....@@@@@@.@@@@@@.@@@@@@.@@@@@@.@@@@@@..
+# ..@@.........@@....@@..@@.....@@.@@..@@.@@..@@.@@......
+# ..@@@@@@.@@@@@@....@@@@@@.@@@@@@.@@..@@.@@@@@@.@@@@@@..
+# ..@@..@@.@@........@@.....@@..@@.@@..@@.@@.........@@..
+# ..@@@@@@.@@@@@@....@@.....@@@@@@.@@..@@.@@@@@@.@@@@@@..
+# .......................................................
+# ..@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@..
+# ..@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@..
+# ..@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@..
+# .......................................................
+
