@@ -40,7 +40,7 @@ data_files = [
 	( sysconfig.get_python_lib() + "/tmuxomatic", [ "README.rst" ] ),
 # TODO: Add example sessions after install has been sorted out
 #	( sysconfig.get_python_lib() + "/tmuxomatic",
-#		[ "session_example", "session_practical", "session_unsupported", "session_yaml" ] ),
+#		[ "session_demo", "session_practical", "session_test", "session_unsupported", "session_yaml" ] ),
 ]
 
 classifiers = [

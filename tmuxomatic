@@ -42,7 +42,7 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMA
 ##     About     |
 ##---------------+
 ##
-## QUICKSTART: Examine the session file "session_example", and run it with "tmuxomatic session_example".
+## QUICKSTART: See the session file "session_demo" in the examples folder, then run it with "tmuxomatic session_demo".
 ##
 ## The tmux interface for creating window splits is technically simple, but to use those splits to arrange layouts is a
 ## tedious and inefficient process.  Other tmux session management tools offer no solutions when it comes to splitting
@@ -285,7 +285,7 @@ VERSION = "2.19-dev" # x.y: x = Major feature, y = Minor feature or bug fix ... 
 ##
 ## The way tmuxomatic (and tmux) works is by recursively subdividing the window using vertical and horizontal splits.
 ## If you specify a windowgram where such a split is not possible, then it cannot be supported by tmux, or tmuxomatic.
-## For more information about this limitation, including an example, see file "session_unsupported".
+## For more information about this limitation, including an example, see file "session_unsupported" in examples folder.
 ##
 ## Supports any pane arrangement that is also supported by tmux.  Some windowgrams, like those in "session_unsupported",
 ## won't work because of tmux (see "add-pane").
