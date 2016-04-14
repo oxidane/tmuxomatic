@@ -8,10 +8,11 @@ A completely different kind of tmux session manager.
 
 1. [Introduction](https://github.com/oxidane/tmuxomatic#introduction)
 2. [One Example](https://github.com/oxidane/tmuxomatic#one-example)
-3. [Flex](https://github.com/oxidane/tmuxomatic#flex) ... ( i. [Concepts](https://github.com/oxidane/tmuxomatic#flex-concepts), ii. [Demo #1](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-new-windowgram), iii. [Demo #2](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-previous-windowgram) )
-4. [Installation](https://github.com/oxidane/tmuxomatic#installation) ... ( i. [Requirements](https://github.com/oxidane/tmuxomatic#installation-requirements), ii. [Guide](https://github.com/oxidane/tmuxomatic#installation-guide), iii. [Optional Packages](https://github.com/oxidane/tmuxomatic#optional-packages) )
-5. [Using tmux](https://github.com/oxidane/tmuxomatic#using-tmux)
-6. [Legal](https://github.com/oxidane/tmuxomatic#legal) ... ( i. [Copyright](https://github.com/oxidane/tmuxomatic#copyright), ii. [License](https://github.com/oxidane/tmuxomatic#license), iii. [Contributor Agreement](https://github.com/oxidane/tmuxomatic#contributor-agreement) )
+3. [Complimentary Mode](https://github.com/oxidane/tmuxomatic#complimentary-mode)
+4. [Flex](https://github.com/oxidane/tmuxomatic#flex) ... ( i. [Concepts](https://github.com/oxidane/tmuxomatic#flex-concepts), ii. [Demo #1](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-new-windowgram), iii. [Demo #2](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-previous-windowgram) )
+5. [Installation](https://github.com/oxidane/tmuxomatic#installation) ... ( i. [Requirements](https://github.com/oxidane/tmuxomatic#installation-requirements), ii. [Guide](https://github.com/oxidane/tmuxomatic#installation-guide), iii. [Optional Packages](https://github.com/oxidane/tmuxomatic#optional-packages) )
+6. [Using tmux](https://github.com/oxidane/tmuxomatic#using-tmux)
+7. [Legal](https://github.com/oxidane/tmuxomatic#legal) ... ( i. [Copyright](https://github.com/oxidane/tmuxomatic#copyright), ii. [License](https://github.com/oxidane/tmuxomatic#license), iii. [Contributor Agreement](https://github.com/oxidane/tmuxomatic#contributor-agreement) )
 
 
 
@@ -51,6 +52,18 @@ With tmuxomatic, you'll never have to manually split, position, or size a pane a
 Additional examples may be found in the `examples` folder.  Other features are listed elsewhere in the documentation and in the source code.
 
 For a list of command line arguments, run `tmuxomatic --help`.
+
+
+
+## Complimentary Mode
+
+As of ***Version 2.19***, tmuxomatic may be used to add windows to an existing session without having to restart it.  This is called *complimentary mode*.  It works with any tmux session, even those created by other session managers.
+
+Simply use tmuxomatic from within tmux, and any windows in the specified file that are not already named by the current session will be added.
+
+If you are new to tmuxomatic and already using tmux, complimentary mode is a convenient way to explore the features of tmuxomatic without disrupting your current session.
+
+**Until 2.19 is released, you will have to `git clone` or `git pull` to use complimentary mode**
 
 
 
