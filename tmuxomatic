@@ -65,7 +65,7 @@ DESCRIPTION = "Intelligent tmux session management" # Maybe add: "using windowgr
 HOMEPAGE = "https://github.com/oxidane/tmuxomatic"
 VERSION = "2.19-dev" # x.y: x = Major feature, y = Minor feature or bug fix ... Development versions as "x.y-dev"
 ##
-##  2.19    TBD         TBD
+##  2.19    TBD         Improvements and bug fixes
 ##                      Implemented #10: Adds windows to current session if run within tmux
 ##                      Optimized window creation by combining tmux commands into fewer executable calls
 ##                      Fixed issue #13: User defined pane-base-index
@@ -334,7 +334,7 @@ except ImportError as e: INSTALLED_PYYAML = False
 ##----------------------------------------------------------------------------------------------------------------------
 
 ARGS            = None
-PRESENT_TMUX    = None                  # Once identified, the user's tmux version is saved here for later use
+USERS_TMUX      = None                  # Once identified, the user's tmux version is saved here for later use
 
 # Flexible Settings (may be safely changed)
 
@@ -346,7 +346,7 @@ DEBUG_SCANLINE  = False                 # Shows the clean break scanline in acti
 
 # Fixed Settings (requires source update)
 
-MINIMUM_TMUX    = "1.8"                 # Minimum supported tmux version (1.8 is required for absolute sizing)
+MINIMUM_TMUX    = "1.8"                 # Minimum supported tmux version is 1.8 (required for absolute sizing)
 VERBOSE_MAX     = 4                     # 0 = quiet, 1 = summary, 2 = inputs, 3 = fitting, 4 = commands
 
 # Aliases for flexible directions
@@ -1819,7 +1819,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
     #       ewpo           Explicit Window Pane Optional            "-t:\"name\".number "       "-t number "
     #       ewpi           Explicit Window Pane Imposed             "-t:\"name\".number"        ""
     #
-    tgtfix = True if PRESENT_TMUX == "2.1" else False
+    tgtfix = True if USERS_TMUX == "2.1" else False
 
     #
     # Parse session file
@@ -2155,6 +2155,9 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
     # and pane focus, starting each batch by returning to the previous focus, and (in addition mode) switching back to
     # the user's window at the end of each batch.
     #
+    # As of tmux 2.1, the command length was changed from 2048 (COMMAND_LENGTH) to 16384 (MAX_IMSGSIZE).  The length
+    # used here will stay at 2048 for now.  This note is for future reference in case a higher limit is preferred.
+    #
     batch_len = 2048        # Limitation of 2048 bytes for tmux 1.8 ("command too long" if exceeded)
     last_window = ""        # Recent "new-window" (changed to "select-window" on save)
     last_pane = ""          # Recent "select-pane" (unmodified)
@@ -2247,10 +2250,10 @@ def main():
         print("The tmux executable cannot be found")
         exit(0)
     if not satisfies_minimum_version( tmux_req, tmux_rep ):
-        print("This requires tmux " + tmux_req + " or higher, found tmux " + tmux_rep)
+        print("This version of tmuxomatic requires tmux " + tmux_req + " or higher, found tmux " + tmux_rep)
         exit(0)
-    global PRESENT_TMUX
-    PRESENT_TMUX = tmux_rep
+    global USERS_TMUX
+    USERS_TMUX = tmux_rep
 
     # Settings
     program_cli = sys.argv[0]                   # Program cli: "./tmuxomatic"
