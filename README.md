@@ -8,7 +8,7 @@ A completely different kind of tmux session manager.
 
 1. [Introduction](https://github.com/oxidane/tmuxomatic#introduction)
 2. [One Example](https://github.com/oxidane/tmuxomatic#one-example)
-3. [Managerless Mode](https://github.com/oxidane/tmuxomatic#managerless-mode) *(New in 2.19)*
+3. [Managerless Mode](https://github.com/oxidane/tmuxomatic#managerless-mode) ... *New in 2.19*
 4. [Flex](https://github.com/oxidane/tmuxomatic#flex) ... ( i. [Concepts](https://github.com/oxidane/tmuxomatic#flex-concepts), ii. [Demo #1](https://github.com/oxidane/tmuxomatic#flex-demonstration-1----create-new-windowgram), iii. [Demo #2](https://github.com/oxidane/tmuxomatic#flex-demonstration-2----extend-previous-windowgram) )
 5. [Installation](https://github.com/oxidane/tmuxomatic#installation) ... ( i. [Requirements](https://github.com/oxidane/tmuxomatic#installation-requirements), ii. [Guide](https://github.com/oxidane/tmuxomatic#installation-guide), iii. [Optional Packages](https://github.com/oxidane/tmuxomatic#optional-packages) )
 6. [Using tmux](https://github.com/oxidane/tmuxomatic#using-tmux)
@@ -57,7 +57,7 @@ For a list of command line arguments, run `tmuxomatic --help`.
 
 ## Managerless Mode
 
-New in ***2.19***, tmuxomatic may be used to add windows to an existing session without having to restart it.  This is called *managerless mode*.  It works with any tmux session, even those created by other session managers.
+As of ***2.19***, tmuxomatic may be used to add windows to an existing session without having to restart it.  This is called *managerless mode*.  It works with any tmux session, even those created by other session managers.
 
 Simply use tmuxomatic from within tmux, and any windows in the specified file that are not already named by the current session will be added.
 
