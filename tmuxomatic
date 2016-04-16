@@ -1803,7 +1803,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
     #
     # Target fix for tmux 2.1 only (was fixed in 2.2)
     #
-    # When calling tmuxomatic from within tmux (complimentary mode), the following tmux commands do not select windows
+    # When calling tmuxomatic from within tmux (managerless mode), the following tmux commands do not select windows
     # and/or panes as they do in other tmux versions.
     #
     #       send-keys
