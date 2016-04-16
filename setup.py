@@ -32,15 +32,17 @@ keywords = [ key.strip() for key in KEYWORDS.split(",") ] # "1, 2, 3" -> ["1", "
 # was called with "install", we search for tmuxomatic in the user's path, and then chmod 755.  If you happen know of a
 # way to do this install without a chmod step, or in a more correct manner, please send a pull request with the changes.
 
+# Build list of example files to install: "./examples/" -> [ "examples/session_demo", ... ]
+examples = "examples"
+examples = [ os.path.join(examples, f) for f in os.listdir(examples) if os.path.isfile(os.path.join(examples, f)) ]
+
 packages = [ "windowgram" ]
 package_dir = {}
 package_data = {}
 data_files = [
 	( "bin", [ "tmuxomatic" ] ),
 	( sysconfig.get_python_lib() + "/tmuxomatic", [ "README.rst" ] ),
-# TODO: Add example sessions after install has been sorted out
-#	( sysconfig.get_python_lib() + "/tmuxomatic",
-#		[ "session_demo", "session_practical", "session_test", "session_unsupported", "session_yaml" ] ),
+	( sysconfig.get_python_lib() + "/tmuxomatic/examples", examples ),
 ]
 
 classifiers = [
