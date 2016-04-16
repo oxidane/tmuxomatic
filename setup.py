@@ -41,7 +41,7 @@ package_dir = {}
 package_data = {}
 data_files = [
 	( "bin", [ "tmuxomatic" ] ),
-	( sysconfig.get_python_lib() + "/tmuxomatic", [ "README.rst" ] ),
+	( sysconfig.get_python_lib() + "/tmuxomatic", [ "README.md" ] ),
 	( sysconfig.get_python_lib() + "/tmuxomatic/examples", examples ),
 ]
 
