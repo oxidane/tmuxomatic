@@ -1801,27 +1801,6 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
         exit(0)
 
     #
-    # Target fix for tmux 2.1 only (was fixed in 2.2)
-    #
-    # When calling tmuxomatic from within tmux (managerless mode), the following tmux commands do not select windows
-    # and/or panes as they do in other tmux versions.
-    #
-    #       send-keys
-    #       split-window
-    #       select-pane
-    #
-    # Fortunately this is fixable by explicitly declaring the window name and pane number for these commands.  This fix
-    # would probably work for all versions of tmux, replacing the previous code entirely.  But doing this takes a lot
-    # of command space.  So in the interest of optimization, the changes are only applied when tmux version is 2.1.
-    #
-    # Variables used in this fix:
-    #                                                               tgtfix = True               tgtfix = False
-    #       ewpo           Explicit Window Pane Optional            "-t:\"name\".number "       "-t number "
-    #       ewpi           Explicit Window Pane Imposed             "-t:\"name\".number"        ""
-    #
-    tgtfix = True if USERS_TMUX == "2.1" else False
-
-    #
     # Parse session file
     #
     #   Each window:
@@ -2006,6 +1985,24 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
         list_build = []     # Window is independently assembled
 
         #
+        # Target fix for tmux 2.1 (not a problem with 2.0 or 2.2)
+        #
+        # When calling tmuxomatic from within tmux (managerless mode), the following tmux commands do not select
+        # windows and/or panes as they do in other tmux versions.
+        #
+        #       send-keys
+        #       split-window
+        #       select-pane
+        #
+        # Fortunately this is easily fixed by explicitly declaring window name and pane number on these commands.  This
+        # fix would probably work for all versions of tmux, but doing so would take significantly more command space.
+        # In the interest of performance, these changes are only applied when tmux 2.1 is used.
+        #
+        tgtfix = True if USERS_TMUX == "2.1" else False
+        ewpo = lambda wp: ("-t:\"" + window_name + "\"." + wp + " ") if tgtfix else ""  # Explicit Window Pane Optional
+        ewpi = lambda wp: (("-t:\"" + window_name + "\"." + wp) if tgtfix else ("-t " + wp)) + " "       # EWP Imposed
+
+        #
         # 5.3a) Create window panes by splitting windows
         #
         first_pane = True
@@ -2060,22 +2057,20 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
             else: # Successive
                 window_pane = str(baseindex_pane + list_split_paneid)
                 window_pane_n = str(baseindex_pane + list_split_paneid + 1) # The new pane
-                ewpo = ("-t:\"" + window_name + "\"." + window_pane + " ") if tgtfix else ""
-                ewpi = (("-t:\"" + window_name + "\"." + window_pane) if tgtfix else ("-t " + window_pane)) + " "
-                ewpi_n = (("-t:\"" + window_name + "\"." + window_pane_n) if tgtfix else ("-t " + window_pane_n)) + " "
                 # Perform the split on this pane
-                list_build.append( "select-pane " + ewpi )
+                list_build.append( "select-pane " + ewpi(window_pane) )
                 # Pane sizing
                 if ARGS.relative:
                     # Relative pane sizing (percentage)
                     percentage = str( int( float( list_split_percnt ) ) ) # Integers are required by tmux 1.8
-                    list_build.append( "split-window " + ewpo + "-" + list_split_orient + " -p " + percentage + adddir )
+                    list_build.append( "split-window " + ewpo(window_pane) + "-" + list_split_orient + \
+                        " -p " + percentage + adddir )
                 else:
                     # Absolute pane sizing (characters)
                     if list_split_orient == 'v': addaxis = " -y " + str( list_split_inst_h )
                     else: addaxis = " -x " + str( list_split_inst_w )
-                    list_build.append( "split-window " + ewpo + "-" + list_split_orient + adddir )
-                    list_build.append( "resize-pane " + ewpi_n + addaxis )
+                    list_build.append( "split-window " + ewpo(window_pane) + "-" + list_split_orient + adddir )
+                    list_build.append( "resize-pane " + ewpi(window_pane_n) + addaxis )
 
         #
         # 5.3b) Prepare shell commands ... This is done separately after the pane size has been established
@@ -2101,16 +2096,13 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
                     clean_run = re.sub(r'([\"])', r'\\\1', run) # Escape double-quotes
                     if clean_run:
                         window_pane = list_panes_index
-                        ewpo = ("-t:\"" + window_name + "\"." + window_pane + " ") if tgtfix else ""
-                        ewpi = (("-t:\"" + window_name + "\"." + window_pane) if tgtfix else ("-t " + window_pane))+" "
-                        list_build.append( "select-pane " + ewpi )
-                        list_build.append( "send-keys " + ewpo + "\"" + clean_run + "\" C-m" )
+                        list_build.append( "select-pane " + ewpi(window_pane) )
+                        list_build.append( "send-keys " + ewpo(window_pane) + "\"" + clean_run + "\" C-m" )
             if not focus_actual_tmux_pane_index or list_panes_foc:
                 focus_actual_tmux_pane_index = list_panes_index
         if focus_actual_tmux_pane_index:
             window_pane = focus_actual_tmux_pane_index
-            ewpi = (("-t:\"" + window_name + "\"." + window_pane) if tgtfix else ("-t " + window_pane))+" "
-            list_build.append( "select-pane " + ewpi )
+            list_build.append( "select-pane " + ewpi(window_pane) )
 
         #
         # 5.4) Add this batch to the main execution list to be run later
