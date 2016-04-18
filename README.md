@@ -45,7 +45,7 @@ Take the following window definition from the `session_demo` file (located in th
 
 And compare it to the resulting screenshot after running `tmuxomatic session_demo`:
 
-<!-- Reminder: Use commit (not master) so that future changes will not break the screenshot on previous versions -->
+<!-- Reminder: Use commit (not master) so any future changes will not affect the screenshot of previous releases -->
 ![](https://raw.githubusercontent.com/oxidane/tmuxomatic/41114a3e93b3093ad397b754c109c666705b4db6/screenshots/screenshot_example.png)
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no other file format rules to remember, and typically no command line arguments will be necessary.
