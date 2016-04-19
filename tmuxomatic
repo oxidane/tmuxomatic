@@ -922,6 +922,12 @@ class SessionFile(object):
         new_name = self.RenameIfSpecified_Raw()
         return None if new_name is None else (PROGRAM_THIS + "_" + new_name)
 
+def DetectParsingError(window): # -> windowgram, layout, error, linestart, linenumber
+    windowgram_lines = window.SplitCleanByKey('windowgram')
+    windowgram = Windowgram_Convert.Lines_To_String( windowgram_lines )
+    layout, error, linenumber = Windowgram_Convert.String_To_Parsed(windowgram)
+    return windowgram, layout, error, window.GetLines('windowgram'), linenumber
+
 
 
 ##----------------------------------------------------------------------------------------------------------------------
@@ -1309,6 +1315,16 @@ def flex_shell(session, serial=0):
     flexmenu_session = session
     session_original = copy.deepcopy(session) # Original copy
     fpp = FlexPointersParameter( flexmenu_session, None, copy.deepcopy( flexsense_reset ) )
+    ##
+    ## Parse all windowgrams to make sure they're valid before entering the flex console
+    ## This catches errors like missing a blank line between a windowgram and its directives
+    ##
+    for window_number, window in enumerate(session.windows, 1):
+        _, _, error, linestart, linenumber = DetectParsingError(window)
+        if error:
+            print("Windowgram parsing error for window number " + str(window_number) + " (on line " + \
+                str(linestart+linenumber-1) + "): " + error)
+            exit(0)
     ##
     ## Show list of windows, or assign selected window
     ##
@@ -1855,14 +1871,12 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
         #
         # 2) Windowgram parser
         #
-        windowgram_lines = window.SplitCleanByKey('windowgram')
-        windowgram = Windowgram_Convert.Lines_To_String( windowgram_lines )
+        windowgram, layout, error, linestart, linenumber = DetectParsingError(window)
         wg = Windowgram(windowgram)
         if ARGS.verbose >= 2:
-            print( "\n".join([ "(2) Windowgram: " + line for line in windowgram_lines if line ]) )
-        layout, error, linenumber = Windowgram_Convert.String_To_Parsed(windowgram)
+            print( "\n".join([ "(2) Windowgram: " + line for line in wg.Export_Lines() if line ]) )
         if error:
-            SetLineNumber( window.GetLines('windowgram'), linenumber - 1 )
+            SetLineNumber( linestart, linenumber - 1 )
             synerr(errpkg, "Windowgram parsing error for window number " + str(window_serial) + ": " + error)
         # For every pane, add an initialized 'l' key that's used later for linking
         for pane in layout.keys(): layout[pane]['l'] = 0
