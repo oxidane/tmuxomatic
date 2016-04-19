@@ -1163,13 +1163,13 @@ def cmd_list(fpp_PRIVATE):
     command     = "use",
     group       = "selectors",
     examples    = [ "use my example", "use 1" ],
-    description = "Select the window you would like to modify",
+    description = "Select the window to use, by either its name or number",
     insert      = True,
 )
-def cmd_use(fpp_PRIVATE, *name_or_serial_REQUIRED):
+def cmd_use(fpp_PRIVATE, *name_or_number_REQUIRED):
     global unittestgen_run
     if unittestgen_run: unittestgen_run = 0 # Turn off unit testing mode
-    name_or_serial = " ".join(name_or_serial_REQUIRED)
+    name_or_serial = " ".join(name_or_number_REQUIRED)
     def using(serial):
         flexmenu_index[0] = serial
         wg = fpp_PRIVATE.flexmenu_session.Get_Wg(serial)
@@ -1181,21 +1181,21 @@ def cmd_use(fpp_PRIVATE, *name_or_serial_REQUIRED):
     if name_or_serial.isdigit():
         serial = int(name_or_serial)
         if fpp_PRIVATE.flexmenu_session.Serial_Is_Valid(serial):
-            return using(serial)                                                        # Serial match
+            return using(serial)                                                        # Winow number match
     for serial in range(1, fpp_PRIVATE.flexmenu_session.Count_Windows()+1):
         if name_or_serial == fpp_PRIVATE.flexmenu_session.Get_Name(serial):
-            return using(serial)                                                        # Exact string match
+            return using(serial)                                                        # Exact window name match
     matches = matched = 0
     for serial in range(1, fpp_PRIVATE.flexmenu_session.Count_Windows()+1):
         if fpp_PRIVATE.flexmenu_session.Get_Name(serial).startswith(name_or_serial):
             matched = serial ; matches += 1
-    if matches == 1: return using(matched)                                              # Starting string match
+    if matches == 1: return using(matched)                                              # Starting window name match
     if matches:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( "The name \"" + \
             name_or_serial + "\" is ambiguous (" + str(matches) + " matches)" ) )       # Name ambiguous
     else:
         return fpp_PRIVATE.flexsense['notices'].append( FlexError( \
-            "This name or serial is invalid: " + name_or_serial ) )                     # No match
+            "This name or number is invalid: " + name_or_serial ) )                     # No match
     fpp_PRIVATE.flexsense['output'].append( "" )
 
 ##
@@ -1848,11 +1848,12 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
         window_name = "" # Window name enclosed in double-quotes
         window_name = "".join( [ ch if ch != '\"' else '\\"' for ch in window_process ] ) # Escape double-quotes
         if not window_name:
-            synerr(errpkg, "Window number " + str(window_serial) + " does not have a name")
+            synerr(errpkg, "Window #" + str(window_serial) + " does not have a name")
         for ix, seen_name in enumerate(window_names_seen):
             if window_name == seen_name:
-                synerr(errpkg, "Session window names must be unique.  The duplicate name, \"" + \
-                    window_name + "\", for window " + str(window_serial) + ", already used by window " + str(1+ix))
+                synerr(errpkg, "Session window names must be unique.  The duplicate name, \"" + window_name + \
+                    "\", for window #" + str(window_serial) + ", already used by window #" + str(1+ix))
+                break
         window_names_seen.append( window_name )
         if ARGS.verbose >= 2: print("")
 
@@ -1877,7 +1878,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
             print( "\n".join([ "(2) Windowgram: " + line for line in wg.Export_Lines() if line ]) )
         if error:
             SetLineNumber( linestart, linenumber - 1 )
-            synerr(errpkg, "Windowgram parsing error for window number " + str(window_serial) + ": " + error)
+            synerr(errpkg, "Windowgram parsing error for window #" + str(window_serial) + ": " + error)
         # For every pane, add an initialized 'l' key that's used later for linking
         for pane in layout.keys(): layout[pane]['l'] = 0
 
