@@ -2015,7 +2015,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
         #
         tgtfix = True if USERS_TMUX == "2.1" else False
         ewpo = lambda wp: ("-t:\"" + window_name + "\"." + wp + " ") if tgtfix else ""  # Explicit Window Pane Optional
-        ewpi = lambda wp: (("-t:\"" + window_name + "\"." + wp) if tgtfix else ("-t " + wp)) + " "       # EWP Imposed
+        ewpi = lambda wp: (("-t:\"" + window_name + "\"." + wp) if tgtfix else ("-t " + wp))             # EWP Imposed
 
         #
         # 5.3a) Create window panes by splitting windows
@@ -2085,7 +2085,7 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
                     if list_split_orient == 'v': addaxis = " -y " + str( list_split_inst_h )
                     else: addaxis = " -x " + str( list_split_inst_w )
                     list_build.append( "split-window " + ewpo(window_pane) + "-" + list_split_orient + adddir )
-                    list_build.append( "resize-pane " + ewpi(window_pane_n) + addaxis )
+                    list_build.append( "resize-pane " + ewpi(window_pane_n) + " " + addaxis )
 
         #
         # 5.3b) Prepare shell commands ... This is done separately after the pane size has been established
