@@ -26,12 +26,6 @@ long_description = fullfile("README.md")
 KEYWORDS = "tmux, session manager, screen, shell, command line, iterm, xterm, split, windowgram"
 keywords = [ key.strip() for key in KEYWORDS.split(",") ] # "1, 2, 3" -> ["1", "2", "3"]
 
-# Maybe someone could help get this sorted out properly.  I don't want to use a subdirectory or a manifest file.  When
-# the user installs, I want tmuxomatic to go into the user's bin directory.  I have been able to accomplish this by
-# using the data_files parameter, which seems to work except for setup() imposing chmod 644.  So afterwards, if setup
-# was called with "install", we search for tmuxomatic in the user's path, and then chmod 755.  If you happen know of a
-# way to do this install without a chmod step, or in a more correct manner, please send a pull request with the changes.
-
 # Build list of example files to install: "./examples/" -> [ "examples/session_demo", ... ]
 examples = "examples"
 examples = [ os.path.join(examples, f) for f in os.listdir(examples) if os.path.isfile(os.path.join(examples, f)) ]
@@ -96,7 +90,9 @@ setup(
 
 )
 
-# This is necessary to make tmuxomatic an executable on install, see notes above
+# Fix the chmod for the executable if installing
+# Setup imposes 644, but it should be 755
+# Note: Using a manifest file would probably make this step unnecessary
 
 if "install" in sys.argv:
 	for path in os.environ["PATH"].split(os.pathsep):
