@@ -26,8 +26,7 @@ long_description = fullfile("README.md")
 KEYWORDS = "tmux, session manager, screen, shell, command line, iterm, xterm, split, windowgram"
 keywords = [ key.strip() for key in KEYWORDS.split(",") ] # "1, 2, 3" -> ["1", "2", "3"]
 
-# Build list of example files to install: "./examples/" -> [ "examples/session_demo", ... ]
-examples = "examples"
+examples = "examples" # Build the list of example files to install: "examples" -> [ "examples/session_demo", ... ]
 examples = [ os.path.join(examples, f) for f in os.listdir(examples) if os.path.isfile(os.path.join(examples, f)) ]
 
 packages = [ "windowgram" ]
