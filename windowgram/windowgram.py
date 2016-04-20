@@ -3289,6 +3289,7 @@ def cmd_flip(fpp_PRIVATE):
 ## Implementation Sketch:
 ##
 ##      rotate <how>                                how == cw, ccw, 180, interpret 1..3 and -1..-3 as multiples of 90
+##      rotate <group> <how>                        group == any group of panes in a fully formed rectangle
 ##
 
 # TODO
