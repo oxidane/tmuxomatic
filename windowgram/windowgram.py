@@ -3289,7 +3289,12 @@ def cmd_flip(fpp_PRIVATE):
 ## Implementation Sketch:
 ##
 ##      rotate <how>                                how == cw, ccw, 180, interpret 1..3 and -1..-3 as multiples of 90
-##      rotate <group> <how>                        group == any group of panes in a fully formed rectangle
+##      rotate <group> <how> [force]                group == fully formed rectangle, force == rotate non-square
+##
+## Notes:
+##
+##      Rotating a group of panes (that is not the full windowgram) should be limited to an even square by default.
+##      A non-square group requires setting the force flag, since it must enlarge the windowgram to accommodate.
 ##
 
 # TODO
