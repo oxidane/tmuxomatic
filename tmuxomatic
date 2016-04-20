@@ -1885,9 +1885,10 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
         #
         # 3) Build list_panes
         #
-        list_panes, layout = SortPanes( layout ) # Sort t to b, l to r, move into list (layout[] -> list_panes[])
+        # Sort t to b, l to r, move into list (layout[] -> list_panes[])
+        list_panes, layout = Windowgram_Miscellaneous.SortPanes( layout )
         # Now check for overlaps
-        overlap_pane1, overlap_pane2 = PaneOverlap( list_panes )
+        overlap_pane1, overlap_pane2 = Windowgram_Miscellaneous.PaneOverlap( list_panes )
         if overlap_pane1 or overlap_pane2:
             synerr(errpkg, "Overlapping panes: " + overlap_pane1 + " and " + overlap_pane2)
 

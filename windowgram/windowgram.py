@@ -346,37 +346,41 @@ def SplitProcessor( sw, wg, iw, ih, list_panes ): # list_split, list_links
 ##
 ##----------------------------------------------------------------------------------------------------------------------
 
-def SortPanes(layout): # list_panes, layout
-    # Sort top to bottom, left to right, move into list (layout[] -> list_panes[])
-    list_panes = [] # List of user defined panes (derived from windowgram)
-    while len(layout):
-        pane = ""
-        for it in layout:
-            if not pane: pane = it
-            elif layout[it]['y'] < layout[pane]['y']: pane = it
-            elif layout[it]['y'] == layout[pane]['y'] and layout[it]['x'] < layout[pane]['x']: pane = it
-        list_panes.append(layout[pane].copy())  # Add to list
-        del layout[pane]                        # Remove from dict
-    return list_panes, layout
+class Windowgram_Miscellaneous():
 
-def PaneOverlap(list_panes): # overlap_pane1, overlap_pane2
-    # Finds the first overlap and returns it
-    for pane1 in list_panes:
-        for pane2 in list_panes:
-            if pane1 != pane2:
-                # Readability
-                p1x1 = pane1['x']
-                p1x2 = p1x1 + pane1['w']
-                p1y1 = pane1['y']
-                p1y2 = p1y1 + pane1['h']
-                p2x1 = pane2['x']
-                p2x2 = p2x1 + pane2['w']
-                p2y1 = pane2['y']
-                p2y2 = p2y1 + pane2['h']
-                # Overlap detection
-                if p1x1 < p2x2 and p1x2 > p2x1 and p1y1 < p2y2 and p1y2 > p2y1:
-                    return pane1['n'], pane2['n']
-    return None, None
+    @staticmethod
+    def SortPanes(layout): # list_panes, layout
+        # Sort top to bottom, left to right, move into list (layout[] -> list_panes[])
+        list_panes = [] # List of user defined panes (derived from windowgram)
+        while len(layout):
+            pane = ""
+            for it in layout:
+                if not pane: pane = it
+                elif layout[it]['y'] < layout[pane]['y']: pane = it
+                elif layout[it]['y'] == layout[pane]['y'] and layout[it]['x'] < layout[pane]['x']: pane = it
+            list_panes.append(layout[pane].copy())  # Add to list
+            del layout[pane]                        # Remove from dict
+        return list_panes, layout
+
+    @staticmethod
+    def PaneOverlap(list_panes): # overlap_pane1, overlap_pane2
+        # Finds the first overlap and returns it
+        for pane1 in list_panes:
+            for pane2 in list_panes:
+                if pane1 != pane2:
+                    # Readability
+                    p1x1 = pane1['x']
+                    p1x2 = p1x1 + pane1['w']
+                    p1y1 = pane1['y']
+                    p1y2 = p1y1 + pane1['h']
+                    p2x1 = pane2['x']
+                    p2x2 = p2x1 + pane2['w']
+                    p2y1 = pane2['y']
+                    p2y2 = p2y1 + pane2['h']
+                    # Overlap detection
+                    if p1x1 < p2x2 and p1x2 > p2x1 and p1y1 < p2y2 and p1y2 > p2y1:
+                        return pane1['n'], pane2['n']
+        return None, None
 
 
 
@@ -882,8 +886,8 @@ class Windowgram():
             if self.error_string:
                 analysis_type = "ERROR"
                 break
-            list_panes, windowgram_parsed = SortPanes( windowgram_parsed )
-            overlap_pane1, overlap_pane2 = PaneOverlap( list_panes )
+            list_panes, windowgram_parsed = Windowgram_Miscellaneous.SortPanes( windowgram_parsed )
+            overlap_pane1, overlap_pane2 = Windowgram_Miscellaneous.PaneOverlap( list_panes )
             if overlap_pane1 or overlap_pane2:
                 analysis_type = "layered" # Implicit
                 break
