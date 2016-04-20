@@ -3238,7 +3238,7 @@ def cmd_insert_2(fpp_PRIVATE, hint, edge, size, newpane=None, spread=None):
 ##
 ## Implementation Sketch:
 ##
-##      mirror <group>                              mirrors a group, supports *
+##      mirror [group]                              mirrors, with optional group specification (supports *)
 ##
 
 # TODO: Optional group
@@ -3263,7 +3263,7 @@ def cmd_mirror(fpp_PRIVATE):
 ##
 ## Implementation Sketch:
 ##
-##      flip <group>                                flips a group, supports *
+##      flip [group]                                flips, with optional group specification (supports *)
 ##
 
 # TODO: Optional group
