@@ -1689,13 +1689,25 @@ class QuerySession_tmux(object):
 
     def tmux_query_paneids(self, session, window_id): # -> [ id, id, ... ]
         panes = []
-        result = tmux_run( EXE_TMUX + " list-panes -t " + session+":"+window_id, nopipe=False, force=False, real=True )
+        result = tmux_run( EXE_TMUX + " list-panes -t " + session + ":" + window_id,
+            nopipe=False, force=False, real=True )
         for line in result.split("\n"):
             data = line.split(" ")
             for elem in line.split(" "):
                 if elem and elem[0] == "%":
                     panes.append( elem )
         return panes
+
+    def tmux_destroy_window(self, session, check_window_name): # -> error
+        for window_id, window_name in self.all_windows:
+            if window_name == check_window_name:
+                result = tmux_run( EXE_TMUX + " kill-window -t " + session + ":" + window_id,
+                    nopipe=False, force=False, real=True )
+                result = result.strip()
+                if not result:
+                    return None
+                return result
+        return "Window not found"
 
     ##--------------------------------------------------------------------------------------------------------------
     ##
@@ -1864,8 +1876,16 @@ def tmuxomatic( program_cli, full_cli, user_wh, session_name, session, active_se
         if active_session.Inside():
             if ARGS.printonly: print("### ", end="")
             if active_session.HasWindow( window_name ):
-                print("Skipping existing: " + window_name)
-                continue
+                if ARGS.recreate:
+                    print("Recreating window: " + window_name)
+                    active_session_name = active_session.session_name # Do not use session_name, that's the input file
+                    error = active_session.tmux_destroy_window( active_session_name, window_name )
+                    if error:
+                        print("  Skipping because of error destroying existing window: " + error)
+                        continue
+                else:
+                    print("Skipping existing: " + window_name)
+                    continue
             else:
                 print("Adding new window: " + window_name)
 
