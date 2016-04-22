@@ -2454,9 +2454,9 @@ if __name__ == "__main__":
     PARSER.add_argument( "-f", "--flex", action="store_true", help=\
         "Flex is a powerful windowgram editor.  It allows you to " + \
         "create or modify your windowgrams using visually oriented " + \
-        "commands (scale, break, etc).  For the full list of commands " + \
-        "enter 'help' at the flex console.  If you know which window " + \
-        "you'll edit, add \":<number>\" after the filename." )
+        "commands (scale, break, etc).  If you know which window " + \
+        "you'll edit, add \":<number>\" after the filename.  For a full " + \
+        "list of commands, enter 'help' at the flex prompt." )
     PARSER.add_argument( "filename", help=\
         "The tmuxomatic session filename (required)" )
     ARGS = PARSER.parse_args()
