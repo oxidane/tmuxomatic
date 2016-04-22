@@ -2463,14 +2463,17 @@ if __name__ == "__main__":
         "Do everything except issue commands to tmux" )
     PARSER.add_argument( "-t", "--tests", action="store_true", help=\
         "Perform all unit tests.  Execution will proceed as normal " + \
-        "unless unit tests fail.")
+        "unless unit tests fail." )
     PARSER.add_argument( "-r", "--recreate", action="store_true", help=\
         "If the session exists, it will be destroyed then recreated.  " + \
-        "Normally, if it exists, tmuxomatic will reattach to it.")
+        "Normally, if it exists, tmuxomatic will reattach to it.  If " + \
+        "used in managerless mode, windows that exist by name will " + \
+        "be destroyed then recreated, rather than skipped." )
     PARSER.add_argument( "-d", "--destroy", action="store_true", help=\
         "When you disconnect, your session will be destroyed.  This " + \
         "is useful in situations where you don't want to consume " + \
-        "resources when you're not 'plugged in'." )
+        "resources when you're not 'plugged in'.  This option has no " + \
+        "effect in managerless mode." )
     PARSER.add_argument( "-f", "--flex", action="store_true", help=\
         "Flex is a powerful windowgram editor.  It allows you to " + \
         "create or modify your windowgrams using visually oriented " + \
