@@ -2448,9 +2448,9 @@ if __name__ == "__main__":
 
     # Argument parser
     PARSER = argparse.ArgumentParser( description=\
-        "The easiest way to define sessions in tmux!  For an introduction and " + \
-        "example session files visit " + HOMEPAGE,
-        epilog="Official site here: " + HOMEPAGE )
+        "The easiest way to define sessions in tmux! ... Visit the official site for an introduction and " + \
+        "example sessions ... " + HOMEPAGE,
+        epilog="Official site ... " + HOMEPAGE )
     PARSER.add_argument( "-V", "--version", action="version", version=PROGRAM_THIS + " " + VERSION, help=\
         "Show the version number and exit" )
     PARSER.add_argument( "-v", "--verbose", action="count", help=\
@@ -2475,11 +2475,11 @@ if __name__ == "__main__":
         "resources when you're not 'plugged in'.  This option has no " + \
         "effect in managerless mode." )
     PARSER.add_argument( "-f", "--flex", action="store_true", help=\
-        "Flex is a powerful windowgram editor.  It allows you to " + \
+        "Enter the flex console.  Type 'help' for a list of commands.  " + \
+        "Flex is a powerful windowgram editor that allows you to " + \
         "create or modify your windowgrams using visually oriented " + \
         "commands (scale, break, etc).  If you know which window " + \
-        "you'll edit, add \":<number>\" after the filename.  For a full " + \
-        "list of commands, enter 'help' at the flex prompt." )
+        "you'll edit, add \":<number>\" after the filename." )
     PARSER.add_argument( "filename", help=\
         "The tmuxomatic session filename (required)" )
     ARGS = PARSER.parse_args()
