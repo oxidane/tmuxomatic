@@ -1644,14 +1644,14 @@ class QuerySession_tmux(object):
 
     ##--------------------------------------------------------------------------------------------------------------
     ##
-    ## Methods must use tmux_run( cmd, nonpipe=False, force=False, real=True ) in case of printonly
+    ## Informational Methods (force=True in case of printonly)
     ##
     ##--------------------------------------------------------------------------------------------------------------
 
     def tmux_get_client_wh(self): # -> error, (w, h)
         # Gets the actual xterm width height from within a tmux pane, required for proper sizing when adding windows
-        result_w = tmux_run( EXE_TMUX + " display -p \"#{client_width}\"", nopipe=False, force=False, real=True )
-        result_h = tmux_run( EXE_TMUX + " display -p \"#{client_height}\"", nopipe=False, force=False, real=True )
+        result_w = tmux_run( EXE_TMUX + " display -p \"#{client_width}\"", nopipe=False, force=True, real=True )
+        result_h = tmux_run( EXE_TMUX + " display -p \"#{client_height}\"", nopipe=False, force=True, real=True )
         try:
             return ( int( result_w.strip().split()[0] ), int( result_h.strip().split()[0] ) )
         except ValueError:
@@ -1659,7 +1659,7 @@ class QuerySession_tmux(object):
 
     def tmux_query_sessionnames(self): # -> [ name, name, ... ]
         sessions = []
-        result = tmux_run( EXE_TMUX + " list-sessions", nopipe=False, force=False, real=True )
+        result = tmux_run( EXE_TMUX + " list-sessions", nopipe=False, force=True, real=True )
         if result:
             for line in result.split("\n"):
                 name = line.split(":", 1)[0]
@@ -1669,7 +1669,7 @@ class QuerySession_tmux(object):
 
     def tmux_query_windowidsandnames(self, session): # -> [ [window_id, window_name], [window_id, window_name], ... ]
         windows = []
-        result = tmux_run( EXE_TMUX + " list-windows -t " + session, nopipe=False, force=False, real=True )
+        result = tmux_run( EXE_TMUX + " list-windows -t " + session, nopipe=False, force=True, real=True )
         for line in result.split("\n"):
             data = line.strip()
             if data:
@@ -1690,13 +1690,19 @@ class QuerySession_tmux(object):
     def tmux_query_paneids(self, session, window_id): # -> [ id, id, ... ]
         panes = []
         result = tmux_run( EXE_TMUX + " list-panes -t " + session + ":" + window_id,
-            nopipe=False, force=False, real=True )
+            nopipe=False, force=True, real=True )
         for line in result.split("\n"):
             data = line.split(" ")
             for elem in line.split(" "):
                 if elem and elem[0] == "%":
                     panes.append( elem )
         return panes
+
+    ##--------------------------------------------------------------------------------------------------------------
+    ##
+    ## Affective Methods (force=False)
+    ##
+    ##--------------------------------------------------------------------------------------------------------------
 
     def tmux_destroy_window(self, session, check_window_name): # -> error
         for window_id, window_name in self.all_windows:
@@ -1711,7 +1717,7 @@ class QuerySession_tmux(object):
 
     ##--------------------------------------------------------------------------------------------------------------
     ##
-    ## Static methods are forced over printonly as these are needed whether inside an active tmux session or not
+    ## Informational Static Methods (force=True)
     ##
     ##--------------------------------------------------------------------------------------------------------------
 
