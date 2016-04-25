@@ -2467,6 +2467,8 @@ if __name__ == "__main__":
         "Print only the tmux commands, then exit" )
     PARSER.add_argument( "-x", "--noexecute", action="store_true", help=\
         "Do everything except issue commands to tmux" )
+    PARSER.add_argument( "-F", "--files", action="store_true", help=\
+        "List PyPI session examples and documentation, then exit" )
     PARSER.add_argument( "-t", "--tests", action="store_true", help=\
         "Perform all unit tests.  Execution will proceed as normal " + \
         "unless unit tests fail." )
@@ -2492,6 +2494,28 @@ if __name__ == "__main__":
 
     # Only absolute placement is supported in this version, relative placement could be useful for programs like weechat
     ARGS.relative = False
+
+    # List the PyPI installed example session files on request
+    if ARGS.files:
+        print("")
+        from distutils import sysconfig
+        basepath = os.path.join( sysconfig.get_python_lib(), "tmuxomatic" )
+        allfiles = []
+        for root, _, files in os.walk(basepath):
+            allfiles += [ os.path.join(root, f) for f in files ]
+        if allfiles:
+            print("Found {} files accompanying the PyPI installation of tmuxomatic:".format(len(allfiles)))
+            print("")
+            for f in allfiles:
+                print("  " + f)
+        else:
+            print("Unable to find a PyPI installation of tmuxomatic")
+            print("")
+            print("  To install tmuxomatic from PyPI, run 'pip3 install tmuxomatic'")
+            print("  Visit the official site for documentation and example files")
+            print("  " + HOMEPAGE)
+        print("")
+        exit(0)
 
     # Locate tmux
     EXE_TMUX = which( EXE_TMUX )
