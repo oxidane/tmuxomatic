@@ -50,9 +50,9 @@ And compare it to the resulting screenshot after running `tmuxomatic session_dem
 
 With tmuxomatic, you'll never have to manually split, position, or size a pane again.  And linking the panes to actions is so simple and logical that you probably won't forget it.  There are no other file format rules to remember, and typically no command line arguments will be necessary.
 
-Additional examples may be found in the `examples` folder.  Other features are listed elsewhere in the documentation and in the source code.
+Additional examples may be found in the `examples` folder.  If you have installed with PyPI, use `tmuxomatic --files` to find the location for these examples on your local filesystem.
 
-For a list of command line arguments, run `tmuxomatic --help`.
+For a list of command line arguments, run `tmuxomatic --help`.  For additional features, see the documentation and/or source code.
 
 
 
